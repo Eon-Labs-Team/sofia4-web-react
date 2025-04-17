@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { document } from './document';
 
 export interface IWasteRemoval extends document {
   date: string,

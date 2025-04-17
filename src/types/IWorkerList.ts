@@ -1,4 +1,4 @@
-import {Document} from "mongoose";
+import { document } from './document';
 
 export interface IWorkerList extends document {
   workerNationality: string,

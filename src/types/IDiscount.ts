@@ -1,4 +1,4 @@
-import { Document} from "mongoose";
+import { document } from './document';
 
 export interface IDiscount extends document {
   discountName: string,

@@ -1,4 +1,4 @@
-import { Document} from "mongoose";
+import { document } from './document';
 
 export interface IRemunerationAndSalaries extends document {
   assetsName: string,
