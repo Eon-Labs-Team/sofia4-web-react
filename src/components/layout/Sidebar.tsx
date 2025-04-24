@@ -18,6 +18,7 @@ import {
   BarChart3,
   FileText,
   Building2,
+  UserPlus,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -66,6 +67,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
     },
     { icon: <Building2 size={20} />, label: "Cuarteles", path: "/cuarteles" },
     { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
+    { icon: <UserPlus size={20} />, label: "Lista Cuadrillas", path: "/lista-cuadrillas" },
     {
       icon: <FileText size={20} />,
       label: "Formulario Dinámico",

@@ -3,6 +3,7 @@ import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/home";
 import Cuarteles from "./pages/Cuarteles";
 import ListaCuarteles from "./pages/ListaCuarteles";
+import ListaCuadrillas from "./pages/ListaCuadrillas";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -69,6 +70,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <ListaCuarteles />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/lista-cuadrillas"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <ListaCuadrillas />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
