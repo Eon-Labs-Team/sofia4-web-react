@@ -7,6 +7,7 @@ import ListaCuadrillas from "./pages/ListaCuadrillas";
 import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
 import MonitoreoMaleza from "./pages/MonitoreoMaleza";
 import SoilAnalysis from "./pages/SoilAnalysis";
+import FertilizacionSuelo from "./pages/FertilizacionSuelo";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -117,6 +118,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <SoilAnalysis />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/fertilizacion-suelo"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <FertilizacionSuelo />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
