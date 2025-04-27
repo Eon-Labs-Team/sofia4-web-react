@@ -187,7 +187,7 @@ const formSections: SectionConfig[] = [
       },
       {
         id: "dateFertilization",
-        type: "date" as FieldType,
+        type: "text" as FieldType,
         label: "Fecha de Fertilización",
         name: "dateFertilization",
         required: true

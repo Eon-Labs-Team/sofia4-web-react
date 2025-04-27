@@ -8,6 +8,7 @@ import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
 import MonitoreoMaleza from "./pages/MonitoreoMaleza";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import FertilizacionSuelo from "./pages/FertilizacionSuelo";
+import IrrigationRecord from "./pages/IrrigationRecord";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -129,6 +130,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <FertilizacionSuelo />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/registro-riego"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <IrrigationRecord />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
