@@ -19,9 +19,12 @@ import {
   FileText,
   Building2,
   UserPlus,
+  ChevronDown,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -31,53 +34,61 @@ interface SidebarProps {
 interface NavItem {
   icon: React.ReactNode;
   label: string;
-  path: string;
+  path?: string;
   requiredRole?: 'admin' | 'manager' | 'user';
+  children?: NavItem[];
+  isExpanded?: boolean;
 }
 
 const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
-  const location = useLocation();
-  const { user } = useAuthStore();
-
-  const handleToggle = () => {
-    setIsCollapsed(!isCollapsed);
-    onToggle();
-  };
-
-  const navItems: NavItem[] = [
+  const [navItems, setNavItems] = useState<NavItem[]>([
     { icon: <Home size={20} />, label: "Inicio", path: "/" },
-    {
-      icon: <LayoutDashboard size={20} />,
-      label: "Dashboard",
-      path: "/dashboard",
-      requiredRole: 'manager'
+    // {
+    //   icon: <LayoutDashboard size={20} />,
+    //   label: "Dashboard",
+    //   path: "/dashboard",
+    //   requiredRole: 'manager'
+    // },
+    // { 
+    //   icon: <BarChart3 size={20} />, 
+    //   label: "Estadísticas", 
+    //   path: "/analytics",
+    //   requiredRole: 'manager'
+    // },
+    // { 
+    //   icon: <Users size={20} />, 
+    //   label: "Usuarios", 
+    //   path: "/users",
+    //   requiredRole: 'admin'
+    // },
+    { 
+      icon: <Building2 size={20} />, 
+      label: "Gestión de Cuarteles", 
+      children: [
+        { icon: <Building2 size={16} />, label: "Cuarteles", path: "/cuarteles" },
+        { icon: <Building2 size={16} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
+      ],
+      isExpanded: false
     },
     { 
-      icon: <BarChart3 size={20} />, 
-      label: "Estadísticas", 
-      path: "/analytics",
-      requiredRole: 'manager'
-    },
-    { 
-      icon: <Users size={20} />, 
-      label: "Usuarios", 
-      path: "/users",
-      requiredRole: 'admin'
-    },
-    { icon: <Building2 size={20} />, label: "Cuarteles", path: "/cuarteles" },
-    { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
-    { icon: <UserPlus size={20} />, label: "Lista Cuadrillas", path: "/lista-cuadrillas" },
-    {
-      icon: <FileText size={20} />,
-      label: "Formulario Dinámico",
-      path: "/dynamic-form",
+      icon: <UserPlus size={20} />, 
+      label: "Lista Cuadrillas", 
+      path: "/lista-cuadrillas" 
     },
     {
       icon: <FileText size={20} />,
-      label: "Constructor de Formularios",
-      path: "/form-builder",
-      requiredRole: 'admin'
+      label: "Formularios",
+      children: [
+        { icon: <FileText size={16} />, label: "Formulario Dinámico", path: "/dynamic-form" },
+        { 
+          icon: <FileText size={16} />,
+          label: "Constructor de Formularios", 
+          path: "/form-builder",
+          requiredRole: 'admin'
+        },
+      ],
+      isExpanded: false
     },
     { 
       icon: <FileText size={20} />, 
@@ -91,22 +102,137 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       path: "/settings",
       requiredRole: 'admin'
     },
-  ];
+  ]);
+
+  const location = useLocation();
+  const { user } = useAuthStore();
+
+  const handleToggle = () => {
+    setIsCollapsed(!isCollapsed);
+    onToggle();
+  };
+
+  const toggleSubmenu = (index: number) => {
+    setNavItems(
+      navItems.map((item, i) => 
+        i === index ? { ...item, isExpanded: !item.isExpanded } : item
+      )
+    );
+  };
 
   // Filter nav items based on user role
-  const filteredNavItems = navItems.filter(item => {
-    if (!item.requiredRole) return true;
-    if (!user) return false;
-    
-    // Admin can access everything
-    if (user.role === 'admin') return true;
-    
-    // Manager can access user and manager items
-    if (user.role === 'manager' && item.requiredRole !== 'admin') return true;
-    
-    // Regular user can only access user items
-    return user.role === item.requiredRole;
-  });
+  const filterNavItems = (items: NavItem[]): NavItem[] => {
+    return items.filter(item => {
+      if (!item.requiredRole) return true;
+      if (!user) return false;
+      
+      // Admin can access everything
+      if (user.role === 'admin') return true;
+      
+      // Manager can access user and manager items
+      if (user.role === 'manager' && item.requiredRole !== 'admin') return true;
+      
+      // Regular user can only access user items
+      return user.role === item.requiredRole;
+    }).map(item => {
+      if (item.children) {
+        return {
+          ...item,
+          children: filterNavItems(item.children)
+        };
+      }
+      return item;
+    });
+  };
+
+  const filteredNavItems = filterNavItems(navItems);
+
+  const renderNavItem = (item: NavItem, index: number, level: number = 0) => {
+    // Skip rendering if item has no children and doesn't pass the role filter
+    if (!item.path && (!item.children || item.children.length === 0)) return null;
+
+    // For items with children (submenus)
+    if (item.children && item.children.length > 0) {
+      return (
+        <li key={`${level}-${index}`}>
+          <Collapsible
+            open={item.isExpanded}
+            onOpenChange={() => toggleSubmenu(index)}
+            className="w-full"
+          >
+            <div className={`flex w-full ${level > 0 ? "pl-4" : ""}`}>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className={`flex w-full items-center justify-between p-2 rounded-md hover:bg-accent transition-colors ${!isCollapsed ? "text-sm" : ""}`}
+                >
+                  <div className="flex items-center">
+                    <span className="text-foreground">{item.icon}</span>
+                    {!isCollapsed && (
+                      <span className="ml-3 text-sm">{item.label}</span>
+                    )}
+                  </div>
+                  {!isCollapsed && (
+                    <ChevronDown 
+                      size={16} 
+                      className={cn(
+                        "transform transition-transform duration-200",
+                        item.isExpanded ? "rotate-180" : ""
+                      )}
+                    />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            
+            {isCollapsed ? (
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span></span>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{item.label}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <CollapsibleContent>
+                <ul className="space-y-1 ml-5 mt-1">
+                  {item.children.map((child, childIndex) => 
+                    renderNavItem(child, childIndex, level + 1)
+                  )}
+                </ul>
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        </li>
+      );
+    }
+
+    // For regular menu items
+    const isActive = location.pathname === item.path;
+    return (
+      <li key={`${level}-${index}`}>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                to={item.path || "#"}
+                className={`flex items-center p-2 rounded-md hover:bg-accent transition-colors ${isActive ? "bg-accent" : ""} ${level > 0 ? "pl-4" : ""}`}
+              >
+                <span className="text-foreground">{item.icon || <div className="w-5" />}</span>
+                {!isCollapsed && (
+                  <span className="ml-3 text-sm">{item.label}</span>
+                )}
+              </Link>
+            </TooltipTrigger>
+            {isCollapsed && (
+              <TooltipContent side="right">{item.label}</TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      </li>
+    );
+  };
 
   return (
     <div
@@ -130,31 +256,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       {/* Navigation Links */}
       <nav className="flex-1 py-4 overflow-y-auto">
         <ul className="space-y-2 px-2">
-          {filteredNavItems.map((item, index) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <li key={index}>
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Link
-                        to={item.path}
-                        className={`flex items-center p-2 rounded-md hover:bg-accent transition-colors ${isActive ? "bg-accent" : ""}`}
-                      >
-                        <span className="text-foreground">{item.icon}</span>
-                        {!isCollapsed && (
-                          <span className="ml-3 text-sm">{item.label}</span>
-                        )}
-                      </Link>
-                    </TooltipTrigger>
-                    {isCollapsed && (
-                      <TooltipContent side="right">{item.label}</TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              </li>
-            );
-          })}
+          {filteredNavItems.map((item, index) => renderNavItem(item, index))}
         </ul>
       </nav>
 
