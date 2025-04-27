@@ -20,6 +20,7 @@ import {
   Building2,
   UserPlus,
   ChevronDown,
+  Beaker,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -102,7 +103,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       label: "Registros de campo",
       children: [
         { icon: <Building2 size={16} />, label: "Monitoreo Estado Fenológico", path: "/monitoreo-estado-fenologico" },
-        { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" }
+        { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" },
+        { icon: <Beaker size={16} />, label: "Análisis de Suelo", path: "/analisis-suelo" }
       ],
       isExpanded: false
     },
