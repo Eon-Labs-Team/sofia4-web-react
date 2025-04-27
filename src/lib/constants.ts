@@ -16,5 +16,15 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/agriculturalWork/crewList`,
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/crewList/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/agriculturalWork/crewList/${id}/state/${state}`,
+  },
+  monitoringOfPhenologicalState: {
+    base: `${API_BASE_URL}/fieldRecord/monitoringOfPhenologicalState`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/monitoringOfPhenologicalState/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/monitoringOfPhenologicalState/${id}/state/false`,
+  },
+  weedMonitoring: {
+    base: `${API_BASE_URL}/fieldRecord/weedMonitoring`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/weedMonitoring/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/weedMonitoring/${id}/state/false`,
   }
 }; 

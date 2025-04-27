@@ -4,6 +4,8 @@ import Home from "./components/home";
 import Cuarteles from "./pages/Cuarteles";
 import ListaCuarteles from "./pages/ListaCuarteles";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
+import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
+import MonitoreoMaleza from "./pages/MonitoreoMaleza";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -81,6 +83,28 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <ListaCuadrillas />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/monitoreo-estado-fenologico"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <MonitoreoEstadoFenologico />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/monitoreo-maleza"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <MonitoreoMaleza />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

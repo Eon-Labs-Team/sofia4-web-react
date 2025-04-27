@@ -96,9 +96,19 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       path: "/reports",
       requiredRole: 'manager'
     },
+
+    {
+      icon: <FileText size={20} />,
+      label: "Registros de campo",
+      children: [
+        { icon: <Building2 size={16} />, label: "Monitoreo Estado Fenológico", path: "/monitoreo-estado-fenologico" },
+        { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" }
+      ],
+      isExpanded: false
+    },
     { 
       icon: <Settings size={20} />, 
-      label: "Configuración", 
+      label: "Configuraciones", 
       path: "/settings",
       requiredRole: 'admin'
     },
