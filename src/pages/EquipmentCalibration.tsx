@@ -113,7 +113,7 @@ const formSections: SectionConfig[] = [
   {
     id: "calibration-info",
     title: "Información de Calibración",
-    description: "Ingrese los datos de la calibración del equipo de medición",
+    description: "Ingrese los datos de la calibración del equipo",
     fields: [
       {
         id: "date",
@@ -460,7 +460,7 @@ const EquipmentCalibration = () => {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Calibración de Equipos de Medición</h1>
+        <h1 className="text-2xl font-bold">Calibración de Equipos</h1>
         <Button onClick={handleAddClick} className="flex items-center gap-2">
           <Plus className="h-4 w-4" /> Agregar Calibración
         </Button>
@@ -530,7 +530,7 @@ const EquipmentCalibration = () => {
         data={equipmentCalibrations}
         columns={columns}
         idField="_id"
-        title="Calibraciones de Equipos de Medición"
+        title="Calibraciones de Equipos"
         gridId="equipment-calibration-grid"
         actions={actionButtons}
       />

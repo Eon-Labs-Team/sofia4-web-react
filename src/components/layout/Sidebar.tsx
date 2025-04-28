@@ -125,7 +125,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" },
         { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
         { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" },
-        { icon: <Scale size={16} />, label: "Calibración Equipo de Medición", path: "/calibracion-equipos-medicion" }
+        { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" },
+        { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" }
       ],
       isExpanded: false
     },
