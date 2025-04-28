@@ -123,7 +123,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Wrench size={16} />, label: "Mantención para Riego Tecnificado", path: "/mantencion-riego-tecnificado" },
         { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" },
         { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" },
-        { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" }
+        { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
+        { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" }
       ],
       isExpanded: false
     },

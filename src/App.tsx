@@ -28,6 +28,7 @@ import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenan
 import AnimalAdmission from "./pages/AnimalAdmission";
 import IrrigationSectorCapacity from "./pages/IrrigationSectorCapacity";
 import WasteRemoval from "./pages/WasteRemoval";
+import WasteManagement from "./pages/WasteManagement";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -273,6 +274,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <WasteRemoval />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/manejo-residuos"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <WasteManagement />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

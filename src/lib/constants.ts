@@ -92,4 +92,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/WasteRemoval/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/WasteRemoval/${id}/state/false`,
   },
+  wasteManagement: {
+    base: `${API_BASE_URL}/controlRecord/wasteManagement`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/wasteManagement/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/wasteManagement/${id}/state/false`,
+  },
 }; 
