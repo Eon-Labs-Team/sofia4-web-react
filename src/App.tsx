@@ -27,6 +27,7 @@ import CalibrarAspersion from "./pages/CalibrarAspersion";
 import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenance";
 import AnimalAdmission from "./pages/AnimalAdmission";
 import IrrigationSectorCapacity from "./pages/IrrigationSectorCapacity";
+import WasteRemoval from "./pages/WasteRemoval";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -261,6 +262,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <IrrigationSectorCapacity />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/retiro-residuos"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <WasteRemoval />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
