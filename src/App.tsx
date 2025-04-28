@@ -22,6 +22,7 @@ import Sidebar from "./components/layout/Sidebar";
 import { Toaster } from "./components/ui/toaster";
 import { useAuthStore } from "./lib/store/authStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AnalisisAgua from "./pages/analisis-agua";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -184,22 +185,23 @@ function App() {
         />
         
         <Route
-          path="/balance-masa"
-          element={
-            <ProtectedRoute>
-              <AuthenticatedLayout>
-                <MassBalance />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
+            path="/balance-masa"
+            element={
+              <ProtectedRoute>
+                <AuthenticatedLayout>
+                  <MassBalance />
+                </AuthenticatedLayout>
+              </ProtectedRoute>
+            }
+          />
+        
         
         <Route
-          path="/dynamic-form"
+          path="/analisis-agua"
           element={
             <ProtectedRoute>
               <AuthenticatedLayout>
-                <DynamicFormExample />
+                <AnalisisAgua />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
