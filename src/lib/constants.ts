@@ -22,6 +22,11 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/monitoringOfPhenologicalState/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/monitoringOfPhenologicalState/${id}/state/false`,
   },
+  animalAdmission: {
+    base: `${API_BASE_URL}/fieldRecord/animalAdmission`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/animalAdmission/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/animalAdmission/${id}/state/false`,
+  },
   weedMonitoring: {
     base: `${API_BASE_URL}/fieldRecord/weedMonitoring`,
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/weedMonitoring/${id}`,

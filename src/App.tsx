@@ -25,6 +25,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AnalisisAgua from "./pages/analisis-agua";
 import CalibrarAspersion from "./pages/CalibrarAspersion";
 import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenance";
+import AnimalAdmission from "./pages/AnimalAdmission";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -237,6 +238,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <TechnicalIrrigationMaintenance />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/ingreso-animales"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <AnimalAdmission />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
