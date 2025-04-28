@@ -10,6 +10,7 @@ import SoilAnalysis from "./pages/SoilAnalysis";
 import FertilizacionSuelo from "./pages/FertilizacionSuelo";
 import IrrigationRecord from "./pages/IrrigationRecord";
 import AnalisisFoliar from "./pages/AnalisisFoliar";
+import EventosClimaticos from "./pages/EventosClimaticos";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -153,6 +154,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <AnalisisFoliar />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/eventos-climaticos"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <EventosClimaticos />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
