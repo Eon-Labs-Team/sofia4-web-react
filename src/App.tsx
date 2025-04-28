@@ -24,6 +24,7 @@ import { useAuthStore } from "./lib/store/authStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AnalisisAgua from "./pages/analisis-agua";
 import CalibrarAspersion from "./pages/CalibrarAspersion";
+import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenance";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -225,6 +226,17 @@ function App() {
             <ProtectedRoute requiredRole="admin">
               <AuthenticatedLayout>
                 <FormBuilderExample />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/mantencion-riego-tecnificado"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <TechnicalIrrigationMaintenance />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
