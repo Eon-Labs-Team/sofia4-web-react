@@ -97,4 +97,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/wasteManagement/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/wasteManagement/${id}/state/false`,
   },
+  equipmentCalibration: {
+    base: `${API_BASE_URL}/controlRecord/equipmentCalibration`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/equipmentCalibration/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/equipmentCalibration/${id}/state/false`,
+  },
 }; 

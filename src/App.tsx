@@ -29,6 +29,7 @@ import AnimalAdmission from "./pages/AnimalAdmission";
 import IrrigationSectorCapacity from "./pages/IrrigationSectorCapacity";
 import WasteRemoval from "./pages/WasteRemoval";
 import WasteManagement from "./pages/WasteManagement";
+import EquipmentCalibration from "./pages/EquipmentCalibration";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -285,6 +286,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <WasteManagement />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/calibracion-equipos-medicion"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <EquipmentCalibration />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
