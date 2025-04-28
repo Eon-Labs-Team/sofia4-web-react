@@ -66,5 +66,10 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/fieldRecord/waterAnalysis`,
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/waterAnalysis/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/waterAnalysis/${id}/state/false`,
+  },
+  calibrateSprinkler: {
+    base: `${API_BASE_URL}/fieldRecord/calibrateSprinkler`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/calibrateSprinkler/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/calibrateSprinkler/${id}/state/false`,
   }
 }; 

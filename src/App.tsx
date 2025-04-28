@@ -23,6 +23,7 @@ import { Toaster } from "./components/ui/toaster";
 import { useAuthStore } from "./lib/store/authStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AnalisisAgua from "./pages/analisis-agua";
+import CalibrarAspersion from "./pages/CalibrarAspersion";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -202,6 +203,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <AnalisisAgua />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/calibrar-aspersion"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <CalibrarAspersion />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

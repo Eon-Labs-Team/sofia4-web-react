@@ -116,7 +116,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <CloudRain size={16} />, label: "Eventos Climáticos", path: "/eventos-climaticos" },
         { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" },
         { icon: <Scale size={16} />, label: "Balance de Masa", path: "/balance-masa" },
-        { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" }
+        { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" },
+        { icon: <Droplets size={16} />, label: "Calibrar Aspersión", path: "/calibrar-aspersion" }
       ],
       isExpanded: false
     },
