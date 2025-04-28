@@ -120,7 +120,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" },
         { icon: <Droplets size={16} />, label: "Calibrar Aspersión", path: "/calibrar-aspersion" },
         { icon: <Wrench size={16} />, label: "Mantención para Riego Tecnificado", path: "/mantencion-riego-tecnificado" },
-        { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" }
+        { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" },
+        { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" }
       ],
       isExpanded: false
     },

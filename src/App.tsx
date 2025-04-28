@@ -26,6 +26,7 @@ import AnalisisAgua from "./pages/analisis-agua";
 import CalibrarAspersion from "./pages/CalibrarAspersion";
 import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenance";
 import AnimalAdmission from "./pages/AnimalAdmission";
+import IrrigationSectorCapacity from "./pages/IrrigationSectorCapacity";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -249,6 +250,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <AnimalAdmission />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/aforo-sector-riego"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <IrrigationSectorCapacity />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

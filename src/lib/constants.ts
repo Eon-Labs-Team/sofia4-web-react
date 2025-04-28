@@ -81,5 +81,10 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/fieldRecord/technicalIrrigationMaintenance`,
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/technicalIrrigationMaintenance/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/technicalIrrigationMaintenance/${id}/state/false`,
+  },
+  irrigationSectorCapacity: {
+    base: `${API_BASE_URL}/fieldRecord/irrigationSectorCapacity`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/irrigationSectorCapacity/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/irrigationSectorCapacity/${id}/state/false`,
   }
 }; 
