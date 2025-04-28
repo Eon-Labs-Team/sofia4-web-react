@@ -12,6 +12,7 @@ import IrrigationRecord from "./pages/IrrigationRecord";
 import AnalisisFoliar from "./pages/AnalisisFoliar";
 import EventosClimaticos from "./pages/EventosClimaticos";
 import LimpiezaMaquinaria from "./pages/LimpiezaMaquinaria";
+import MassBalance from "./pages/MassBalance";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -177,6 +178,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <LimpiezaMaquinaria />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/balance-masa"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <MassBalance />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

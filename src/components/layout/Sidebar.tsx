@@ -25,6 +25,7 @@ import {
   Leaf,
   CloudRain,
   Trash,
+  Scale,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -113,7 +114,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" },
         { icon: <Leaf size={16} />, label: "Análisis Foliar", path: "/analisis-foliar" },
         { icon: <CloudRain size={16} />, label: "Eventos Climáticos", path: "/eventos-climaticos" },
-        { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" }
+        { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" },
+        { icon: <Scale size={16} />, label: "Balance de Masa", path: "/balance-masa" }
       ],
       isExpanded: false
     },
