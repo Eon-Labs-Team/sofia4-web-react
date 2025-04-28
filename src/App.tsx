@@ -9,6 +9,7 @@ import MonitoreoMaleza from "./pages/MonitoreoMaleza";
 import SoilAnalysis from "./pages/SoilAnalysis";
 import FertilizacionSuelo from "./pages/FertilizacionSuelo";
 import IrrigationRecord from "./pages/IrrigationRecord";
+import AnalisisFoliar from "./pages/AnalisisFoliar";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
@@ -141,6 +142,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <IrrigationRecord />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/analisis-foliar"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <AnalisisFoliar />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

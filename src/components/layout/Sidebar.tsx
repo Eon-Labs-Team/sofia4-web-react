@@ -22,6 +22,7 @@ import {
   ChevronDown,
   Beaker,
   Droplets,
+  Leaf,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -107,7 +108,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" },
         { icon: <Beaker size={16} />, label: "Análisis de Suelo", path: "/analisis-suelo" },
         { icon: <Beaker size={16} />, label: "Fertilización de Suelo", path: "/fertilizacion-suelo" },
-        { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" }
+        { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" },
+        { icon: <Leaf size={16} />, label: "Análisis Foliar", path: "/analisis-foliar" }
       ],
       isExpanded: false
     },
