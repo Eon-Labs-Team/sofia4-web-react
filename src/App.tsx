@@ -39,6 +39,7 @@ import Capacitaciones from "./pages/Capacitaciones";
 import LavadoManos from "./pages/LavadoManos";
 import ElectricityConsumption from "./pages/electricity-consumption";
 import WaterConsumption from "./pages/water-consumption";
+import HygieneSanitation from "./pages/HygieneSanitation";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -405,6 +406,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <WaterConsumption />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/hygiene-sanitation"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <HygieneSanitation />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
