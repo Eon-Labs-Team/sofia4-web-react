@@ -132,4 +132,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/trainingTalks/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/trainingTalks/${id}/state/false`,
   },
+  handWashing: {
+    base: `${API_BASE_URL}/controlRecord/handWashingRecord`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/handWashingRecord/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/handWashingRecord/${id}/state/false`,
+  },
 }; 

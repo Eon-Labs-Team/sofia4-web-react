@@ -36,6 +36,7 @@ import BackPumpCalculation from "./pages/backPumpCalculation";
 import VisitorLog from "./pages/VisitorLog";
 import PersonnelProvision from "./pages/PersonnelProvision";
 import Capacitaciones from "./pages/Capacitaciones";
+import LavadoManos from "./pages/LavadoManos";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -369,6 +370,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <Capacitaciones />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/lavado-manos"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <LavadoManos />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
