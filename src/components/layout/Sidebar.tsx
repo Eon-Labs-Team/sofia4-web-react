@@ -150,6 +150,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Droplets size={16} />, label: "Consumo de Agua", path: "/water-consumption" },
         { icon: <Trash size={16} />, label: "Higiene y Sanidad", path: "/hygiene-sanitation" },
         { icon: <Shovel size={16} />, label: "Calicata", path: "/calicata" },
+        { icon: <Droplets size={16} />, label: "Registro Cloro en Láminas de Espuma", path: "/chlorine-registration" },
       ],
       isExpanded: false
     },

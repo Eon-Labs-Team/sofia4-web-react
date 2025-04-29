@@ -41,6 +41,7 @@ import ElectricityConsumption from "./pages/electricity-consumption";
 import WaterConsumption from "./pages/water-consumption";
 import HygieneSanitation from "./pages/HygieneSanitation";
 import Calicata from "./pages/calicata";
+import ChlorineRegistration from "./pages/ChlorineRegistration";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -429,6 +430,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <Calicata />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/chlorine-registration"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <ChlorineRegistration />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
