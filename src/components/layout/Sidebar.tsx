@@ -142,6 +142,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
         { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
         { icon: <Presentation size={16} />, label: "Capacitaciones", path: "/capacitaciones" },
+        { icon: <Trash size={16} />, label: "Limpieza de Instalaciones", path: "/limpieza-instalaciones" },
       ],
       isExpanded: false
     },

@@ -12,6 +12,7 @@ import IrrigationRecord from "./pages/IrrigationRecord";
 import AnalisisFoliar from "./pages/AnalisisFoliar";
 import EventosClimaticos from "./pages/EventosClimaticos";
 import LimpiezaMaquinaria from "./pages/LimpiezaMaquinaria";
+import FacilityCleaning from "./pages/FacilityCleaning";
 import MassBalance from "./pages/MassBalance";
 import DynamicFormExample from "./pages/DynamicFormExample";
 import FormBuilderExample from "./pages/FormBuilderExample";
@@ -191,6 +192,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <LimpiezaMaquinaria />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/limpieza-instalaciones"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <FacilityCleaning />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

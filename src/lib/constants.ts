@@ -12,6 +12,11 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}/state/${state}`,
   },
+  facilityCleaning: {
+    base: `${API_BASE_URL}/controlRecord/facilityCleaningRecord`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/facilityCleaningRecord/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/facilityCleaningRecord/${id}/state/false`,
+  },
   personnelProvision: {
     base: `${API_BASE_URL}/controlRecord/personnelProvision`,
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/personnelProvision/${id}`,
