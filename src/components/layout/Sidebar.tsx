@@ -32,6 +32,7 @@ import {
   UserCheck,
   Presentation,
   Zap,
+  Shovel,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -148,6 +149,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Zap size={16} />, label: "Consumo de Luz", path: "/electricity-consumption" },
         { icon: <Droplets size={16} />, label: "Consumo de Agua", path: "/water-consumption" },
         { icon: <Trash size={16} />, label: "Higiene y Sanidad", path: "/hygiene-sanitation" },
+        { icon: <Shovel size={16} />, label: "Calicata", path: "/calicata" },
       ],
       isExpanded: false
     },

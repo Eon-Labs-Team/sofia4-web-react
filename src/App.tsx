@@ -40,6 +40,7 @@ import LavadoManos from "./pages/LavadoManos";
 import ElectricityConsumption from "./pages/electricity-consumption";
 import WaterConsumption from "./pages/water-consumption";
 import HygieneSanitation from "./pages/HygieneSanitation";
+import Calicata from "./pages/calicata";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -417,6 +418,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <HygieneSanitation />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/calicata"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <Calicata />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

@@ -152,4 +152,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/hygieneSanitation/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/hygieneSanitation/${id}/state/false`,
   },
+  calicata: {
+    base: `${API_BASE_URL}/controlRecord/calicata`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}/state/false`,
+  },
 }; 
