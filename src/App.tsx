@@ -34,6 +34,7 @@ import CalibrationMeasuringEquipment from "./pages/CalibrationMeasuringEquipment
 import BackPumpCalculation from "./pages/backPumpCalculation";
 import VisitorLog from "./pages/VisitorLog";
 import PersonnelProvision from "./pages/PersonnelProvision";
+import Capacitaciones from "./pages/Capacitaciones";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -345,6 +346,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <PersonnelProvision />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/capacitaciones"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <Capacitaciones />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

@@ -30,6 +30,7 @@ import {
   Recycle,
   Calculator,
   UserCheck,
+  Presentation,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -140,6 +141,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       children: [
         { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
         { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
+        { icon: <Presentation size={16} />, label: "Capacitaciones", path: "/capacitaciones" },
       ],
       isExpanded: false
     },
