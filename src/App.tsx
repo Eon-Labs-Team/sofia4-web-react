@@ -33,6 +33,7 @@ import EquipmentCalibration from "./pages/EquipmentCalibration";
 import CalibrationMeasuringEquipment from "./pages/CalibrationMeasuringEquipment";
 import BackPumpCalculation from "./pages/backPumpCalculation";
 import VisitorLog from "./pages/VisitorLog";
+import PersonnelProvision from "./pages/PersonnelProvision";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -333,6 +334,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <VisitorLog />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/personnel-provision"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <PersonnelProvision />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
