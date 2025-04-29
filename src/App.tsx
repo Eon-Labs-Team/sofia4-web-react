@@ -31,6 +31,7 @@ import WasteRemoval from "./pages/WasteRemoval";
 import WasteManagement from "./pages/WasteManagement";
 import EquipmentCalibration from "./pages/EquipmentCalibration";
 import CalibrationMeasuringEquipment from "./pages/CalibrationMeasuringEquipment";
+import BackPumpCalculation from "./pages/backPumpCalculation";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -309,6 +310,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <CalibrationMeasuringEquipment />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/back-pump-calculation"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <BackPumpCalculation />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

@@ -28,6 +28,7 @@ import {
   Scale,
   Wrench,
   Recycle,
+  Calculator,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -126,7 +127,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
         { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" },
         { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" },
-        { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" }
+        { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" },
+        { icon: <Calculator size={16} />, label: "Cálculo Bomba de Espalda", path: "/back-pump-calculation" }
       ],
       isExpanded: false
     },
