@@ -38,6 +38,7 @@ import PersonnelProvision from "./pages/PersonnelProvision";
 import Capacitaciones from "./pages/Capacitaciones";
 import LavadoManos from "./pages/LavadoManos";
 import ElectricityConsumption from "./pages/electricity-consumption";
+import WaterConsumption from "./pages/water-consumption";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -393,6 +394,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <ElectricityConsumption />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/water-consumption"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <WaterConsumption />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

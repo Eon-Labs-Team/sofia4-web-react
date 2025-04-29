@@ -146,6 +146,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Trash size={16} />, label: "Limpieza de Instalaciones", path: "/limpieza-instalaciones" },
         { icon: <Droplets size={16} />, label: "Lavado de Manos", path: "/lavado-manos" },
         { icon: <Zap size={16} />, label: "Consumo de Luz", path: "/electricity-consumption" },
+        { icon: <Droplets size={16} />, label: "Consumo de Agua", path: "/water-consumption" },
       ],
       isExpanded: false
     },
