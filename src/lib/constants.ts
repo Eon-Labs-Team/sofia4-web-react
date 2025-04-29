@@ -17,6 +17,11 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/facilityCleaningRecord/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/facilityCleaningRecord/${id}/state/false`,
   },
+  chlorination: {
+    base: `${API_BASE_URL}/controlRecord/chlorination`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/chlorination/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/chlorination/${id}/state/false`,
+  },
   chlorineRegistration: {
     base: `${API_BASE_URL}/controlRecord/chlorineRegistration`,
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/chlorineRegistration/${id}`,
