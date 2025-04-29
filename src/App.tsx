@@ -32,6 +32,7 @@ import WasteManagement from "./pages/WasteManagement";
 import EquipmentCalibration from "./pages/EquipmentCalibration";
 import CalibrationMeasuringEquipment from "./pages/CalibrationMeasuringEquipment";
 import BackPumpCalculation from "./pages/backPumpCalculation";
+import VisitorLog from "./pages/VisitorLog";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -321,6 +322,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <BackPumpCalculation />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/visitor-log"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <VisitorLog />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
