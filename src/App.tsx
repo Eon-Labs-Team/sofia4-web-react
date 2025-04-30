@@ -43,6 +43,7 @@ import HygieneSanitation from "./pages/HygieneSanitation";
 import Calicata from "./pages/calicata";
 import ChlorineRegistration from "./pages/ChlorineRegistration";
 import WaterChlorination from "./pages/WaterChlorination";
+import UnidadesMedida from "./pages/unidadesMedida";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -453,6 +454,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <WaterChlorination />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/unidades-medida"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <UnidadesMedida />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

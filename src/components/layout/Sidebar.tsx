@@ -33,6 +33,7 @@ import {
   Presentation,
   Zap,
   Shovel,
+  Ruler,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -157,11 +158,19 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
     },
 
 
+
+
+
     { 
       icon: <Settings size={20} />, 
       label: "Configuraciones", 
       path: "/settings",
-      requiredRole: 'admin'
+      requiredRole: 'admin',
+      children:[
+        { icon: <Ruler size={16} />, label: "Unidades de Medida", path: "/unidades-medida" },
+
+      ],
+      isExpanded: false
     },
   ]);
 
