@@ -9,6 +9,10 @@ export const ENDPOINTS = {
     byEnterpriseId: `${API_BASE_URL}/wareHouse/productCategory/byEnterpriseId`,
     fullDelete: (id: string | number) => `${API_BASE_URL}/wareHouse/productCategory/fullDelete/${id}`,
   },
+  workers: {
+    base: `${API_BASE_URL}/harvest/workers`,
+    byId: (id: string | number) => `${API_BASE_URL}/harvest/workers/${id}`,
+  },
   cuarteles: {
     base: `${API_BASE_URL}/harvest/barracks`,
     byId: (id: string | number) => `${API_BASE_URL}/harvest/barracks/${id}`,

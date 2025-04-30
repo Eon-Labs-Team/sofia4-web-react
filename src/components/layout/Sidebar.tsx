@@ -35,6 +35,7 @@ import {
   Shovel,
   Ruler,
   Tag,
+  Briefcase,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -171,6 +172,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Ruler size={16} />, label: "Unidades de Medida", path: "/unidades-medida" },
         { icon: <Tag size={16} />, label: "Categorías de Productos", path: "/product-categories" },
         { icon: <FileText size={16} />, label: "Órdenes de Aplicación", path: "/field-work-apportionment" },
+        { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
       ],
       isExpanded: false
     },

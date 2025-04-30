@@ -46,6 +46,7 @@ import WaterChlorination from "./pages/WaterChlorination";
 import UnidadesMedida from "./pages/unidadesMedida";
 import ProductCategories from "./pages/ProductCategories";
 import FieldWorkApportionment from "./pages/FieldWorkApportionment";
+import TrabajosRealizados from "./pages/TrabajosRealizados";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -489,6 +490,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <FieldWorkApportionment />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/trabajos-realizados"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <TrabajosRealizados />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
