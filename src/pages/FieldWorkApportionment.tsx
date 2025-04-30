@@ -20,10 +20,13 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
-  FieldType
+  FieldType,
+  FieldOption
 } from "@/components/DynamicForm/DynamicForm";
 import { IFieldWorkApportionment } from "@/types/IFieldWorkApportionment";
 import fieldWorkApportionmentService from "@/_services/fieldWorkApportionmentService";
+import cuartelService from "@/_services/cuartelService";
+import { Cuartel } from "@/types/cuartel";
 import { toast } from "@/components/ui/use-toast";
 
 // Render function for the state column (boolean)
@@ -292,12 +295,14 @@ const formSections: SectionConfig[] = [
       },
       {
         id: "barracksPaddock",
-        type: arrayFieldType,
+        type: "select",
         label: "Cuartel(es)",
         name: "barracksPaddock",
-        placeholder: "Cuarteles",
+        placeholder: "Seleccione cuarteles",
         required: true,
-        helperText: "Agregue los cuarteles relacionados"
+        helperText: "Seleccione los cuarteles relacionados",
+        options: [], // Se llenará dinámicamente desde el componente
+        multiple: true
       },
     ]
   },
@@ -553,13 +558,73 @@ const FieldWorkApportionment = () => {
   const [editingFieldWorkApportionment, setEditingFieldWorkApportionment] = useState<IFieldWorkApportionment | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [selectedFieldWorkApportionmentId, setSelectedFieldWorkApportionmentId] = useState<string | number | null>(null);
+  const [cuarteles, setCuarteles] = useState<Cuartel[]>([]);
+  const [formSectionsWithOptions, setFormSectionsWithOptions] = useState<SectionConfig[]>(formSections);
 
-  // Fetch all field work apportionments when component mounts
+  // Fetch both field work apportionments and cuarteles on component mount
   useEffect(() => {
-    fetchFieldWorkApportionments();
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchFieldWorkApportionments();
+        await fetchCuarteles();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
   }, []);
 
-  // Fetch all field work apportionments from API
+  // Update form sections when cuarteles data is loaded
+  useEffect(() => {
+    if (cuarteles.length > 0) {
+        console.log("cuarteles", cuarteles);
+      // Convert cuarteles to options format
+      const cuartelOptions: FieldOption[] = cuarteles
+        .filter(cuartel => cuartel.state) // Solo cuarteles activos
+        .map(cuartel => ({
+          label: cuartel.barracks,
+          value: String(cuartel._id || '') // Convertir a string
+        }));
+
+      // Update form sections with cuartel options
+      const updatedFormSections = formSections.map(section => {
+        if (section.id === "crop-info") {
+          return {
+            ...section,
+            fields: section.fields.map(field => {
+              if (field.id === "barracksPaddock") {
+                return {
+                  ...field,
+                  options: cuartelOptions
+                };
+              }
+              return field;
+            })
+          };
+        }
+        return section;
+      });
+
+      setFormSectionsWithOptions(updatedFormSections);
+    }
+  }, [cuarteles]);
+
+  const fetchCuarteles = async () => {
+    try {
+      const data = await cuartelService.findAll();
+      setCuarteles(data.data);
+    } catch (error) {
+      console.error("Error loading cuarteles:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los cuarteles. Por favor intente nuevamente.",
+      });
+    }
+  };
+
   const fetchFieldWorkApportionments = async () => {
     setIsLoading(true);
     try {
@@ -664,7 +729,12 @@ const FieldWorkApportionment = () => {
 
   // Handle form submission - either add or update
   const handleFormSubmit = (data: Partial<IFieldWorkApportionment>) => {
-    if (editingFieldWorkApportionment) {
+    // Convertir el valor de barracksPaddock a un array si no lo es
+    if (data.barracksPaddock && !Array.isArray(data.barracksPaddock)) {
+      data.barracksPaddock = [data.barracksPaddock as string];
+    }
+    
+    if (editingFieldWorkApportionment && editingFieldWorkApportionment._id) {
       handleUpdateFieldWorkApportionment(editingFieldWorkApportionment._id, data);
     } else {
       handleAddFieldWorkApportionment(data);
@@ -724,8 +794,9 @@ const FieldWorkApportionment = () => {
         data={fieldWorkApportionments}
         columns={columns}
         gridId="fieldWorkApportionments"
-        actions={renderActions}
+        title="Órdenes de Aplicación"
         expandableContent={expandableContent}
+        actions={renderActions}
       />
 
       {/* Form Dialog */}
@@ -743,7 +814,7 @@ const FieldWorkApportionment = () => {
           </DialogHeader>
 
           <DynamicForm
-            sections={formSections}
+            sections={formSectionsWithOptions}
             onSubmit={handleFormSubmit}
             defaultValues={editingFieldWorkApportionment || {}}
           />

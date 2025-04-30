@@ -47,6 +47,8 @@ import UnidadesMedida from "./pages/unidadesMedida";
 import ProductCategories from "./pages/ProductCategories";
 import FieldWorkApportionment from "./pages/FieldWorkApportionment";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
+import TipoCultivo from "./pages/TipoCultivo";
+import Variedades from "./pages/Variedades";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -115,6 +117,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <ListaCuadrillas />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/variedades"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <Variedades />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
@@ -490,6 +503,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <FieldWorkApportionment />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/tipo-cultivo"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <TipoCultivo />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

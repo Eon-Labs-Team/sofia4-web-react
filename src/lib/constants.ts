@@ -187,4 +187,14 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}/state/false`,
   },
+  cropType: {
+    base: `${API_BASE_URL}/config/cropType`,
+    byId: (id: string | number) => `${API_BASE_URL}/config/cropType/${id}`,
+    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/cropType/${id}/state/${state}`,
+  },
+  varietyType: {
+    base: `${API_BASE_URL}/config/varietyType`,
+    byId: (id: string | number) => `${API_BASE_URL}/config/varietyType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/varietyType/${id}/state/${state}`,
+  },
 }; 

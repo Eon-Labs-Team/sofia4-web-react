@@ -159,6 +159,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       isExpanded: false
     },
 
+    { icon: <FileText size={16} />, label: "Órdenes de Aplicación", path: "/field-work-apportionment" },
+    { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
 
 
 
@@ -171,8 +173,8 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       children:[
         { icon: <Ruler size={16} />, label: "Unidades de Medida", path: "/unidades-medida" },
         { icon: <Tag size={16} />, label: "Categorías de Productos", path: "/product-categories" },
-        { icon: <FileText size={16} />, label: "Órdenes de Aplicación", path: "/field-work-apportionment" },
-        { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
+        { icon: <Leaf size={16} />, label: "Tipo Cultivo", path: "/tipo-cultivo" },
+        { icon: <Leaf size={16} />, label: "Variedades", path: "/variedades" },
       ],
       isExpanded: false
     },
