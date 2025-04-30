@@ -3,6 +3,12 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30
 
 // API endpoints
 export const ENDPOINTS = {
+  productCategory: {
+    base: `${API_BASE_URL}/wareHouse/productCategory`,
+    byId: (id: string | number) => `${API_BASE_URL}/wareHouse/productCategory/${id}`,
+    byEnterpriseId: `${API_BASE_URL}/wareHouse/productCategory/byEnterpriseId`,
+    fullDelete: (id: string | number) => `${API_BASE_URL}/wareHouse/productCategory/fullDelete/${id}`,
+  },
   cuarteles: {
     base: `${API_BASE_URL}/harvest/barracks`,
     byId: (id: string | number) => `${API_BASE_URL}/harvest/barracks/${id}`,
@@ -171,5 +177,10 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/controlRecord/calicata`,
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}/state/false`,
+  },
+  fieldWorkApportionment: {
+    base: `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment`,
+    byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}/state/false`,
   },
 }; 

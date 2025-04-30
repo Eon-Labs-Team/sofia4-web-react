@@ -44,6 +44,8 @@ import Calicata from "./pages/calicata";
 import ChlorineRegistration from "./pages/ChlorineRegistration";
 import WaterChlorination from "./pages/WaterChlorination";
 import UnidadesMedida from "./pages/unidadesMedida";
+import ProductCategories from "./pages/ProductCategories";
+import FieldWorkApportionment from "./pages/FieldWorkApportionment";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -465,6 +467,28 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <UnidadesMedida />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/product-categories"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <ProductCategories />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/field-work-apportionment"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <FieldWorkApportionment />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }
