@@ -49,6 +49,7 @@ import FieldWorkApportionment from "./pages/FieldWorkApportionment";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
 import TipoCultivo from "./pages/TipoCultivo";
 import Variedades from "./pages/Variedades";
+import TiposSuelo from "./pages/TiposSuelo";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -525,6 +526,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <TrabajosRealizados />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/tipos-suelo"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <TiposSuelo />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

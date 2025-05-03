@@ -197,4 +197,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/config/varietyType/${id}`,
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/varietyType/${id}/state/${state}`,
   },
+  soilType: {
+    base: `${API_BASE_URL}/config/soilType`,
+    byId: (id: string | number) => `${API_BASE_URL}/config/soilType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/soilType/${id}/state/${state}`,
+  },
 }; 

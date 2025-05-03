@@ -175,6 +175,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
         { icon: <Tag size={16} />, label: "Categorías de Productos", path: "/product-categories" },
         { icon: <Leaf size={16} />, label: "Tipo Cultivo", path: "/tipo-cultivo" },
         { icon: <Leaf size={16} />, label: "Variedades", path: "/variedades" },
+        { icon: <Tag size={16} />, label: "Tipos de Suelo", path: "/tipos-suelo" },
       ],
       isExpanded: false
     },
