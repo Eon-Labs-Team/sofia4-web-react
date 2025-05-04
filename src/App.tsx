@@ -45,7 +45,6 @@ import ChlorineRegistration from "./pages/ChlorineRegistration";
 import WaterChlorination from "./pages/WaterChlorination";
 import UnidadesMedida from "./pages/unidadesMedida";
 import ProductCategories from "./pages/ProductCategories";
-import FieldWorkApportionment from "./pages/FieldWorkApportionment";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
 import TipoCultivo from "./pages/TipoCultivo";
 import Variedades from "./pages/Variedades";
@@ -505,17 +504,6 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <SubcategoryProduct />
-              </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/field-work-apportionment"
-          element={
-            <ProtectedRoute>
-              <AuthenticatedLayout>
-                <FieldWorkApportionment />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

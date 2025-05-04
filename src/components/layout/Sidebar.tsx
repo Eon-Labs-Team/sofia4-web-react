@@ -159,7 +159,6 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       isExpanded: false
     },
 
-    { icon: <FileText size={16} />, label: "Órdenes de Aplicación", path: "/field-work-apportionment" },
     { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
 
 

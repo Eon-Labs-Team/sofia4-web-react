@@ -187,11 +187,6 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}/state/false`,
   },
-  fieldWorkApportionment: {
-    base: `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment`,
-    byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}`,
-    changeState: (id: string | number) => `${API_BASE_URL}/agriculturalWork/fieldWorkApportionment/${id}/state/false`,
-  },
   cropType: {
     base: `${API_BASE_URL}/config/cropType`,
     byId: (id: string | number) => `${API_BASE_URL}/config/cropType/${id}`,
