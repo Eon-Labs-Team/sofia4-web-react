@@ -1,4 +1,4 @@
-export * from './IHarvest';
+export * from './IWork';
 export * from './IBarracks';
 export * from './IChoreState';
 export * from './ILaborType';
