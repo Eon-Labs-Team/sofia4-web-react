@@ -173,6 +173,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
       children:[
         { icon: <Ruler size={16} />, label: "Unidades de Medida", path: "/unidades-medida" },
         { icon: <Tag size={16} />, label: "Categorías de Productos", path: "/product-categories" },
+        { icon: <Tag size={16} />, label: "Subcategorías de Productos", path: "/subcategory-product" },
         { icon: <Leaf size={16} />, label: "Tipo Cultivo", path: "/tipo-cultivo" },
         { icon: <Leaf size={16} />, label: "Variedades", path: "/variedades" },
         { icon: <Tag size={16} />, label: "Tipos de Suelo", path: "/tipos-suelo" },

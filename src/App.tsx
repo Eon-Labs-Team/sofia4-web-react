@@ -50,6 +50,7 @@ import TrabajosRealizados from "./pages/TrabajosRealizados";
 import TipoCultivo from "./pages/TipoCultivo";
 import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
+import SubcategoryProduct from "./pages/subcategory-product";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -493,6 +494,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <ProductCategories />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/subcategory-product"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <SubcategoryProduct />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

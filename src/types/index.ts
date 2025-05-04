@@ -93,5 +93,5 @@ export * from './IWasteType';
 export * from './IWeatherCondition';
 export * from './IWindCondition';
 export * from './IWorkDay';
-export * from './ISubProductCategory';
+export * from './ISubCategoryProduct';
 export * from './IGlobalConfig';
