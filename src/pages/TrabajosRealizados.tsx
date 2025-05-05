@@ -51,14 +51,6 @@ const columns: Column[] = [
     sortable: true,
   },
   {
-    id: "classification",
-    header: "Clasificación",
-    accessor: "classification",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
     id: "worker",
     header: "Trabajador",
     accessor: "worker.id",

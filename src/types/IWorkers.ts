@@ -1,7 +1,8 @@
 import { document } from './document';
 
+//Registro de trabajos realizados.
+
 export interface IWorkers extends document {
-  classification: string,
   worker: WorkerType,
   quadrille: string,
   workingDay: string,
