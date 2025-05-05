@@ -202,4 +202,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/config/soilType/${id}`,
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/soilType/${id}/state/${state}`,
   },
+  work: {
+    base: `${API_BASE_URL}/agriculturalWork/work`,
+    byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/work/${id}`,
+    changeState: (id: string | number, state: string) => `${API_BASE_URL}/agriculturalWork/work/${id}/state/${state}`,
+  },
 }; 

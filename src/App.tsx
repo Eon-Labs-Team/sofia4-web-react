@@ -50,6 +50,7 @@ import TipoCultivo from "./pages/TipoCultivo";
 import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
+import OrdenAplicacion from "./pages/orden-aplicacion";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -537,6 +538,17 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <TiposSuelo />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/orden-aplicacion"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AuthenticatedLayout>
+                <OrdenAplicacion />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

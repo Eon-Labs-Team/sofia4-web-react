@@ -36,6 +36,7 @@ import {
   Ruler,
   Tag,
   Briefcase,
+  FileSpreadsheet,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -160,7 +161,7 @@ const Sidebar = ({ collapsed = false, onToggle = () => {} }: SidebarProps) => {
     },
 
     { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
-
+    { icon: <FileSpreadsheet size={16} />, label: "Orden de Aplicación", path: "/orden-aplicacion" },
 
 
 

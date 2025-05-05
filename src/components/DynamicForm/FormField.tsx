@@ -265,7 +265,7 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
                         disabled={field.disabled}
                       >
                         {formField.value ? (
-                          format(formField.value, "PPP")
+                          format(new Date(formField.value), "PPP")
                         ) : (
                           <span className="text-muted-foreground">
                             {field.placeholder || "Select a date"}
@@ -278,8 +278,12 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={formField.value}
-                      onSelect={formField.onChange}
+                      selected={formField.value ? new Date(formField.value) : undefined}
+                      onSelect={(date) => {
+                        // Convert date to ISO string in UTC format
+                        const utcDate = date ? date.toISOString() : null;
+                        formField.onChange(utcDate);
+                      }}
                       disabled={(date) =>
                         (field.min ? date < new Date(field.min) : false) ||
                         (field.max ? date > new Date(field.max) : false)
