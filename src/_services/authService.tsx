@@ -1,41 +1,6 @@
 import { User, LoginCredentials, LoginResponse } from '@/types/auth';
-import { ENDPOINTS } from '@/lib/constants';
+import { API_BASE_SOFIA } from '@/lib/constants';
 
-// Mock user data
-const MOCK_USERS = [
-  {
-    id: '1',
-    enterprise: 'empresa1',
-    username: 'admin',
-    password: 'admin123',
-    email: 'admin@example.com',
-    fullName: 'Admin User',
-    role: 'admin',
-    permissions: ['read', 'write', 'delete', 'admin']
-  },
-  {
-    id: '2',
-    enterprise: 'empresa1',
-    username: 'user',
-    password: 'user123',
-    email: 'user@example.com',
-    fullName: 'Regular User',
-    role: 'user',
-    permissions: ['read', 'write']
-  },
-  {
-    id: '3',
-    enterprise: 'empresa1',
-    username: 'manager',
-    password: 'manager123',
-    email: 'manager@example.com',
-    fullName: 'Manager User',
-    role: 'manager',
-    permissions: ['read', 'write', 'delete']
-  }
-];
-
-// Token utility functions
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
@@ -65,40 +30,43 @@ const getUser = (): User | null => {
 
 class AuthService {
   /**
-   * Login with credentials
-   * In a real implementation, this would communicate with an API
+   * Login with credentials using the real API endpoint
    */
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    // Mock API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Check credentials against mock data
-    const user = MOCK_USERS.find(u => 
-      u.enterprise === credentials.enterprise &&
-      u.username === credentials.username && 
-      u.password === credentials.password
-    );
-    
-    if (!user) {
+    try {
+      const response = await fetch(`${API_BASE_SOFIA}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enterpriseName: credentials.enterprise,
+          username: credentials.username,
+          password: credentials.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error('Authentication failed');
+      }
+
+      const { token, user } = data.data;
+
+      // Store auth data in localStorage
+      saveToken(token);
+      saveUser(user);
+
+      return {
+        user,
+        token,
+        enterpriseId: credentials.enterprise
+      };
+    } catch (error) {
+      console.error('Login error:', error);
       throw new Error('Invalid username or password');
     }
-    
-    // Generate a mock token
-    const token = `mock-jwt-token-${user.id}-${Date.now()}`;
-    
-    // Create the response object (exclude password)
-    const { password, ...userWithoutPassword } = user;
-    const response = {
-      user: userWithoutPassword as User,
-      token,
-      enterpriseId: user.enterprise
-    };
-    
-    // Store auth data in localStorage
-    saveToken(token);
-    saveUser(response.user);
-    
-    return response;
   }
   
   /**
@@ -116,7 +84,7 @@ class AuthService {
     return !!getToken() && !!getUser();
   }
   
-  /**{}
+  /**
    * Get the current user
    */
   getCurrentUser(): User | null {
@@ -135,7 +103,7 @@ class AuthService {
    */
   hasPermission(permission: string): boolean {
     const user = this.getCurrentUser();
-    return user?.permissions.includes(permission) || false;
+    return user?.permission?.[permission] || false;
   }
   
   /**

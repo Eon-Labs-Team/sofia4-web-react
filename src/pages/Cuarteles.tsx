@@ -228,7 +228,7 @@ const Cuarteles = () => {
     setIsLoading(true);
     try {
       const data = await cuartelService.findAll();
-      setCuarteles(data.data);
+      setCuarteles(data);
     } catch (error) {
       console.error("Error loading cuarteles:", error);
       // Use mock data in case of API failure

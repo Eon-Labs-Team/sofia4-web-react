@@ -1,225 +1,294 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
-  Bell,
-  ChevronDown,
+  Leaf,
+  BarChart3,
+  Wheat,
+  Award,
   ChevronLeft,
-  ChevronRight,
-  Home,
+  CheckCircle,
+  XCircle,
   Menu,
-  MessageSquare,
-  PieChart,
-  Settings,
-  User,
-  Users,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Property } from "@/types/property";
+import { toast } from "@/components/ui/use-toast";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useSidebarStore } from "@/lib/store/sidebarStore";
+import { useAuthStore } from "@/lib/store/authStore";
+import propertyService from "@/_services/propertyService";
 
-interface SidebarProps {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
+interface Permission {
+  canView: boolean;
 }
 
-const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
+interface BarrackOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  permission: Permission;
+}
+
+const barrackOptions: BarrackOption[] = [
+  {
+    id: "good-practices",
+    title: "Buenas Prácticas Agrícolas",
+    description: "Gestión de buenas prácticas agrícolas",
+    icon: <Leaf className="h-6 w-6" />,
+    permission: { canView: true },
+  },
+  {
+    id: "management",
+    title: "Gestión",
+    description: "Gestión de recursos y operaciones",
+    icon: <BarChart3 className="h-6 w-6" />,
+    permission: { canView: true },
+  },
+  {
+    id: "harvest",
+    title: "Cosecha",
+    description: "Control y seguimiento de cosechas",
+    icon: <Wheat className="h-6 w-6" />,
+    permission: { canView: true },
+  },
+  {
+    id: "certifications",
+    title: "Certificaciones",
+    description: "Gestión de certificaciones y estándares",
+    icon: <Award className="h-6 w-6" />,
+    permission: { canView: true },
+  },
+];
+
+const CuartelesTable = ({ 
+  cuarteles, 
+  onActionClick 
+}: { 
+  cuarteles: Property[], 
+  onActionClick: (actionId: string, cuartelId: string | number) => void 
+}) => {
+  const { user } = useAuthStore();
+
+  const hasPermission = (actionId: string): boolean => {
+    if (!user) return false;
+    
+    switch (actionId) {
+      case "good-practices":
+        return user.permission.bpa;
+      case "management":
+        return user.permission.gestion;
+      case "harvest":
+        return user.permission.cosecha;
+      case "certifications":
+        return user.permission.certificacion;
+      default:
+        return false;
+    }
+  };
+
   return (
-    <div
-      className={`h-full bg-background border-r transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
-    >
-      <div className="flex items-center justify-between p-4 border-b">
-        {!collapsed && <h2 className="text-xl font-bold">Dashboard</h2>}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto"
-        >
-          {collapsed ? <ChevronRight /> : <ChevronLeft />}
-        </Button>
-      </div>
-
-      <div className="p-2">
-        <nav className="space-y-2">
-          <Button
-            variant="ghost"
-            className={`w-full justify-${collapsed ? "center" : "start"}`}
-          >
-            <Home className="h-5 w-5 mr-2" />
-            {!collapsed && <span>Home</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-${collapsed ? "center" : "start"}`}
-          >
-            <PieChart className="h-5 w-5 mr-2" />
-            {!collapsed && <span>Analytics</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-${collapsed ? "center" : "start"}`}
-          >
-            <MessageSquare className="h-5 w-5 mr-2" />
-            {!collapsed && <span>Messages</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-${collapsed ? "center" : "start"}`}
-          >
-            <Users className="h-5 w-5 mr-2" />
-            {!collapsed && <span>Team</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full justify-${collapsed ? "center" : "start"}`}
-          >
-            <Settings className="h-5 w-5 mr-2" />
-            {!collapsed && <span>Settings</span>}
-          </Button>
-        </nav>
-      </div>
-
-      <div className="absolute bottom-0 w-full p-4 border-t">
-        <div className="flex items-center">
-          <Avatar>
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user123" />
-            <AvatarFallback>US</AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="ml-3">
-              <p className="text-sm font-medium">User Name</p>
-              <p className="text-xs text-muted-foreground">user@example.com</p>
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>            
+            <TableHead>Nombre</TableHead>            
+            <TableHead>Estado</TableHead>
+            <TableHead>Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {cuarteles.map((cuartel) => (
+            <TableRow key={cuartel.taxId}>
+              <TableCell>{cuartel.propertyName}</TableCell>              
+              <TableCell>
+                {cuartel.status ? (
+                  <div className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span>Activo</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <XCircle className="h-4 w-4 text-red-500 mr-2" />
+                    <span>Inactivo</span>
+                  </div>
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  {barrackOptions.map((option) => (
+                    hasPermission(option.id) && (
+                      <TooltipProvider key={option.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                              onClick={() => onActionClick(option.id, cuartel._id)}
+                            >
+                              {option.icon}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{option.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )
+                  ))}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };
 
-interface ContentAreaProps {
-  sidebarCollapsed: boolean;
-}
-
-const ContentArea = ({ sidebarCollapsed }: ContentAreaProps) => {
-  return (
-    <div className="w-full h-full overflow-auto">
-      <main className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Users</CardTitle>
-              <CardDescription>User growth over time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">1,234</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                +12% from last month
-              </div>
-              <Progress value={75} className="mt-4" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue</CardTitle>
-              <CardDescription>Monthly revenue statistics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">$34,567</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                +8% from last month
-              </div>
-              <Progress value={65} className="mt-4" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Projects</CardTitle>
-              <CardDescription>Current project status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">12</div>
-              <div className="text-sm text-muted-foreground mt-1">
-                3 due this week
-              </div>
-              <Progress value={42} className="mt-4" />
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest user actions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=user${i}`}
-                      />
-                      <AvatarFallback>U{i}</AvatarFallback>
-                    </Avatar>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium">
-                        User {i} completed a task
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        2 hours ago
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="ml-auto">
-                      Task
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Recent system notifications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-start">
-                    <div className="mr-4 mt-1 bg-primary/10 p-2 rounded-full">
-                      <Bell className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        System Notification {i}
-                      </p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
-  );
-};
+// Vamos a definir un contexto para el control del sidebar
+// Esto es opcional, otra alternativa sería pasar la función por props 
+// desde el componente App hasta el Home
+export const SidebarContext = React.createContext<{
+  toggleSidebar?: () => void;
+}>({});
 
 const HomePage = () => {
+  const { 
+    toggleActionMode, 
+    setActiveAction, 
+    resetActiveAction,
+    actionMode, 
+    activeAction: storeActiveAction
+  } = useSidebarStore();
+  
+  const [cuarteles, setCuarteles] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toggleSidebar } = React.useContext(SidebarContext);
+
+  useEffect(() => {
+    fetchCuarteles();
+  }, []);
+
+  const fetchCuarteles = async () => {
+    setIsLoading(true);
+    try {
+      const response = await propertyService.findAll();
+      setCuarteles(response);
+    } catch (error) {
+      console.error("Error loading cuarteles:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los cuarteles. Por favor intente nuevamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleActionClick = (actionId: string, cuartelId: string | number) => {
+    // Datos para el título en el sidebar
+    const actionTitle = barrackOptions.find(opt => opt.id === actionId)?.title || '';
+    const cuartelName = cuarteles.find(c => c._id === cuartelId)?.propertyName || '';
+    
+    // Activamos el modo acción en el sidebar
+    toggleActionMode(true);
+    setActiveAction({
+      actionId,
+      cuartelId,
+      title: actionTitle,
+      subtitle: cuartelName
+    });
+
+    // Mostrar el sidebar si está oculto
+    if (toggleSidebar) {
+      toggleSidebar();
+    }
+  };
+
+  const handleBackToHome = () => {
+    // Restauramos el menú original y reseteamos el modo acción
+    resetActiveAction();
+    
+    // Ocultar el sidebar
+    if (toggleSidebar) {
+      toggleSidebar();
+    }
+  };
+
   return (
-    <div className="w-full h-full">
-      <ContentArea sidebarCollapsed={false} />
+    <div className="flex-1 h-full overflow-hidden">
+      {actionMode && storeActiveAction ? (
+        <div className="w-full h-full p-6">
+          <div className="flex items-center mb-6">
+            <Button 
+              variant="ghost" 
+              className="mr-2" 
+              onClick={handleBackToHome}
+            >
+              <ChevronLeft className="h-5 w-5 mr-1" />
+              Volver
+            </Button>
+            <h1 className="text-2xl font-bold">
+              {barrackOptions.find(opt => opt.id === storeActiveAction.actionId)?.title} - 
+              {cuarteles.find(c => c._id === storeActiveAction.cuartelId)?.propertyName || ''}
+            </h1>
+            {toggleSidebar && (
+              <Button 
+                variant="ghost" 
+                className="ml-auto" 
+                onClick={toggleSidebar}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+          <div className="p-4 border rounded-md">
+            <p>Contenido para {storeActiveAction.actionId}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              El menú lateral ahora muestra las opciones para esta acción
+              y es gestionado directamente por el componente Sidebar.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full h-full p-6">
+          <div className="flex items-center mb-6">
+            <h1 className="text-2xl font-bold">Cuarteles</h1>
+            {toggleSidebar && (
+              <Button 
+                variant="ghost" 
+                className="ml-auto" 
+                onClick={toggleSidebar}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <p>Cargando cuarteles...</p>
+            </div>
+          ) : (
+            <CuartelesTable 
+              cuarteles={cuarteles} 
+              onActionClick={handleActionClick}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };
