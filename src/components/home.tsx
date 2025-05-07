@@ -73,12 +73,12 @@ const barrackOptions: BarrackOption[] = [
   },
 ];
 
-const CuartelesTable = ({ 
-  cuarteles, 
+const PropertiesTable = ({ 
+  properties, 
   onActionClick 
 }: { 
-  cuarteles: Property[], 
-  onActionClick: (actionId: string, cuartelId: string | number) => void 
+  properties: Property[], 
+  onActionClick: (actionId: string, propertyId: string | number) => void 
 }) => {
   const { user } = useAuthStore();
 
@@ -110,11 +110,11 @@ const CuartelesTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {cuarteles.map((cuartel) => (
-            <TableRow key={cuartel.taxId}>
-              <TableCell>{cuartel.propertyName}</TableCell>              
+          {properties.map((property) => (
+            <TableRow key={property.taxId}>
+              <TableCell>{property.propertyName}</TableCell>              
               <TableCell>
-                {cuartel.status ? (
+                {property.status ? (
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     <span>Activo</span>
@@ -135,7 +135,7 @@ const CuartelesTable = ({
                           <TooltipTrigger asChild>
                             <button
                               className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                              onClick={() => onActionClick(option.id, cuartel._id)}
+                              onClick={() => onActionClick(option.id, property._id)}
                             >
                               {option.icon}
                             </button>
@@ -173,24 +173,24 @@ const HomePage = () => {
     activeAction: storeActiveAction
   } = useSidebarStore();
   
-  const [cuarteles, setCuarteles] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toggleSidebar } = React.useContext(SidebarContext);
 
   useEffect(() => {
-    fetchCuarteles();
+    fetchProperties();
   }, []);
 
-  const fetchCuarteles = async () => {
+  const fetchProperties= async () => {
     setIsLoading(true);
     try {
       const response = await propertyService.findAll();
-      setCuarteles(response);
+      setProperties(response);
     } catch (error) {
-      console.error("Error loading cuarteles:", error);
+      console.error("Error loading properties:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los cuarteles. Por favor intente nuevamente.",
+        description: "No se pudieron cargar las propiedades. Por favor intente nuevamente.",
         variant: "destructive",
       });
     } finally {
@@ -198,18 +198,18 @@ const HomePage = () => {
     }
   };
 
-  const handleActionClick = (actionId: string, cuartelId: string | number) => {
+  const handleActionClick = (actionId: string, propertyId: string | number) => {
     // Datos para el título en el sidebar
     const actionTitle = barrackOptions.find(opt => opt.id === actionId)?.title || '';
-    const cuartelName = cuarteles.find(c => c._id === cuartelId)?.propertyName || '';
+    const propertyName = properties.find(c => c._id === propertyId)?.propertyName || '';
     
     // Activamos el modo acción en el sidebar
     toggleActionMode(true);
     setActiveAction({
       actionId,
-      cuartelId,
+      propertyId,
       title: actionTitle,
-      subtitle: cuartelName
+      subtitle: propertyName
     });
 
     // Mostrar el sidebar si está oculto
@@ -243,7 +243,7 @@ const HomePage = () => {
             </Button>
             <h1 className="text-2xl font-bold">
               {barrackOptions.find(opt => opt.id === storeActiveAction.actionId)?.title} - 
-              {cuarteles.find(c => c._id === storeActiveAction.cuartelId)?.propertyName || ''}
+              {properties.find(c => c._id === storeActiveAction.propertyId)?.propertyName || ''}
             </h1>
             {toggleSidebar && (
               <Button 
@@ -266,7 +266,7 @@ const HomePage = () => {
       ) : (
         <div className="w-full h-full p-6">
           <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-bold">Cuarteles</h1>
+            <h1 className="text-2xl font-bold">Predios / campos</h1>
             {toggleSidebar && (
               <Button 
                 variant="ghost" 
@@ -279,11 +279,11 @@ const HomePage = () => {
           </div>
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <p>Cargando cuarteles...</p>
+              <p>Cargando predios...</p>
             </div>
           ) : (
-            <CuartelesTable 
-              cuarteles={cuarteles} 
+            <PropertiesTable 
+              properties={properties} 
               onActionClick={handleActionClick}
             />
           )}

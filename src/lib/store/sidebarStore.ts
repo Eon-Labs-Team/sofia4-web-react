@@ -20,7 +20,7 @@ interface SidebarState {
   // Datos del modo actual si estamos en uno
   activeAction: {
     actionId: string;
-    cuartelId: string | number;
+    propertyId: string | number;
     title?: string;
     subtitle?: string;
   } | null;
