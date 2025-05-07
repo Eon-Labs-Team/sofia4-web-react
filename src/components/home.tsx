@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useSidebarStore } from "@/lib/store/sidebarStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import propertyService from "@/_services/propertyService";
+import UserMenu from "./layout/UserMenu";
 
 interface Permission {
   canView: boolean;
@@ -255,38 +256,38 @@ const HomePage = () => {
               </Button>
             )}
           </div>
-          <div className="p-4 border rounded-md">
-            <p>Contenido para {storeActiveAction.actionId}</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              El menú lateral ahora muestra las opciones para esta acción
-              y es gestionado directamente por el componente Sidebar.
+          <div className="h-full">
+            <p className="text-muted-foreground">
+              Seleccione una opción del menú lateral para comenzar a trabajar.
             </p>
           </div>
         </div>
       ) : (
         <div className="w-full h-full p-6">
-          <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-bold">Predios / campos</h1>
-            {toggleSidebar && (
-              <Button 
-                variant="ghost" 
-                className="ml-auto" 
-                onClick={toggleSidebar}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Bienvenido a Sofia</h1>
+              <p className="text-muted-foreground">
+                Selecciona un predio para comenzar a trabajar.
+              </p>
+            </div>
+            <div className="ml-auto">
+              <UserMenu />
+            </div>
+          </div>
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">Predios / campos</h2>
+            {isLoading ? (
+              <p>Cargando predios...</p>
+            ) : properties.length > 0 ? (
+              <PropertiesTable 
+                properties={properties} 
+                onActionClick={handleActionClick} 
+              />
+            ) : (
+              <p>No hay predios disponibles.</p>
             )}
           </div>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <p>Cargando predios...</p>
-            </div>
-          ) : (
-            <PropertiesTable 
-              properties={properties} 
-              onActionClick={handleActionClick}
-            />
-          )}
         </div>
       )}
     </div>

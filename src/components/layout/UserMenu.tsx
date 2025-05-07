@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, LogOut } from 'lucide-react';
+import { User as UserIcon, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 
-const UserMenu: React.FC = () => {
+interface UserMenuProps {
+  variant?: 'default' | 'sidebar';
+}
+
+const UserMenu: React.FC<UserMenuProps> = ({ variant = 'default' }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,9 +34,9 @@ const UserMenu: React.FC = () => {
   
   // Generate initials for avatar fallback
   const getInitials = () => {
-    if (!user || !user.fullName) return 'U';
+    if (!user || !user.username) return 'U';
     
-    return user.fullName
+    return user.username
       .split(' ')
       .map(part => part[0])
       .join('')
@@ -55,9 +59,13 @@ const UserMenu: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button 
+          variant="ghost" 
+          className="relative h-10 w-10 rounded-full"
+          aria-label="Menú de usuario"
+        >
           <Avatar>
-            <AvatarImage src="" alt={user?.fullName || 'User'} />
+            <AvatarImage src="" alt={user?.username || 'User'} />
             <AvatarFallback>{getInitials()}</AvatarFallback>
           </Avatar>
         </Button>
@@ -65,7 +73,7 @@ const UserMenu: React.FC = () => {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+            <p className="text-sm font-medium leading-none">{user?.username}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user?.email}
             </p>
@@ -81,6 +89,17 @@ const UserMenu: React.FC = () => {
             </span>
           </div>
         </DropdownMenuItem>
+        {variant === 'default' && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <a href="/" className="cursor-pointer">
+                <UserIcon className="w-4 h-4 mr-2" />
+                <span>Inicio</span>
+              </a>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           onClick={handleLogout}

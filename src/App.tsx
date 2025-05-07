@@ -1,5 +1,5 @@
 import { Suspense, useState, useEffect } from "react";
-import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
+import { useRoutes, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Home, { SidebarContext } from "./components/home";
 import Cuarteles from "./pages/Cuarteles";
 import ListaCuarteles from "./pages/ListaCuarteles";
@@ -51,41 +51,48 @@ import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/orden-aplicacion";
+import { useSidebarStore } from "./lib/store/sidebarStore";
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarHidden, setSidebarHidden] = useState(true); // Por defecto, el sidebar está oculto
   const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const { actionMode } = useSidebarStore();
 
   const handleSidebarToggle = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  const handleSidebarVisibility = () => {
-    setSidebarHidden(!sidebarHidden);
+  // Determine if sidebar should be shown based on current route and action mode
+  const shouldShowSidebar = () => {
+    return location.pathname !== "/" || actionMode;
   };
 
   // Contexto para proporcionar la función de toggle a los componentes hijos
   const sidebarContextValue = {
-    toggleSidebar: handleSidebarVisibility
+    toggleSidebar: () => setSidebarCollapsed(prev => !prev)
   };
 
   // Layout with sidebar for authenticated users
-  const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={handleSidebarToggle} 
-        hidden={sidebarHidden}
-        onToggleVisibility={handleSidebarVisibility}
-      />
-      <main className={`transition-all duration-300 overflow-auto ${sidebarHidden ? 'w-full' : 'flex-1'}`}>
-        <Suspense fallback={<p>Loading...</p>}>
-          {children}
-        </Suspense>
-      </main>
-    </div>
-  );
+  const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+    const showSidebar = shouldShowSidebar();
+    
+    return (
+      <div className="flex h-screen overflow-hidden">
+        {showSidebar && (
+          <Sidebar 
+            collapsed={sidebarCollapsed} 
+            onToggle={handleSidebarToggle}
+          />
+        )}
+        <main className="flex-1 overflow-auto">
+          <Suspense fallback={<p>Loading...</p>}>
+            {children}
+          </Suspense>
+        </main>
+      </div>
+    );
+  };
 
   return (
     <SidebarContext.Provider value={sidebarContextValue}>

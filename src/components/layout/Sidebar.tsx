@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -126,167 +126,38 @@ const Sidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [isHidden, setIsHidden] = useState(hidden);
   const { actionMode, activeAction, resetActiveAction } = useSidebarStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   
   // Estado local para los items de navegación
   const [localNavItems, setLocalNavItems] = useState<NavItem[]>([
     { icon: <Home size={20} />, label: "Inicio", path: "/" },
     /*
-    // {
-    //   icon: <LayoutDashboard size={20} />,
-    //   label: "Dashboard",
-    //   path: "/dashboard",
-    //   requiredRole: 'manager'
-    // },
-    // { 
-    //   icon: <BarChart3 size={20} />, 
-    //   label: "Estadísticas", 
-    //   path: "/analytics",
-    //   requiredRole: 'manager'
-    // },
-    // { 
-    //   icon: <Users size={20} />, 
-    //   label: "Usuarios", 
-    //   path: "/users",
-    //   requiredRole: 'admin'
-    // },
-    { 
-      icon: <Building2 size={20} />, 
-      label: "Gestión de Cuarteles", 
-      children: [
-        { icon: <Building2 size={16} />, label: "Cuarteles", path: "/cuarteles" },
-        { icon: <Building2 size={16} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
-      ],
-      isExpanded: false
-    },
-    { 
-      icon: <UserPlus size={20} />, 
-      label: "Lista Cuadrillas", 
-      path: "/lista-cuadrillas" 
-    },
-    {
-      icon: <FileText size={20} />,
-      label: "Formularios",
-      children: [
-        { icon: <FileText size={16} />, label: "Formulario Dinámico", path: "/dynamic-form" },
-        { 
-          icon: <FileText size={16} />,
-          label: "Constructor de Formularios", 
-          path: "/form-builder",
-          requiredRole: 'admin'
-        },
-      ],
-      isExpanded: false
-    },
-    { 
-      icon: <FileText size={20} />, 
-      label: "Reportes", 
-      path: "/reports",
-      requiredRole: 'manager'
-    },
-
-    {
-      icon: <FileText size={20} />,
-      label: "Registros de campo",
-      children: [
-        { icon: <Building2 size={16} />, label: "Monitoreo Estado Fenológico", path: "/monitoreo-estado-fenologico" },
-        { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" },
-        { icon: <Beaker size={16} />, label: "Análisis de Suelo", path: "/analisis-suelo" },
-        { icon: <Beaker size={16} />, label: "Fertilización de Suelo", path: "/fertilizacion-suelo" },
-        { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" },
-        { icon: <Leaf size={16} />, label: "Análisis Foliar", path: "/analisis-foliar" },
-        { icon: <CloudRain size={16} />, label: "Eventos Climáticos", path: "/eventos-climaticos" },
-        { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" },
-        { icon: <Scale size={16} />, label: "Balance de Masa", path: "/balance-masa" },
-        { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" },
-        { icon: <Droplets size={16} />, label: "Calibrar Aspersión", path: "/calibrar-aspersion" },
-        { icon: <Wrench size={16} />, label: "Mantención para Riego Tecnificado", path: "/mantencion-riego-tecnificado" },
-        { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" },
-        { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" },
-        { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
-        { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" },
-        { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" },
-        { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" },
-        { icon: <Calculator size={16} />, label: "Cálculo Bomba de Espalda", path: "/back-pump-calculation" },
-      ],
-      isExpanded: false
-    },
-
-    {
-      icon: <FileText size={20} />,
-      label: "Registros de control",
-      children: [
-        { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
-        { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
-        { icon: <Presentation size={16} />, label: "Capacitaciones", path: "/capacitaciones" },
-        { icon: <Trash size={16} />, label: "Limpieza de Instalaciones", path: "/limpieza-instalaciones" },
-        { icon: <Droplets size={16} />, label: "Lavado de Manos", path: "/lavado-manos" },
-        { icon: <Zap size={16} />, label: "Consumo de Luz", path: "/electricity-consumption" },
-        { icon: <Droplets size={16} />, label: "Consumo de Agua", path: "/water-consumption" },
-        { icon: <Trash size={16} />, label: "Higiene y Sanidad", path: "/hygiene-sanitation" },
-        { icon: <Shovel size={16} />, label: "Calicata", path: "/calicata" },
-        { icon: <Droplets size={16} />, label: "Registro Cloro en Láminas de Espuma", path: "/chlorine-registration" },
-        { icon: <Droplets size={16} />, label: "Cloración de Agua", path: "/water-chlorination" },
-      ],
-      isExpanded: false
-    },
-
-    { icon: <Briefcase size={16} />, label: "Trabajos Realizados", path: "/trabajos-realizados" },
-    { icon: <FileSpreadsheet size={16} />, label: "Orden de Aplicación", path: "/orden-aplicacion" },
-
-    { 
-      icon: <Settings size={20} />, 
-      label: "Configuraciones", 
-      path: "/settings",
-      requiredRole: 'admin',
-      children:[
-        { icon: <Ruler size={16} />, label: "Unidades de Medida", path: "/unidades-medida" },
-        { icon: <Tag size={16} />, label: "Categorías de Productos", path: "/product-categories" },
-        { icon: <Tag size={16} />, label: "Subcategorías de Productos", path: "/subcategory-product" },
-        { icon: <Leaf size={16} />, label: "Tipo Cultivo", path: "/tipo-cultivo" },
-        { icon: <Leaf size={16} />, label: "Variedades", path: "/variedades" },
-        { icon: <Tag size={16} />, label: "Tipos de Suelo", path: "/tipos-suelo" },
-      ],
-      isExpanded: false
-    },
+    // Commented items omitted for brevity
     */
   ]);
 
-  // Guardar los items originales del menú en el store global cuando se monta el componente
+  // Actualizar el estado local cuando cambia el prop
   useEffect(() => {
-    const { saveOriginalNavItems } = useSidebarStore.getState();
-    saveOriginalNavItems(localNavItems);
-  }, []);
-  
-  // Cambiar el menú cuando se activa una acción
+    setIsCollapsed(collapsed);
+  }, [collapsed]);
+
+  useEffect(() => {
+    setIsHidden(hidden);
+  }, [hidden]);
+
+  // Si estamos en modo acción, reemplazamos los ítems de navegación con los específicos para esa acción
   useEffect(() => {
     if (actionMode && activeAction) {
-      // Generar el menú específico para la acción
-      const actionMenuItems = generateMenuForAction(
-        activeAction.actionId, 
-        activeAction.cuartelId
-      );
-      
-      // Actualizar el menú local con el botón de volver y los elementos específicos
-      setLocalNavItems([
-        {
-          icon: <ChevronLeft size={20} />,
-          label: "Volver",
-          path: "/",
-          isExpanded: false
-        },
-        ...actionMenuItems
-      ]);
+      const specificNavItems = generateMenuForAction(activeAction.actionId, activeAction.propertyId);
+      setLocalNavItems(specificNavItems);
     } else {
-      // Restaurar el menú original si no estamos en modo acción
-      const { originalNavItems } = useSidebarStore.getState();
-      if (originalNavItems.length > 0) {
-        setLocalNavItems(originalNavItems);
-      }
+      // Restaurar ítems originales
+      setLocalNavItems([
+        { icon: <Home size={20} />, label: "Inicio", path: "/" },
+      ]);
     }
   }, [actionMode, activeAction]);
-
-  const location = useLocation();
-  const { user } = useAuthStore();
 
   const handleToggle = () => {
     setIsCollapsed(!isCollapsed);
@@ -294,234 +165,208 @@ const Sidebar = ({
   };
 
   const toggleSubmenu = (index: number) => {
-    const updatedItems = [...localNavItems];
-    updatedItems[index] = { 
-      ...updatedItems[index], 
-      isExpanded: !updatedItems[index].isExpanded 
-    };
-    setLocalNavItems(updatedItems);
+    setLocalNavItems(items => 
+      items.map((item, i) => 
+        i === index 
+          ? { ...item, isExpanded: !item.isExpanded } 
+          : item
+      )
+    );
   };
 
-  // Manejar clic en el botón "Volver"
-  const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    if (actionMode && path === "/") {
-      e.preventDefault();
-      resetActiveAction();
-    }
+  const goToHomePage = () => {
+    resetActiveAction();
+    navigate('/');
   };
 
-  // Filter nav items based on user role
   const filterNavItems = (items: NavItem[]): NavItem[] => {
+    const { user } = useAuthStore();
+
     return items.filter(item => {
+      // Si el ítem no tiene restricción de rol, lo mostramos
       if (!item.requiredRole) return true;
+
+      // Si requiere un rol pero no hay usuario, no lo mostramos
       if (!user) return false;
-      
-      // Admin can access everything
-      if (user.role === 'admin') return true;
-      
-      // Manager can access user and manager items
-      if (user.role === 'manager' && item.requiredRole !== 'admin') return true;
-      
-      // Regular user can only access user items
-      return user.role === item.requiredRole;
-    }).map(item => {
-      if (item.children) {
-        return {
-          ...item,
-          children: filterNavItems(item.children)
-        };
+
+      // Comprobamos si el usuario tiene el rol requerido
+      switch (item.requiredRole) {
+        case 'admin':
+          return user.role === 'admin';
+        case 'manager':
+          return user.role === 'admin' || user.role === 'manager';
+        default:
+          return true;
       }
-      return item;
     });
   };
 
-  const filteredNavItems = filterNavItems(localNavItems);
-
-  // Renderizar un ítem de navegación
   const renderNavItem = (item: NavItem, index: number) => {
-    if (item.children) {
-      return renderSubmenu(item, index);
-    }
-    
-    return renderLink(item, index);
+    return item.children && item.children.length > 0
+      ? renderSubmenu(item, index)
+      : renderLink(item, index);
   };
 
-  // Renderizar un enlace
   const renderLink = (item: NavItem, index: number) => (
-    <li key={index}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              to={item.path || '#'}
-              className={`flex items-center p-2 rounded-md transition-colors ${location.pathname === item.path ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"}`}
-              onClick={(e) => item.path === "/" && actionMode ? handleBackClick(e, item.path) : null}
-            >
-              <span className="flex-shrink-0">{item.icon}</span>
-              {!isCollapsed && <span className="ml-3">{item.label}</span>}
-            </Link>
-          </TooltipTrigger>
-          {isCollapsed && (
-            <TooltipContent side="right">{item.label}</TooltipContent>
+    <li key={index} className="mb-1">
+      {item.path ? (
+        <Link
+          to={item.path}
+          className={cn(
+            "flex items-center justify-between h-10 w-full rounded-md px-3 text-sm font-medium",
+            "hover:bg-accent hover:text-accent-foreground",
+            location.pathname === item.path && "bg-accent text-accent-foreground",
+            isCollapsed ? "justify-center" : ""
           )}
-        </Tooltip>
-      </TooltipProvider>
-    </li>
-  );
-
-  // Renderizar un submenú
-  const renderSubmenu = (item: NavItem, index: number) => (
-    <li key={index}>
-      <Collapsible
-        open={item.isExpanded}
-        onOpenChange={() => toggleSubmenu(index)}
-        className="w-full"
-      >
-        <CollapsibleTrigger asChild>
-          <button
-            className={`w-full flex items-center justify-between p-2 rounded-md transition-colors ${location.pathname.startsWith(item.path || '#') ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"}`}
-          >
-            <div className="flex items-center">
-              <span className="flex-shrink-0">{item.icon}</span>
-              {!isCollapsed && <span className="ml-3">{item.label}</span>}
-            </div>
-            {!isCollapsed && (
-              <ChevronDown
-                size={16}
-                className={`transition-transform ${item.isExpanded ? "transform rotate-180" : ""}`}
-              />
-            )}
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pl-6 pt-1">
-          <ul className="space-y-1">
-            {!isCollapsed &&
-              item.children?.map((child, childIndex) => (
-                <li key={childIndex}>
-                  <Link
-                    to={child.path || '#'}
-                    className={`flex items-center p-1 rounded-md transition-colors ${location.pathname === child.path ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"}`}
-                  >
-                    <span className="flex-shrink-0">{child.icon}</span>
-                    <span className="ml-3">{child.label}</span>
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </CollapsibleContent>
-      </Collapsible>
-      {isCollapsed && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="px-2">
-                <div className="w-10 h-1 bg-border mt-1 rounded-full mx-auto"></div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="max-w-[250px]">
-              <div className="space-y-1">
-                {item.label}
-                <ul className="space-y-1 mt-1">
-                  {item.children?.map((child, childIndex) => (
-                    <li key={childIndex}>
-                      <Link
-                        to={child.path || '#'}
-                        className="flex items-center p-1 text-sm"
-                      >
-                        <span className="flex-shrink-0 mr-2">{child.icon}</span>
-                        {child.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        >
+          <div className="flex items-center">
+            {item.icon}
+            {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          </div>
+        </Link>
+      ) : (
+        <div
+          className={cn(
+            "flex items-center justify-between h-10 w-full rounded-md px-3 text-sm font-medium",
+            "text-muted-foreground",
+            isCollapsed ? "justify-center" : ""
+          )}
+        >
+          <div className="flex items-center">
+            {item.icon}
+            {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          </div>
+        </div>
       )}
     </li>
   );
 
-  // Si el sidebar está oculto, no renderizamos nada o retornamos un botón para mostrarlo
-  if (isHidden) {
-    return (
-      <button 
-        onClick={() => {
-          setIsHidden(false);
-          onToggleVisibility();
+  const renderSubmenu = (item: NavItem, index: number) => (
+    <Collapsible
+      key={index}
+      open={item.isExpanded}
+      className="mb-1"
+    >
+      <CollapsibleTrigger 
+        asChild
+        onClick={(e) => {
+          e.preventDefault();
+          toggleSubmenu(index);
         }}
-        className="fixed left-0 top-1/2 transform -translate-y-1/2 bg-background border border-l-0 border-border p-2 rounded-r-md z-50 hover:bg-accent/20 transition-all duration-200"
       >
-        <ChevronRight size={18} />
-      </button>
-    );
+        <div
+          className={cn(
+            "flex items-center justify-between h-10 w-full rounded-md px-3 text-sm font-medium cursor-pointer",
+            "hover:bg-accent hover:text-accent-foreground",
+            isCollapsed ? "justify-center" : ""
+          )}
+        >
+          <div className="flex items-center">
+            {item.icon}
+            {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          </div>
+          {!isCollapsed && (
+            <ChevronDown
+              size={16}
+              className={cn(
+                "transition-transform duration-200",
+                item.isExpanded && "transform rotate-180"
+              )}
+            />
+          )}
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent className={cn(!isCollapsed ? "pl-9" : "px-3")}>
+        <ul className="mt-1 space-y-1">
+          {item.children?.map((child, childIndex) => (
+            <li key={childIndex}>
+              <Link
+                to={child.path || "#"}
+                className={cn(
+                  "flex items-center h-8 w-full rounded-md px-3 text-sm font-medium",
+                  "hover:bg-accent hover:text-accent-foreground",
+                  location.pathname === child.path && "bg-accent text-accent-foreground",
+                  isCollapsed ? "justify-center" : ""
+                )}
+              >
+                {isCollapsed ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>{child.icon}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{child.label}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <>
+                    {child.icon}
+                    <span className="ml-3">{child.label}</span>
+                  </>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  // Si estamos en la página de inicio y el sidebar debe ocultarse, retornamos null
+  if (location.pathname === "/" && !actionMode) {
+    return null;
   }
 
   return (
     <div
-      className={`h-screen bg-background border-r transition-all duration-300 flex flex-col ${isCollapsed ? "w-[70px]" : "w-[280px]"}`}
+      className={cn(
+        "shrink-0 border-r bg-card h-screen flex flex-col overflow-hidden transition-all duration-300",
+        isCollapsed ? "w-20" : "w-64",
+        isHidden ? "-translate-x-full md:translate-x-0" : "translate-x-0",
+      )}
     >
-      {/* Logo and collapse button */}
-      <div className="p-4 flex items-center justify-between">
-        {!isCollapsed && (
-          <div className="font-bold text-xl">
-            {actionMode && activeAction ? (
-              <span className="text-sm">{activeAction.title || 'Acción Cuartel'}</span>
-            ) : (
-              'Sofia App'
-            )}
+      {/* Header del sidebar con el botón de toggle y el título */}
+      <div className="h-14 pl-4 pr-4 flex items-center justify-between border-b">
+        {!isCollapsed ? (
+          <div className="flex items-center cursor-pointer" onClick={goToHomePage}>
+            <span className="text-xl font-bold">Sofia</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full cursor-pointer" onClick={goToHomePage}>
+            <span className="text-xl font-bold">S</span>
           </div>
         )}
-        <div className="flex ml-auto">
-          {/* Botón para ocultar completamente el sidebar */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setIsHidden(true);
-              onToggleVisibility();
-            }}
-            className="mr-1"
-            title="Ocultar menú"
-          >
-            <ChevronLeft size={18} />
-          </Button>
-          
-          {/* Botón para colapsar/expandir */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggle}
-            title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-          >
-            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </Button>
-        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8"
+          onClick={handleToggle}
+        >
+          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </Button>
       </div>
 
-      {/* Mostrar detalles del cuartel si estamos en modo acción */}
-      {!isCollapsed && actionMode && activeAction && (
-        <div className="px-4 pb-2">
-          <span className="text-xs text-muted-foreground block">
-            {activeAction.subtitle || `Cuartel ID: ${activeAction.cuartelId}`}
-          </span>
-        </div>
-      )}
-
-      <Separator />
-
-      {/* Navigation Links */}
-      <nav className="flex-1 py-4 overflow-y-auto">
-        <ul className="space-y-2 px-2">
-          {filteredNavItems.map((item, index) => renderNavItem(item, index))}
+      {/* Contenido del sidebar */}
+      <div className="flex-1 overflow-y-auto p-2">
+        <ul>
+          {filterNavItems(localNavItems).map((item, index) => 
+            renderNavItem(item, index)
+          )}
         </ul>
-      </nav>
+      </div>
 
-      <Separator />
-
-      {/* User Menu Section */}
-      <div className="p-4 flex justify-center">
-        <UserMenu />
+      {/* Footer del sidebar con el menú de usuario */}
+      <div className="shrink-0 p-4 border-t">
+        <div className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
+          <UserMenu variant="sidebar" />
+          {!isCollapsed && (
+            <div className="ml-3">
+              <p className="text-sm font-medium">Cuenta</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
