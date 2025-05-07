@@ -21,7 +21,8 @@ class CuartelService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const cuarteles = await response.json();
+      return cuarteles.data;
     } catch (error) {
       console.error('Error fetching cuarteles:', error);
       throw error;

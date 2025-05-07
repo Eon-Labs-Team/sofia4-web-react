@@ -2,9 +2,13 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  fullName: string;
-  role: 'admin' | 'user' | 'manager';
-  permissions: string[];
+  role: string;
+  permission: {
+    bpa: boolean;
+    cosecha: boolean;
+    gestion: boolean;
+    certificacion: boolean;
+  };
 }
 
 export interface LoginCredentials {

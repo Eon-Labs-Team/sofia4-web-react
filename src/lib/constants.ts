@@ -1,6 +1,6 @@
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4900';
+export const API_BASE_SOFIA = import.meta.env.VITE_API_CRUD_URL || 'http://localhost:4500'
 // API endpoints
 export const ENDPOINTS = {
   productCategory: {
@@ -206,5 +206,10 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/agriculturalWork/work`,
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/work/${id}`,
     changeState: (id: string | number, state: string) => `${API_BASE_URL}/agriculturalWork/work/${id}/state/${state}`,
+  },
+  properties: {
+    base: `${API_BASE_URL}/property`,
+    byId: (id: string | number) => `${API_BASE_URL}/property/${id}`,
+    byName: (name: string) => `${API_BASE_URL}/property/byName/${name}`,
   },
 }; 
