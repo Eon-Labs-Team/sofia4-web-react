@@ -12,5 +12,6 @@ export interface IVisitorLog extends document {
   exitDate: string,
   exitTime: string,
   visitorSignature: string,
-  state: boolean
+  state: boolean,
+  propertyId?: string | number
 }

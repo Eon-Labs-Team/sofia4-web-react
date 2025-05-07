@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useSidebarStore } from "@/lib/store/sidebarStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import propertyService from "@/_services/propertyService";
-import UserMenu from "./layout/UserMenu";
+import UserMenu from "../components/layout/UserMenu";
 
 interface Permission {
   canView: boolean;
@@ -107,13 +107,13 @@ const PropertiesTable = ({
           <TableRow>            
             <TableHead>Nombre</TableHead>            
             <TableHead>Estado</TableHead>
-            <TableHead>Acciones</TableHead>
+            <TableHead>Módulos</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {properties.map((property) => (
             <TableRow key={property.taxId}>
-              <TableCell>{property.propertyName}</TableCell>              
+              <TableCell>{property.propertyName}</TableCell>
               <TableCell>
                 {property.status ? (
                   <div className="flex items-center">
@@ -174,6 +174,7 @@ const HomePage = () => {
     activeAction: storeActiveAction
   } = useSidebarStore();
   
+  const { setPropertyId, clearPropertyId } = useAuthStore();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toggleSidebar } = React.useContext(SidebarContext);
@@ -204,6 +205,9 @@ const HomePage = () => {
     const actionTitle = barrackOptions.find(opt => opt.id === actionId)?.title || '';
     const propertyName = properties.find(c => c._id === propertyId)?.propertyName || '';
     
+    // Set the propertyId in the auth store
+    setPropertyId(propertyId);
+    
     // Activamos el modo acción en el sidebar
     toggleActionMode(true);
     setActiveAction({
@@ -220,6 +224,9 @@ const HomePage = () => {
   };
 
   const handleBackToHome = () => {
+    // Clear the propertyId from the auth store
+    clearPropertyId();
+    
     // Restauramos el menú original y reseteamos el modo acción
     resetActiveAction();
     

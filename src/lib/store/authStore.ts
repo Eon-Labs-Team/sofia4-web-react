@@ -9,11 +9,14 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   enterpriseId: string | null;
+  propertyId: string | number | null;
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  setPropertyId: (id: string | number) => void;
+  clearPropertyId: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -24,6 +27,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
   enterpriseId: null,
+  propertyId: null,
+  
   // Login action
   login: async (credentials: LoginCredentials) => {
     try {
@@ -52,12 +57,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({
       user: null,
       token: null,
-      isAuthenticated: false
+      isAuthenticated: false,
+      propertyId: null
     });
   },
   
   // Clear any auth errors
   clearError: () => {
     set({ error: null });
+  },
+
+  // Set the current property ID
+  setPropertyId: (id: string | number) => {
+    set({ propertyId: id });
+  },
+  
+  // Clear the current property ID
+  clearPropertyId: () => {
+    set({ propertyId: null });
   }
 })); 

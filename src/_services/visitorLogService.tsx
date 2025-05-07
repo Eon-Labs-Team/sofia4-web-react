@@ -1,17 +1,24 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IVisitorLog } from '@/types/IVisitorLog';
+import { useAuthStore } from '@/lib/store/authStore';
 
 /**
  * Service for managing visitor logs
  */
 class VisitorLogService {
   /**
-   * Get all visitor logs
-   * @returns Promise with all visitor logs
+   * Get all visitor logs for a specific property
+   * @param propertyId The ID of the property to get visitor logs for
+   * @returns Promise with visitor logs for the property
    */
-  async findAll(): Promise<IVisitorLog[]> {
+  async findAll(propertyId?: string | number | null): Promise<IVisitorLog[]> {
     try {
-      const response = await fetch(`${ENDPOINTS.visitorLog.base}`, {
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.visitorLog.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.visitorLog.base}`;
+      
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -31,22 +38,14 @@ class VisitorLogService {
   /**
    * Create a new visitor log
    * @param visitorLog Visitor log data
+   * @param propertyId The ID of the property this visitor log belongs to
    * @returns Promise with created visitor log
    */
-  async createVisitorLog(visitorLog: Partial<IVisitorLog>): Promise<IVisitorLog> {
+  async createVisitorLog(visitorLog: Partial<IVisitorLog>, propertyId?: string | number | null): Promise<IVisitorLog> {
     try {
       const visitorLogData: Partial<IVisitorLog> = {
-        entryDate: visitorLog.entryDate,
-        entryTime: visitorLog.entryTime,
-        visitorName: visitorLog.visitorName,
-        temperature: visitorLog.temperature,
-        origin: visitorLog.origin,
-        purpose: visitorLog.purpose,
-        comments: visitorLog.comments,
-        vehiclePlate: visitorLog.vehiclePlate,
-        exitDate: visitorLog.exitDate,
-        exitTime: visitorLog.exitTime,
-        visitorSignature: visitorLog.visitorSignature,
+        ...visitorLog,
+        propertyId, // Add propertyId to the visitor log data
         state: visitorLog.state !== undefined ? visitorLog.state : true
       };
 

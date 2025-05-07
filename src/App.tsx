@@ -1,6 +1,6 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRoutes, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Home, { SidebarContext } from "./components/home";
+import Home, { SidebarContext } from "./pages/home";
 import Cuarteles from "./pages/Cuarteles";
 import ListaCuarteles from "./pages/ListaCuarteles";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
@@ -23,6 +23,7 @@ import Sidebar from "./components/layout/Sidebar";
 import { Toaster } from "./components/ui/toaster";
 import { useAuthStore } from "./lib/store/authStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PropertyRoute from "./components/auth/PropertyRoute";
 import AnalisisAgua from "./pages/analisis-agua";
 import CalibrarAspersion from "./pages/CalibrarAspersion";
 import TechnicalIrrigationMaintenance from "./pages/TechnicalIrrigationMaintenance";
@@ -86,7 +87,7 @@ function App() {
           />
         )}
         <main className="flex-1 overflow-auto">
-          <Suspense fallback={<p>Loading...</p>}>
+          <Suspense fallback={<p>Cargando...</p>}>
             {children}
           </Suspense>
         </main>
@@ -101,7 +102,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         
-        {/* Protected routes with sidebar layout */}
+        {/* Home route - protected but doesn't need PropertyRoute */}
         <Route
           path="/"
           element={
@@ -113,13 +114,16 @@ function App() {
           }
         />
         
+        {/* All other protected routes with PropertyRoute */}
         <Route
           path="/cuarteles"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Cuarteles />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Cuarteles />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -128,9 +132,11 @@ function App() {
           path="/lista-cuarteles"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <ListaCuarteles />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ListaCuarteles />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -139,9 +145,11 @@ function App() {
           path="/lista-cuadrillas"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <ListaCuadrillas />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ListaCuadrillas />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -150,9 +158,11 @@ function App() {
           path="/variedades"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Variedades />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Variedades />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -161,9 +171,11 @@ function App() {
           path="/monitoreo-estado-fenologico"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <MonitoreoEstadoFenologico />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <MonitoreoEstadoFenologico />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -172,9 +184,11 @@ function App() {
           path="/monitoreo-maleza"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <MonitoreoMaleza />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <MonitoreoMaleza />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -183,9 +197,11 @@ function App() {
           path="/analisis-suelo"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <SoilAnalysis />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <SoilAnalysis />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -194,9 +210,11 @@ function App() {
           path="/fertilizacion-suelo"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <FertilizacionSuelo />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <FertilizacionSuelo />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -205,9 +223,11 @@ function App() {
           path="/registro-riego"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <IrrigationRecord />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <IrrigationRecord />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -216,9 +236,11 @@ function App() {
           path="/analisis-foliar"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <AnalisisFoliar />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <AnalisisFoliar />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -227,9 +249,11 @@ function App() {
           path="/eventos-climaticos"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <EventosClimaticos />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <EventosClimaticos />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -238,9 +262,11 @@ function App() {
           path="/limpieza-maquinaria"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <LimpiezaMaquinaria />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <LimpiezaMaquinaria />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -249,9 +275,11 @@ function App() {
           path="/limpieza-instalaciones"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <FacilityCleaning />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <FacilityCleaning />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -260,9 +288,11 @@ function App() {
             path="/balance-masa"
             element={
               <ProtectedRoute>
-                <AuthenticatedLayout>
-                  <MassBalance />
-                </AuthenticatedLayout>
+                <PropertyRoute>
+                  <AuthenticatedLayout>
+                    <MassBalance />
+                  </AuthenticatedLayout>
+                </PropertyRoute>
               </ProtectedRoute>
             }
           />
@@ -272,9 +302,11 @@ function App() {
           path="/analisis-agua"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <AnalisisAgua />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <AnalisisAgua />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -283,9 +315,11 @@ function App() {
           path="/calibrar-aspersion"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <CalibrarAspersion />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <CalibrarAspersion />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -294,9 +328,11 @@ function App() {
           path="/form-builder"
           element={
             <ProtectedRoute requiredRole="admin">
-              <AuthenticatedLayout>
-                <FormBuilderExample />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <FormBuilderExample />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -305,9 +341,11 @@ function App() {
           path="/mantencion-riego-tecnificado"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <TechnicalIrrigationMaintenance />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <TechnicalIrrigationMaintenance />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -316,9 +354,11 @@ function App() {
           path="/ingreso-animales"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <AnimalAdmission />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <AnimalAdmission />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -327,9 +367,11 @@ function App() {
           path="/aforo-sector-riego"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <IrrigationSectorCapacity />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <IrrigationSectorCapacity />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -338,9 +380,11 @@ function App() {
           path="/retiro-residuos"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <WasteRemoval />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <WasteRemoval />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -349,9 +393,11 @@ function App() {
           path="/manejo-residuos"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <WasteManagement />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <WasteManagement />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -360,9 +406,11 @@ function App() {
           path="/calibracion-equipos"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <EquipmentCalibration />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <EquipmentCalibration />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -371,9 +419,11 @@ function App() {
           path="/calibracion-equipos-medicion"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <CalibrationMeasuringEquipment />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <CalibrationMeasuringEquipment />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -382,9 +432,11 @@ function App() {
           path="/back-pump-calculation"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <BackPumpCalculation />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <BackPumpCalculation />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -393,9 +445,11 @@ function App() {
           path="/visitor-log"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <VisitorLog />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <VisitorLog />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -404,9 +458,11 @@ function App() {
           path="/personnel-provision"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <PersonnelProvision />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <PersonnelProvision />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -415,9 +471,11 @@ function App() {
           path="/capacitaciones"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Capacitaciones />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Capacitaciones />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -426,9 +484,11 @@ function App() {
           path="/lavado-manos"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <LavadoManos />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <LavadoManos />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -437,9 +497,11 @@ function App() {
           path="/electricity-consumption"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <ElectricityConsumption />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ElectricityConsumption />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -448,9 +510,11 @@ function App() {
           path="/water-consumption"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <WaterConsumption />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <WaterConsumption />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -459,9 +523,11 @@ function App() {
           path="/hygiene-sanitation"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <HygieneSanitation />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <HygieneSanitation />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -470,9 +536,11 @@ function App() {
           path="/calicata"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Calicata />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Calicata />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -481,9 +549,11 @@ function App() {
           path="/chlorine-registration"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <ChlorineRegistration />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ChlorineRegistration />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -492,9 +562,11 @@ function App() {
           path="/water-chlorination"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <WaterChlorination />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <WaterChlorination />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -503,9 +575,11 @@ function App() {
           path="/unidades-medida"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <UnidadesMedida />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <UnidadesMedida />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -514,9 +588,11 @@ function App() {
           path="/product-categories"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <ProductCategories />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ProductCategories />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -525,9 +601,11 @@ function App() {
           path="/subcategory-product"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <SubcategoryProduct />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <SubcategoryProduct />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -536,9 +614,11 @@ function App() {
           path="/tipo-cultivo"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <TipoCultivo />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <TipoCultivo />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -547,9 +627,11 @@ function App() {
           path="/trabajos-realizados"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <TrabajosRealizados />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <TrabajosRealizados />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -558,9 +640,11 @@ function App() {
           path="/tipos-suelo"
           element={
             <ProtectedRoute>
-              <AuthenticatedLayout>
-                <TiposSuelo />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <TiposSuelo />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -569,9 +653,11 @@ function App() {
           path="/orden-aplicacion"
           element={
             <ProtectedRoute requiredRole="admin">
-              <AuthenticatedLayout>
-                <OrdenAplicacion />
-              </AuthenticatedLayout>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <OrdenAplicacion />
+                </AuthenticatedLayout>
+              </PropertyRoute>
             </ProtectedRoute>
           }
         />
@@ -582,9 +668,11 @@ function App() {
             path="/tempobook/*"
             element={
               <ProtectedRoute>
-                <AuthenticatedLayout>
-                  {useRoutes(routes)}
-                </AuthenticatedLayout>
+                <PropertyRoute>
+                  <AuthenticatedLayout>
+                    {useRoutes(routes)}
+                  </AuthenticatedLayout>
+                </PropertyRoute>
               </ProtectedRoute>
             }
           />

@@ -56,10 +56,10 @@ interface SidebarProps {
 }
 
 // Función para generar menús específicos según el tipo de acción
-const generateMenuForAction = (actionId: string, cuartelId: string | number): NavItem[] => {
-  // Función para añadir el ID del cuartel a las rutas
-  const withCuartelId = (path: string) => `${path}?cuartelId=${cuartelId}`;
-
+const generateMenuForAction = (actionId: string, propertyId: string | number): NavItem[] => {
+  // We no longer need to add the propertyId to the URL path
+  // as we'll get it from the store instead
+  
   switch (actionId) {
     case "good-practices":
       return [
@@ -67,9 +67,9 @@ const generateMenuForAction = (actionId: string, cuartelId: string | number): Na
           icon: <Leaf size={20} />, 
           label: "Buenas Prácticas", 
           children: [
-            { icon: <Leaf size={16} />, label: "Registro de Visitas", path: withCuartelId("/visitor-log") },
-            { icon: <CheckCircle size={16} />, label: "Certificaciones", path: withCuartelId("/certificaciones") },
-            { icon: <BarChart3 size={16} />, label: "Reportes", path: withCuartelId("/reportes-practicas") },
+            { icon: <Leaf size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
+            { icon: <CheckCircle size={16} />, label: "Certificaciones", path: "/certificaciones" },
+            { icon: <BarChart3 size={16} />, label: "Reportes", path: "/reportes-practicas" },
           ],
           isExpanded: true
         }
@@ -80,9 +80,9 @@ const generateMenuForAction = (actionId: string, cuartelId: string | number): Na
           icon: <BarChart3 size={20} />, 
           label: "Gestión", 
           children: [
-            { icon: <BarChart3 size={16} />, label: "Indicadores", path: withCuartelId("/indicadores") },
-            { icon: <Users size={16} />, label: "Personal", path: withCuartelId("/personal") },
-            { icon: <PieChart size={16} />, label: "Recursos", path: withCuartelId("/recursos") },
+            { icon: <BarChart3 size={16} />, label: "Indicadores", path: "/indicadores" },
+            { icon: <Users size={16} />, label: "Personal", path: "/personal" },
+            { icon: <PieChart size={16} />, label: "Recursos", path: "/recursos" },
           ],
           isExpanded: true
         }
@@ -93,8 +93,8 @@ const generateMenuForAction = (actionId: string, cuartelId: string | number): Na
           icon: <Wheat size={20} />, 
           label: "Cosecha", 
           children: [
-            { icon: <Wheat size={16} />, label: "Registro de Cosecha", path: withCuartelId("/cosecha") },
-            { icon: <BarChart3 size={16} />, label: "Estadísticas", path: withCuartelId("/estadisticas-cosecha") },
+            { icon: <Wheat size={16} />, label: "Registro de Cosecha", path: "/cosecha" },
+            { icon: <BarChart3 size={16} />, label: "Estadísticas", path: "/estadisticas-cosecha" },
           ],
           isExpanded: true
         }
@@ -105,9 +105,9 @@ const generateMenuForAction = (actionId: string, cuartelId: string | number): Na
           icon: <Award size={20} />, 
           label: "Certificaciones", 
           children: [
-            { icon: <Award size={16} />, label: "Certificados", path: withCuartelId("/certificados") },
-            { icon: <CheckCircle size={16} />, label: "Estándares", path: withCuartelId("/estandares") },
-            { icon: <BarChart3 size={16} />, label: "Reportes", path: withCuartelId("/reportes-certificaciones") },
+            { icon: <Award size={16} />, label: "Certificados", path: "/certificados" },
+            { icon: <CheckCircle size={16} />, label: "Estándares", path: "/estandares" },
+            { icon: <BarChart3 size={16} />, label: "Reportes", path: "/reportes-certificaciones" },
           ],
           isExpanded: true
         }

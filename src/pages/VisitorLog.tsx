@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   UserCheck,
   CheckCircle,
@@ -308,16 +309,33 @@ const VisitorLog = () => {
   const [selectedVisitorLog, setSelectedVisitorLog] = useState<IVisitorLog | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch visitor logs on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchVisitorLogs();
-  }, []);
+    if (!propertyId) {
+      // You could add a navigation here to redirect to home page if needed
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionada. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch visitor logs on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchVisitorLogs();
+    }
+  }, [propertyId]);
   
   // Function to fetch visitor logs data
   const fetchVisitorLogs = async () => {
     setIsLoading(true);
     try {
-      const data = await visitorLogService.findAll();
+      const data = await visitorLogService.findAll(propertyId);
       setVisitorLogs(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading visitor logs:", error);
@@ -334,7 +352,7 @@ const VisitorLog = () => {
   // Function to handle adding a new visitor log
   const handleAddVisitorLog = async (data: Partial<IVisitorLog>) => {
     try {
-      await visitorLogService.createVisitorLog(data);
+      await visitorLogService.createVisitorLog(data, propertyId);
       
       toast({
         title: "Éxito",
