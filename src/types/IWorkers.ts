@@ -3,7 +3,7 @@ import { document } from './document';
 //Registro de trabajos realizados.
 
 export interface IWorkers extends document {
-  worker: WorkerType, //id del trabajador
+  worker: string, //id del trabajador
   quadrille: string, //id de la cuadrilla
   workingDay: string, //horas trabajadas
   paymentMethod: string, //metodo de pago -- tomado de la entidad work en la cual se está creando. 
@@ -11,6 +11,7 @@ export interface IWorkers extends document {
   totalHoursYield: string, //total de horas de rendimiento
   overtime: string, //horas extras
   bonus: string, //bono
+  bond: string, //alias for bonus
   yieldValue: string, //valor del rendimiento -- Traido del valor de la labor (workType)
   dayValue: string, //valor de la jornada
 
@@ -27,9 +28,11 @@ export interface IWorkers extends document {
   salary: string, //salario -- traido de la ficha del trabajador -- se usa para calcular el valor dia.
   date: string,
   contractor: string,
-  state: boolean
+  classification: string, // clasificación del trabajador
+  workId: string, // ID de la orden de trabajo asociada
+  state: boolean,
+  id: string, // ID del registro
+  createdBy: string | null, // ID del usuario que creó el registro
+  updatedBy: string | null, // ID del usuario que actualizó el registro
 }
 
-interface WorkerType {
-  id: string,
-}

@@ -18,6 +18,10 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/harvest/workers`,
     byId: (id: string | number) => `${API_BASE_URL}/harvest/workers/${id}`,
   },
+  machinery: {
+    base: `${API_BASE_URL}/harvest/machinery`,
+    byId: (id: string | number) => `${API_BASE_URL}/harvest/machinery/${id}`,
+  },
   cuarteles: {
     base: `${API_BASE_URL}/harvest/barracks`,
     byId: (id: string | number) => `${API_BASE_URL}/harvest/barracks/${id}`,
@@ -203,13 +207,23 @@ export const ENDPOINTS = {
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/soilType/${id}/state/${state}`,
   },
   work: {
-    base: `${API_BASE_URL}/agriculturalWork/work`,
-    byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/work/${id}`,
-    changeState: (id: string | number, state: string) => `${API_BASE_URL}/agriculturalWork/work/${id}/state/${state}`,
+    base: `${API_BASE_URL}/work`,
+    byId: (id: string | number) => `${API_BASE_URL}/work/${id}`,
+    changeState: (id: string | number, state: string) => `${API_BASE_URL}/work/${id}/state/${state}`,
   },
   properties: {
     base: `${API_BASE_URL}/property`,
     byId: (id: string | number) => `${API_BASE_URL}/property/${id}`,
     byName: (name: string) => `${API_BASE_URL}/property/byName/${name}`,
+  },
+  faenas: {
+    base: `${API_BASE_URL}/task/taskType`,
+    byId: (id: string | number) => `${API_BASE_URL}/task/taskType/${id}`,
+    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/task/taskType/${id}/state/${state}`,
+  },
+  labores: {
+    base: `${API_BASE_URL}/task/task`,
+    byId: (id: string | number) => `${API_BASE_URL}/task/task/${id}`,
+    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/task/task/${id}/state/${state}`,
   },
 }; 

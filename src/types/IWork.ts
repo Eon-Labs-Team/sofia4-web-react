@@ -45,7 +45,7 @@ export interface IWork extends Document {
   rowNumber: RowNumberType,
   dosification: string, // Dosificacion
   taskType: string,
-  task: Task,
+  task: WorkTask,
   customTask?: string,
   calibrationPerHectare: number,
 
@@ -75,15 +75,46 @@ interface RowNumberType {
   id: string,
 }
 
-interface Task {
-  id: string,
+/**
+ * Lugares de uso que se despliegan en la columna "Usar en:"
+ * – Sofia            → módulo web
+ * – AppSofia         → aplicación móvil
+ * – Sofia-AppSofia   → ambos
+ * – Deactivate       → desactivada (no disponible)
+ */
+export type UsageScope =
+  | 'Sofia'
+  | 'AppSofia'
+  | 'Sofia-AppSofia'
+  | 'Deactivate';
+
+/**
+ * Entidad padre → Faena (TaskType).
+ * Cada registro agrupa un conjunto de labores (Task) con sus precios.
+ */
+export interface ITaskType extends Document {
+  _id: string,
+  name: string;
+  optionalCode?: string;
+  workType: WorkType;
+  usageScope: UsageScope;
+  usesCalibrationPerHa: boolean;
+  allowedFarms: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+} 
+
+export interface WorkTask {
+  _id:string,
+  id:string,
+  taskTypeId: string,
   optionalCode: string,
   taskName: string,
   taskPrice: number,
   optimalYield: number,
   isEditableInApp: boolean,
   usesWetCalculationPerHa: boolean,
-  usageContext: string, // 0: solo web, 1: solo app, 2: web y app
+  usageContext: string, // 0: solo web, 1: solo app, 2: web y app 4:desactivate
   maxHarvestYield: number,
   showTotalEarningsInApp: boolean,
   associatedProducts: Array<AssociatedProductsType>,
@@ -142,7 +173,7 @@ interface ResponsibleType {
 
 interface WorkWorkers {
   classification: string,
-  worker: WorkerType,
+  worker: string,
   quadrille: string,
   workingDay: string,
   paymentMethod: string,
@@ -162,9 +193,6 @@ interface WorkWorkers {
   contractor: string,
 }
 
-interface WorkerType {
-  id: string,
-}
 
 interface WorkMachinery {
   classification: string,

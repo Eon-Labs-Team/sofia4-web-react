@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IWorkers } from '@/types/IWorkers';
+import { useAuthStore } from '@/lib/store/authStore';
 
 /**
  * Service for managing workers (trabajos realizados) data
@@ -11,7 +12,15 @@ class WorkerService {
    */
   async findAll(): Promise<IWorkers[]> {
     try {
-      const response = await fetch(ENDPOINTS.workers.base, {
+      const { propertyId } = useAuthStore.getState();
+      
+      // Create a URL with query parameters
+      const url = new URL(ENDPOINTS.workers.base);
+      if (propertyId) {
+        url.searchParams.append('propertyId', propertyId.toString());
+      }
+      
+      const response = await fetch(url.toString(), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -35,28 +44,45 @@ class WorkerService {
    */
   async createWorker(worker: Partial<IWorkers>): Promise<IWorkers> {
     try {
+      const { propertyId, user } = useAuthStore.getState();
+      
       const workerData: Partial<IWorkers> = {
         classification: worker.classification,
         worker: worker.worker,
         quadrille: worker.quadrille,
         workingDay: worker.workingDay,
         paymentMethod: worker.paymentMethod,
-        totalHectares: worker.totalHectares,
+        yield: worker.yield,
+        totalHoursYield: worker.totalHoursYield,
         overtime: worker.overtime,
+        bonus: worker.bonus,
         bond: worker.bond,
+        yieldValue: worker.yieldValue,
         dayValue: worker.dayValue,
-        totalDeal: worker.totalDeal,
-        bonuses: worker.bonuses,
+        additionalBonuses: worker.additionalBonuses,
         exportPerformance: worker.exportPerformance,
         juicePerformance: worker.juicePerformance,
         othersPerformance: worker.othersPerformance,
+        totalDeal: worker.totalDeal,
         dailyTotal: worker.dailyTotal,
         value: worker.value,
         salary: worker.salary,
         date: worker.date,
         contractor: worker.contractor,
+        workId: worker.workId,
         state: worker.state !== undefined ? worker.state : true,
+        createdBy: user?.id || null,
+        updatedBy: user?.id || null,
       };
+
+      console.log(workerData);
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        workerData.propertyId = propertyId;
+      }
+
 
       const response = await fetch(ENDPOINTS.workers.base, {
         method: 'POST',
@@ -85,12 +111,22 @@ class WorkerService {
    */
   async updateWorker(id: string | number, worker: Partial<IWorkers>): Promise<IWorkers> {
     try {
+      const { propertyId } = useAuthStore.getState();
+      const workerData = { ...worker};
+      delete workerData.__v;
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        workerData.propertyId = propertyId;
+      }
+      
       const response = await fetch(ENDPOINTS.workers.byId(id), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(worker),
+        body: JSON.stringify(workerData),
       });
 
       if (!response.ok) {
@@ -111,13 +147,22 @@ class WorkerService {
    */
   async softDeleteWorker(id: string | number): Promise<any> {
     try {
-      // Update only the state field to false
+      const { propertyId } = useAuthStore.getState();
+      
+      const stateData = { state: false };
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        stateData.propertyId = propertyId;
+      }
+      
       const response = await fetch(ENDPOINTS.workers.byId(id), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ state: false }),
+        body: JSON.stringify(stateData),
       });
 
       if (!response.ok) {
@@ -138,7 +183,15 @@ class WorkerService {
    */
   async findById(id: string | number): Promise<IWorkers> {
     try {
-      const response = await fetch(ENDPOINTS.workers.byId(id), {
+      const { propertyId } = useAuthStore.getState();
+      
+      // Create URL with query parameters
+      const url = new URL(ENDPOINTS.workers.byId(id));
+      if (propertyId) {
+        url.searchParams.append('propertyId', propertyId.toString());
+      }
+      
+      const response = await fetch(url.toString(), {
         headers: {
           'Content-Type': 'application/json',
         },

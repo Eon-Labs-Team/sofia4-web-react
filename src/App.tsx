@@ -2,6 +2,8 @@ import { Suspense, useState, useEffect } from "react";
 import { useRoutes, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Home, { SidebarContext } from "./pages/home";
 import Cuarteles from "./pages/Cuarteles";
+import Faenas from "./pages/Faenas";
+import Labores from "./pages/Labores";
 import ListaCuarteles from "./pages/ListaCuarteles";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
 import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
@@ -122,6 +124,32 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <Cuarteles />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/faenas"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Faenas />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/labores"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Labores />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>
@@ -652,7 +680,7 @@ function App() {
         <Route
           path="/orden-aplicacion"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute>
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <OrdenAplicacion />

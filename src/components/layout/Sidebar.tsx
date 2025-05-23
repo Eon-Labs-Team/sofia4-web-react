@@ -56,23 +56,59 @@ interface SidebarProps {
 }
 
 // Función para generar menús específicos según el tipo de acción
-const generateMenuForAction = (actionId: string, propertyId: string | number): NavItem[] => {
-  // We no longer need to add the propertyId to the URL path
-  // as we'll get it from the store instead
+const generateMenuForAction = (actionId: string, propertyId: string | number): NavItem[] => {  
+    
   
   switch (actionId) {
     case "good-practices":
       return [
-        { 
-          icon: <Leaf size={20} />, 
-          label: "Buenas Prácticas", 
+        { icon: <BarChart3 size={16} />, label: "Orden de aplicación", path: "/orden-aplicacion" },
+        { icon: <BarChart3 size={16} />, label: "Trabajos realizados", path: "/trabajos-realizados" },
+
+        {
+          icon: <FileText size={20} />,
+          label: "Registros de control",
           children: [
-            { icon: <Leaf size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
-            { icon: <CheckCircle size={16} />, label: "Certificaciones", path: "/certificaciones" },
-            { icon: <BarChart3 size={16} />, label: "Reportes", path: "/reportes-practicas" },
+            { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
+            { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
+            { icon: <Presentation size={16} />, label: "Capacitaciones", path: "/capacitaciones" }
           ],
-          isExpanded: true
-        }
+          isExpanded: false
+        },
+        {
+          icon: <FileText size={20} />,
+          label: "Registros de campo",
+          children: [
+            { icon: <Building2 size={16} />, label: "Monitoreo Estado Fenológico", path: "/monitoreo-estado-fenologico" },
+            { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" },
+            { icon: <Beaker size={16} />, label: "Análisis de Suelo", path: "/analisis-suelo" },
+            { icon: <Beaker size={16} />, label: "Fertilización de Suelo", path: "/fertilizacion-suelo" },
+            { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" },
+            { icon: <Leaf size={16} />, label: "Análisis Foliar", path: "/analisis-foliar" },
+            { icon: <CloudRain size={16} />, label: "Eventos Climáticos", path: "/eventos-climaticos" },
+            { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" },
+            { icon: <Scale size={16} />, label: "Balance de Masa", path: "/balance-masa" },
+            { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" },
+            { icon: <Droplets size={16} />, label: "Calibrar Aspersión", path: "/calibrar-aspersion" },
+            { icon: <Wrench size={16} />, label: "Mantención para Riego Tecnificado", path: "/mantencion-riego-tecnificado" },
+            { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" },
+            { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" },
+            { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
+            { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" },
+            { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" },
+            { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" },
+            { icon: <Calculator size={16} />, label: "Cálculo Bomba de Espalda", path: "/back-pump-calculation" },
+          ],
+          isExpanded: false
+        },
+        { icon: <Briefcase size={16} />, 
+        label: "Configuraciones", 
+        children: [
+
+          { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
+          { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
+        ] },
+
       ];
     case "management":
       return [
@@ -83,6 +119,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
             { icon: <BarChart3 size={16} />, label: "Indicadores", path: "/indicadores" },
             { icon: <Users size={16} />, label: "Personal", path: "/personal" },
             { icon: <PieChart size={16} />, label: "Recursos", path: "/recursos" },
+            { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
           ],
           isExpanded: true
         }
@@ -95,6 +132,8 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
           children: [
             { icon: <Wheat size={16} />, label: "Registro de Cosecha", path: "/cosecha" },
             { icon: <BarChart3 size={16} />, label: "Estadísticas", path: "/estadisticas-cosecha" },
+            { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
+            { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
           ],
           isExpanded: true
         }
@@ -132,6 +171,16 @@ const Sidebar = ({
   // Estado local para los items de navegación
   const [localNavItems, setLocalNavItems] = useState<NavItem[]>([
     { icon: <Home size={20} />, label: "Inicio", path: "/" },
+    { 
+      icon: <Briefcase size={20} />, 
+      label: "Faenas", 
+      path: "/faenas"
+    },
+    { 
+      icon: <Briefcase size={20} />, 
+      label: "Labores", 
+      path: "/labores"
+    },
     /*
     // Commented items omitted for brevity
     */
@@ -155,6 +204,16 @@ const Sidebar = ({
       // Restaurar ítems originales
       setLocalNavItems([
         { icon: <Home size={20} />, label: "Inicio", path: "/" },
+        { 
+          icon: <Briefcase size={20} />, 
+          label: "Faenas", 
+          path: "/faenas"
+        },
+        { 
+          icon: <Briefcase size={20} />, 
+          label: "Labores", 
+          path: "/labores"
+        },
       ]);
     }
   }, [actionMode, activeAction]);
