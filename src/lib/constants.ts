@@ -226,4 +226,8 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/task/task/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/task/task/${id}/state/${state}`,
   },
+  products: {
+    base: `${API_BASE_URL}/products/products`,
+    byId: (id: string | number) => `${API_BASE_URL}/products/products/${id}`,
+  },
 }; 

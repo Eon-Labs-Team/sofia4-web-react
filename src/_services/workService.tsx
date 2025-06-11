@@ -81,6 +81,52 @@ class WorkService {
     }
   }
 
+
+
+  /**
+   * Create a new work with type A t (tRABAJO AGRICOLA)
+   * @param work Work data
+   * @returns Promise with created work
+   */
+  async createAgriculturalWork(work: Partial<IWork>): Promise<IWork> {
+    try {
+      const { propertyId, user } = useAuthStore.getState();
+      
+      // Always set workType to 'T' for orden de aplicación
+      const workData = {
+        ...work,
+        workType: 'T' as const,
+        createdBy: user?.id || null, // Add createdBy field with current user ID
+        updatedBy: user?.id || null, // Add updatedBy field with current user ID
+      };
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        workData.propertyId = propertyId;
+      }
+
+      console.log('Sending to API:', JSON.stringify(workData));
+
+      const response = await fetch(ENDPOINTS.work?.base, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(workData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating orden de aplicación:', error);
+      throw error;
+    }
+  }
+
   /**
    * Update an existing work
    * @param id Work ID

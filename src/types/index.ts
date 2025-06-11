@@ -12,6 +12,7 @@ export * from './IGenericTreatment';
 export * from './IMeasurementUnits';
 export * from './IProductCategory';
 export * from './IProductMaster';
+export * from './IProducts';
 export * from './IBackpackSprayerCalculation';
 export * from './IEquipmentCalibration';
 export * from './ICalicata';

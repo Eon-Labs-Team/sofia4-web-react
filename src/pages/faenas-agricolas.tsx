@@ -197,7 +197,7 @@ const columns: Column[] = [
 // Expandable content for each row
 const expandableContent = (row: any) => (
   <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">Orden: {row.orderNumber}</h3>
+    <h3 className="text-lg font-semibold mb-2">Faena: {row.orderNumber}</h3>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <p><strong>Cuartel:</strong> {row.barracks}</p>
@@ -293,10 +293,10 @@ const expandableContent = (row: any) => (
   </div>
 );
 
-// Form configuration for adding new orden de aplicación
+// Form configuration for adding new faena agrícola
 const formSections: SectionConfig[] = [
   {
-    id: "orden-info-basic",
+    id: "faena-info-basic",
     title: "Información Básica",
     fields: [
       {
@@ -349,7 +349,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-detail",
+    id: "faena-info-detail",
     title: "Detalles de Aplicación",
     fields: [
       {
@@ -398,7 +398,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-task",
+    id: "faena-info-task",
     title: "Información de Tarea",
     fields: [
       {
@@ -434,7 +434,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-payment",
+    id: "faena-info-payment",
     title: "Información de Pago",
     fields: [
       {
@@ -468,7 +468,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-dates",
+    id: "faena-info-dates",
     title: "Fechas y Horas",
     fields: [
       {
@@ -516,7 +516,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-climate",
+    id: "faena-info-climate",
     title: "Condiciones Climáticas",
     fields: [
       {
@@ -550,7 +550,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-app",
+    id: "faena-info-app",
     title: "Información para App",
     fields: [
       {
@@ -581,7 +581,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-responsibles",
+    id: "faena-info-responsibles",
     title: "Responsables",
     fields: [
       {
@@ -644,7 +644,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-ppe",
+    id: "faena-info-ppe",
     title: "Equipo de Protección Personal",
     fields: [
       {
@@ -706,7 +706,7 @@ const formSections: SectionConfig[] = [
     ],
   },
   {
-    id: "orden-info-washing",
+    id: "faena-info-washing",
     title: "Protocolo de Lavado",
     fields: [
       {
@@ -775,7 +775,7 @@ const formSections: SectionConfig[] = [
 
 // Form validation schema
 const formValidationSchema = z.object({
-  workType: z.string().default("A"),
+  workType: z.string().default("T"),
   orderNumber: z.string({ invalid_type_error: "El número de orden debe ser texto" }).min(1, { message: "El número de orden es obligatorio" }),
   executionDate: z.string({ invalid_type_error: "La fecha debe ser una fecha válida" }),
   barracks: z.string({ invalid_type_error: "El cuartel debe ser texto" }).min(1, { message: "El cuartel es obligatorio" }),
@@ -889,11 +889,11 @@ interface WorkWithId extends IWork {
   _id?: string;
 }
 
-const OrdenAplicacion = () => {
+const FaenasAgricolas = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [ordenesAplicacion, setOrdenesAplicacion] = useState<WorkWithId[]>([]);
+  const [faenasAgricolas, setFaenasAgricolas] = useState<WorkWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOrden, setSelectedOrden] = useState<WorkWithId | null>(null);
+  const [selectedFaena, setSelectedFaena] = useState<WorkWithId | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Workers state
@@ -911,9 +911,9 @@ const OrdenAplicacion = () => {
   // Products state
   const [products, setProducts] = useState<IProduct[]>([]);
   
-  // Fetch ordenes on component mount
+  // Fetch faenas on component mount
   useEffect(() => {
-    fetchOrdenesAplicacion();
+    fetchFaenasAgricolas();
     fetchTaskTypes();
     fetchTasks();
   }, []);
@@ -970,24 +970,24 @@ const OrdenAplicacion = () => {
     setSelectedTaskType(taskTypeId);
   };
   
-  // Function to fetch ordenes data
-  const fetchOrdenesAplicacion = async () => {
+  // Function to fetch faenas data
+  const fetchFaenasAgricolas = async () => {
     setIsLoading(true);
     try {
       const data = await workService.findAll();
       // Handle both array responses and paginated responses
       const allWorksData = Array.isArray(data) ? data : (data as any)?.data || [];
       
-      // Filter only works with workType === 'A' (Application/Órdenes de Aplicación)
-      const ordenesData = allWorksData.filter((work: any) => work.workType === 'A');
+      // Filter only works with workType === 'T' (Task/Faenas Agrícolas)
+      const faenasData = allWorksData.filter((work: any) => work.workType === 'T');
       
-      setOrdenesAplicacion(ordenesData);
-      console.log('Órdenes de aplicación (filtered by workType A):', ordenesData);
+      setFaenasAgricolas(faenasData);
+      console.log('Faenas agrícolas (filtered by workType T):', faenasData);
     } catch (error) {
-      console.error("Error loading órdenes de aplicación:", error);
+      console.error("Error loading faenas agrícolas:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las órdenes de aplicación",
+        description: "No se pudieron cargar las faenas agrícolas",
         variant: "destructive",
       });
     } finally {
@@ -995,60 +995,60 @@ const OrdenAplicacion = () => {
     }
   };
   
-  // Function to handle adding a new orden
-  const handleAddOrden = async (data: Partial<IWork>) => {
-    console.log("orden de aplicacion", data);
+  // Function to handle adding a new faena
+  const handleAddFaena = async (data: Partial<IWork>) => {
+    console.log("faena agrícola", data);
 
     try {
-      await workService.createApplication(data);
+      await workService.createAgriculturalWork(data);
       toast({
         title: "Éxito",
-        description: "Orden de aplicación creada correctamente",
+        description: "Faena agrícola creada correctamente",
       });
-      fetchOrdenesAplicacion();
+      fetchFaenasAgricolas();
     } catch (error) {
-      console.error("Error al crear la orden de aplicación:", error);
+      console.error("Error al crear la faena agrícola:", error);
       toast({
         title: "Error",
-        description: "No se pudo crear la orden de aplicación",
+        description: "No se pudo crear la faena agrícola",
         variant: "destructive",
       });
     }
   };
 
-  // Function to handle updating an orden
-  const handleUpdateOrden = async (id: string | number, data: Partial<IWork>) => {
+  // Function to handle updating a faena
+  const handleUpdateFaena = async (id: string | number, data: Partial<IWork>) => {
     try {
       await workService.updateWork(id, data);
       toast({
         title: "Éxito", 
-        description: "Orden de aplicación actualizada correctamente",
+        description: "Faena agrícola actualizada correctamente",
       });
-      fetchOrdenesAplicacion();
+      fetchFaenasAgricolas();
     } catch (error) {
-      console.error(`Error al actualizar la orden de aplicación ${id}:`, error);
+      console.error(`Error al actualizar la faena agrícola ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar la orden de aplicación",
+        description: "No se pudo actualizar la faena agrícola",
         variant: "destructive",
       });
     }
   };
 
-  // Function to handle deleting a cuartel (changing state to void)
-  const handleVoidOrden = async (id: string | number) => {
+  // Function to handle deleting a faena (changing state to void)
+  const handleVoidFaena = async (id: string | number) => {
     try {
       await workService.changeWorkState(id, "void");
       toast({
         title: "Éxito",
-        description: "Orden de aplicación anulada correctamente",
+        description: "Faena agrícola anulada correctamente",
       });
-      fetchOrdenesAplicacion();
+      fetchFaenasAgricolas();
     } catch (error) {
-      console.error(`Error al anular la orden de aplicación ${id}:`, error);
+      console.error(`Error al anular la faena agrícola ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo anular la orden de aplicación",
+        description: "No se pudo anular la faena agrícola",
         variant: "destructive",
       });
     }
@@ -1093,27 +1093,27 @@ const OrdenAplicacion = () => {
       }
     }
     
-    if (isEditMode && selectedOrden) {
-      handleUpdateOrden(selectedOrden.id || selectedOrden._id || '', processedData);
+    if (isEditMode && selectedFaena) {
+      handleUpdateFaena(selectedFaena.id || selectedFaena._id || '', processedData);
     } else {
-      handleAddOrden(processedData);
+      handleAddFaena(processedData);
       console.log('processedData', data);
     }
     setIsDialogOpen(false);
   };
 
   // Function to handle edit button click
-  const handleEditClick = (orden: WorkWithId) => {
-    setSelectedOrden(orden);
+  const handleEditClick = (faena: WorkWithId) => {
+    setSelectedFaena(faena);
     setIsEditMode(true);
     
     // Set the selected task type if available
-    if (orden.taskType) {
-      setSelectedTaskType(String(orden.taskType));
+    if (faena.taskType) {
+      setSelectedTaskType(String(faena.taskType));
       
       // Filter tasks for this task type
-      console.log('Edit mode - orden.taskType:', orden.taskType);
-      const tasksForType = allTasks.filter(task => task.taskTypeId === String(orden.taskType));
+      console.log('Edit mode - faena.taskType:', faena.taskType);
+      const tasksForType = allTasks.filter(task => task.taskTypeId === String(faena.taskType));
       console.log('Edit mode - filtered tasks:', tasksForType);
       setFilteredTasks(tasksForType);
     }
@@ -1415,49 +1415,49 @@ const OrdenAplicacion = () => {
 
   // Fetch workers on component mount and when selected order changes
   useEffect(() => {
-    if (isEditMode && selectedOrden) {
-      console.log('useEffect triggered for fetchWorkers:', { isEditMode, selectedOrden: selectedOrden?.id || selectedOrden?._id });
+    if (isEditMode && selectedFaena) {
+      console.log('useEffect triggered for fetchWorkers:', { isEditMode, selectedFaena: selectedFaena?.id || selectedFaena?._id });
       fetchWorkers();
     }
-  }, [isEditMode, selectedOrden]);
+  }, [isEditMode, selectedFaena]);
 
   // Additional useEffect to fetch workers when dialog opens in edit mode
   useEffect(() => {
-    if (isDialogOpen && isEditMode && selectedOrden) {
-      console.log('Dialog opened in edit mode, fetching workers for order:', selectedOrden?.id || selectedOrden?._id);
+    if (isDialogOpen && isEditMode && selectedFaena) {
+      console.log('Dialog opened in edit mode, fetching workers for order:', selectedFaena?.id || selectedFaena?._id);
       fetchWorkers();
     }
-  }, [isDialogOpen, isEditMode, selectedOrden]);
+  }, [isDialogOpen, isEditMode, selectedFaena]);
 
   // Fetch machinery on component mount and when selected order changes
   useEffect(() => {
-    if (isEditMode && selectedOrden) {
-      console.log('useEffect triggered for fetchMachinery:', { isEditMode, selectedOrden: selectedOrden?.id || selectedOrden?._id });
+    if (isEditMode && selectedFaena) {
+      console.log('useEffect triggered for fetchMachinery:', { isEditMode, selectedFaena: selectedFaena?.id || selectedFaena?._id });
       fetchMachinery();
     }
-  }, [isEditMode, selectedOrden]);
+  }, [isEditMode, selectedFaena]);
 
   // Fetch products on component mount and when selected order changes
   useEffect(() => {
-    if (isEditMode && selectedOrden) {
-      console.log('useEffect triggered for fetchProducts:', { isEditMode, selectedOrden: selectedOrden?.id || selectedOrden?._id });
+    if (isEditMode && selectedFaena) {
+      console.log('useEffect triggered for fetchProducts:', { isEditMode, selectedFaena: selectedFaena?.id || selectedFaena?._id });
       fetchProducts();
     }
-  }, [isEditMode, selectedOrden]);
+  }, [isEditMode, selectedFaena]);
 
   // Function to fetch workers data for the current work
   const fetchWorkers = async () => {
-    if (!selectedOrden) {
-      console.log('No selected orden, skipping fetchWorkers');
+    if (!selectedFaena) {
+      console.log('No selected faena, skipping fetchWorkers');
       return;
     }
     
     try {
-      console.log('Fetching workers for order:', selectedOrden?.id || selectedOrden?._id);
+      console.log('Fetching workers for order:', selectedFaena?.id || selectedFaena?._id);
       const data = await workerService.findAll();
       console.log('All workers fetched:', data);
       
-      const workId = selectedOrden.id || (selectedOrden as any)._id;
+      const workId = selectedFaena.id || (selectedFaena as any)._id;
       console.log('Filtering workers by workId:', workId);
       
       // Handle both array responses and paginated responses
@@ -1485,17 +1485,17 @@ const OrdenAplicacion = () => {
 
   // Function to fetch machinery data for the current work
   const fetchMachinery = async () => {
-    if (!selectedOrden) {
-      console.log('No selected orden, skipping fetchMachinery');
+    if (!selectedFaena) {
+      console.log('No selected faena, skipping fetchMachinery');
       return;
     }
     
     try {
-      console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
+      console.log('Fetching machinery for order:', selectedFaena?.id || selectedFaena._id);
       const data = await machineryService.findAll();
       console.log('All machinery fetched:', data);
       
-      const workId = selectedOrden.id || (selectedOrden as any)._id;
+      const workId = selectedFaena.id || (selectedFaena as any)._id;
       console.log('Filtering machinery by workId:', workId);
       
       // Handle both array responses and paginated responses
@@ -1523,17 +1523,17 @@ const OrdenAplicacion = () => {
 
   // Function to fetch products data for the current work
   const fetchProducts = async () => {
-    if (!selectedOrden) {
-      console.log('No selected orden, skipping fetchProducts');
+    if (!selectedFaena) {
+      console.log('No selected faena, skipping fetchProducts');
       return;
     }
     
     try {
-      console.log('Fetching products for order:', selectedOrden?.id || selectedOrden._id);
+      console.log('Fetching products for order:', selectedFaena?.id || selectedFaena._id);
       const data = await productService.findAll();
       console.log('All products fetched:', data);
       
-      const workId = selectedOrden.id || (selectedOrden as any)._id;
+      const workId = selectedFaena.id || (selectedFaena as any)._id;
       console.log('Filtering products by workId:', workId);
       
       // Handle both array responses and paginated responses
@@ -1574,7 +1574,7 @@ const OrdenAplicacion = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => handleVoidOrden(row.id || row._id || '')}
+          onClick={() => handleVoidFaena(row.id || row._id || '')}
           title="Anular"
           disabled={row.workState === "void"}
         >
@@ -1588,49 +1588,48 @@ const OrdenAplicacion = () => {
     <div className="container mx-auto p-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Órdenes de Aplicación</h1>
+          <h1 className="text-2xl font-bold">Faenas Agrícolas</h1>
           <p className="text-muted-foreground">
-            Gestione las órdenes de aplicación de productos
+            Gestione las faenas agrícolas y trabajos de campo
           </p>
         </div>
         <Button
           onClick={() => {
-            setSelectedOrden(null);
+            setSelectedFaena(null);
             setIsEditMode(false);
             setIsDialogOpen(true);
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Orden
+          Agregar Faena
         </Button>
       </div>
 
       <Grid
         columns={columns}
-        data={ordenesAplicacion}
+        data={faenasAgricolas}
         expandableContent={expandableContent}
         actions={renderActions}
-        gridId="orden-aplicacion-grid"
-        title="Órdenes de Aplicación"
+        gridId="faenas-agricolas-grid"
+        title="Faenas Agrícolas"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Editar Orden de Aplicación" : "Nueva Orden de Aplicación"}
+              {isEditMode ? "Editar Faena Agrícola" : "Nueva Faena Agrícola"}
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? "Actualice los detalles de la orden de aplicación existente"
-                : "Complete el formulario para crear una nueva orden de aplicación"}
+                ? "Actualice los detalles de la faena agrícola existente"
+                : "Complete el formulario para crear una nueva faena agrícola"}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="w-full max-w-full overflow-hidden">
-            <DynamicForm
-              sections={formSections.map(section => {
-              if (section.id === "orden-info-task") {
+          <DynamicForm
+            sections={formSections.map(section => {
+              if (section.id === "faena-info-task") {
                 return {
                   ...section,
                   fields: section.fields.map(field => {
@@ -1674,16 +1673,16 @@ if (field.id === "task") {
             })}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
-            defaultValues={isEditMode && selectedOrden 
+            defaultValues={isEditMode && selectedFaena 
               ? { 
-                  ...selectedOrden,
-                  taskType: selectedOrden.taskType || "",
-                  task: selectedOrden.task && typeof selectedOrden.task === 'object' 
-                    ? (selectedOrden.task as any).id || (selectedOrden.task as any)._id || ""
-                    : selectedOrden.task || ""
+                  ...selectedFaena,
+                  taskType: selectedFaena.taskType || "",
+                  task: selectedFaena.task && typeof selectedFaena.task === 'object' 
+                    ? (selectedFaena.task as any).id || (selectedFaena.task as any)._id || ""
+                    : selectedFaena.task || ""
                 } 
               : {
-                  workType: "A", // Default to Application type
+                  workType: "T", // Default to Task type
                   ppe: {
                     gloves: true,
                     applicatorSuit: true,
@@ -1726,11 +1725,10 @@ if (field.id === "task") {
                 }
             }
           />
-          </div>
           
           {/* Workers section - only visible in edit mode */}
-          {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+          {isEditMode && selectedFaena && (
+            <div className="mt-6 border rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">Trabajadores</h3>
               </div>
@@ -1846,7 +1844,7 @@ if (field.id === "task") {
                   exportPerformance: "0",
                   juicePerformance: "0",
                   othersPerformance: "0",
-                  workId: selectedOrden ? String(selectedOrden.id || (selectedOrden as any)._id) : "",
+                  workId: selectedFaena ? String(selectedFaena.id || (selectedFaena as any)._id) : "",
                   state: true
                 }}
                 addableColumns={[
@@ -1877,7 +1875,7 @@ if (field.id === "task") {
                 }}
                 onInlineAdd={async (newWorker) => {
                   try {
-                    if (!selectedOrden) {
+                    if (!selectedFaena) {
                       toast({
                         title: "Error",
                         description: "No hay una orden seleccionada",
@@ -1910,7 +1908,7 @@ if (field.id === "task") {
                       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
                     }
 
-                    const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    const workId = selectedFaena.id || (selectedFaena as any)._id;
                     const workerData = {
                       ...newWorker,
                       workId: String(workId),
@@ -1941,8 +1939,8 @@ if (field.id === "task") {
           )}
           
           {/* Machinery section - only visible in edit mode */}
-          {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+          {isEditMode && selectedFaena && (
+            <div className="mt-6 border rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">Maquinaria</h3>
               </div>
@@ -2039,7 +2037,7 @@ if (field.id === "task") {
                   finalHours: "",
                   timeValue: "0",
                   totalValue: "0",
-                  workId: selectedOrden ? String(selectedOrden.id || (selectedOrden as any)._id) : "",
+                  workId: selectedFaena ? String(selectedFaena.id || (selectedFaena as any)._id) : "",
                 }}
                 addableColumns={[
                   "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
@@ -2066,7 +2064,7 @@ if (field.id === "task") {
                 }}
                 onInlineAdd={async (newMachinery) => {
                   try {
-                    if (!selectedOrden) {
+                    if (!selectedFaena) {
                       toast({
                         title: "Error",
                         description: "No hay una orden seleccionada",
@@ -2095,7 +2093,7 @@ if (field.id === "task") {
                       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
                     }
 
-                    const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    const workId = selectedFaena.id || (selectedFaena as any)._id;
                     const machineryData = {
                       ...newMachinery,
                       workId: String(workId),
@@ -2125,8 +2123,8 @@ if (field.id === "task") {
           )}
           
           {/* Products section - only visible in edit mode */}
-          {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+          {isEditMode && selectedFaena && (
+            <div className="mt-6 border rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium">Productos</h3>
               </div>
@@ -2211,7 +2209,7 @@ if (field.id === "task") {
                   machineryRelationship: "",
                   packagingCode: "",
                   invoiceNumber: "",
-                  workId: selectedOrden ? String(selectedOrden.id || (selectedOrden as any)._id) : "",
+                  workId: selectedFaena ? String(selectedFaena.id || (selectedFaena as any)._id) : "",
                 }}
                 addableColumns={[
                   "category", "product", "unitOfMeasurement", "amountPerHour", 
@@ -2219,7 +2217,7 @@ if (field.id === "task") {
                 ]}
                 onInlineAdd={async (newProduct) => {
                   try {
-                    if (!selectedOrden) {
+                    if (!selectedFaena) {
                       toast({
                         title: "Error",
                         description: "No hay una orden seleccionada",
@@ -2251,7 +2249,7 @@ if (field.id === "task") {
                       throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
                     }
 
-                    const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    const workId = selectedFaena.id || (selectedFaena as any)._id;
                     const productData = {
                       ...newProduct,
                       workId: String(workId),
@@ -2295,4 +2293,4 @@ if (field.id === "task") {
   );
 };
 
-export default OrdenAplicacion; 
+export default FaenasAgricolas; 

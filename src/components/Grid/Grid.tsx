@@ -162,16 +162,22 @@ const GridComponent: React.FC<GridProps> = ({
   };
 
   const renderEditableCell = (column: Column, row: any) => {
-    const isEditing = String(row[idField]) === editingRowId;
+    const rowId = String(row[idField]);
+    const isEditing = rowId === editingRowId;
     const isColumnEditable = editableColumns.includes(column.id);
     
     if (!isEditing || !isColumnEditable) {
-      // Return normal cell content
+      // Return normal cell content for this specific row
       return column.render
         ? column.render(row[column.accessor], row)
         : row[column.accessor] != null
           ? String(row[column.accessor])
           : "";
+    }
+
+    // Only use editing data if this specific row is being edited
+    if (!editingRowData) {
+      return row[column.accessor] != null ? String(row[column.accessor]) : "";
     }
 
     // Get value from editing data, handling nested properties
@@ -362,10 +368,11 @@ const GridComponent: React.FC<GridProps> = ({
 
   // Renderizar celdas de una fila
   const renderCells = (row: any) => {
+    const rowId = row[idField] || 'unknown-row';
     return columns
       .filter((column) => column.visible)
       .map((column) => (
-        <td key={column.id} className="px-4 py-2 border-t">
+        <td key={`${rowId}-${column.id}`} className="px-4 py-2 border-t">
           {renderEditableCell(column, row)}
         </td>
       ));

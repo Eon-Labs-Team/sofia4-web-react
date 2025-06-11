@@ -54,6 +54,7 @@ import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/orden-aplicacion";
+import FaenasAgricolas from "./pages/faenas-agricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 
 function App() {
@@ -684,6 +685,19 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <OrdenAplicacion />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/faenas-agricolas"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <FaenasAgricolas />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>

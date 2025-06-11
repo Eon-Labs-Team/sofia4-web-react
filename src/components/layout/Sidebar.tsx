@@ -63,6 +63,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
     case "good-practices":
       return [
         { icon: <BarChart3 size={16} />, label: "Orden de aplicación", path: "/orden-aplicacion" },
+        { icon: <BarChart3 size={16} />, label: "Faenas Agrícolas", path: "/faenas-agricolas" },
         { icon: <BarChart3 size={16} />, label: "Trabajos realizados", path: "/trabajos-realizados" },
 
         {
