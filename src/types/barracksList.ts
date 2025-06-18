@@ -51,4 +51,7 @@ export interface BarracksList {
 
   createdAt?: Date;  // Campos automáticos de timestamps
   updatedAt?: Date;  // Campos automáticos de timestamps
+
+  createdBy?: string;
+  updatedBy?: string;
 } 

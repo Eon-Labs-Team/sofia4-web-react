@@ -54,6 +54,7 @@ export interface FieldConfig {
   defaultValue?: any;
   helperText?: string;
   gridConfig?: any; // Configuration for nested grid
+  onChange?: (value: any, setValue: any, getValues?: any) => void; // Custom onChange handler
 }
 
 export interface SectionConfig {

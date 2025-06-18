@@ -22,10 +22,6 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/harvest/machinery`,
     byId: (id: string | number) => `${API_BASE_URL}/harvest/machinery/${id}`,
   },
-  cuarteles: {
-    base: `${API_BASE_URL}/harvest/barracks`,
-    byId: (id: string | number) => `${API_BASE_URL}/harvest/barracks/${id}`,
-  },
   listaCuarteles: {
     base: `${API_BASE_URL}/agriculturalWork/barracksList`,
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}`,

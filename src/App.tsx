@@ -1,7 +1,6 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRoutes, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Home, { SidebarContext } from "./pages/home";
-import Cuarteles from "./pages/Cuarteles";
 import Faenas from "./pages/Faenas";
 import Labores from "./pages/Labores";
 import ListaCuarteles from "./pages/ListaCuarteles";
@@ -113,20 +112,6 @@ function App() {
               <AuthenticatedLayout>
                 <Home />
               </AuthenticatedLayout>
-            </ProtectedRoute>
-          }
-        />
-        
-        {/* All other protected routes with PropertyRoute */}
-        <Route
-          path="/cuarteles"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <Cuarteles />
-                </AuthenticatedLayout>
-              </PropertyRoute>
             </ProtectedRoute>
           }
         />

@@ -47,7 +47,7 @@ interface FormFieldProps {
 }
 
 const FormField: React.FC<FormFieldProps> = ({ field }) => {
-  const { control, setValue } = useFormContext();
+  const { control, setValue, getValues } = useFormContext();
 
   // Render different field types
   const renderField = () => {
@@ -218,8 +218,15 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
               <FormItem>
                 <FormLabel>{field.label}</FormLabel>
                 <Select
-                  onValueChange={formField.onChange}
-                  defaultValue={formField.value}
+                  key={`${field.name}-${field.options?.length || 0}`}
+                  onValueChange={(value) => {
+                    formField.onChange(value);
+                    // Call custom onChange if provided
+                    if ((field as any).onChange) {
+                      (field as any).onChange(value, setValue, getValues);
+                    }
+                  }}
+                  value={formField.value || ""}
                   disabled={field.disabled}
                 >
                   <FormControl>

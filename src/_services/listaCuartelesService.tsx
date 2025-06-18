@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { BarracksList } from '@/types/barracksList';
+import { useAuthStore } from '@/lib/store/authStore';
 
 /**
  * Service for managing lista cuarteles (barracks list) data
@@ -11,7 +12,15 @@ class ListaCuartelesService {
    */
   async findAll(): Promise<BarracksList[]> {
     try {
-      const response = await fetch(ENDPOINTS.listaCuarteles.base, {
+      const { propertyId } = useAuthStore.getState();
+      
+      // Create a URL with query parameters
+      const url = new URL(ENDPOINTS.listaCuarteles.base);
+      if (propertyId) {
+        url.searchParams.append('propertyId', propertyId.toString());
+      }
+      
+      const response = await fetch(url.toString(), {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -21,7 +30,8 @@ class ListaCuartelesService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const barracksData = await response.json();
+      return barracksData.data || barracksData;
     } catch (error) {
       console.error('Error fetching barracks list:', error);
       throw error;
@@ -35,6 +45,8 @@ class ListaCuartelesService {
    */
   async createBarracksList(barracksList: Partial<BarracksList>): Promise<BarracksList> {
     try {
+      const { propertyId, user } = useAuthStore.getState();
+      
       const barracksListData: Partial<BarracksList> = {
         classificationZone: barracksList.classificationZone,
         barracksPaddockName: barracksList.barracksPaddockName,
@@ -77,6 +89,19 @@ class ListaCuartelesService {
         mapSectorColor: barracksList.mapSectorColor,
         state: barracksList.state !== undefined ? barracksList.state : true,
       };
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        barracksListData.propertyId = propertyId;
+      }
+
+      // Add createdBy field with current user ID
+      if (user?.id) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        barracksListData.createdBy = user.id;
+        barracksListData.updatedBy = user.id;
+      }
 
       const response = await fetch(ENDPOINTS.listaCuarteles.base, {
         method: 'POST',
@@ -105,12 +130,28 @@ class ListaCuartelesService {
    */
   async updateBarracksList(id: string | number, barracksList: Partial<BarracksList>): Promise<BarracksList> {
     try {
+      const { propertyId, user } = useAuthStore.getState();
+      
+      const updateData = { ...barracksList };
+      
+      // Add propertyId if available
+      if (propertyId) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        updateData.propertyId = propertyId;
+      }
+
+      // Add updatedBy field with current user ID
+      if (user?.id) {
+        // @ts-ignore - Adding a property that might not be in the interface but required by API
+        updateData.updatedBy = user.id;
+      }
+      
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(barracksList),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {

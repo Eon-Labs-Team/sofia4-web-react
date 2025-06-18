@@ -22,6 +22,7 @@ import { z } from "zod";
 import { BarracksList } from "@/types/barracksList";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import { toast } from "@/components/ui/use-toast";
+import { useAuthStore } from "@/lib/store/authStore";
 
 // Render function for the boolean columns
 const renderBoolean = (value: boolean) => {
@@ -632,26 +633,94 @@ const ListaCuarteles = () => {
   const [selectedCuartel, setSelectedCuartel] = useState<BarracksList | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch lista cuarteles on component mount
+  // Get propertyId from auth store
+  const { propertyId } = useAuthStore();
+  
+  // Fetch lista cuarteles on component mount and when propertyId changes
   useEffect(() => {
-    fetchListaCuarteles();
-  }, []);
+    console.log('🔄 ListaCuarteles useEffect triggered - propertyId:', propertyId);
+    if (propertyId) {
+      fetchListaCuarteles();
+    } else {
+      console.log('⚠️ No propertyId available, skipping fetch');
+      setListaCuarteles([]);
+    }
+  }, [propertyId]);
+  
+  // Debug effect to monitor state changes
+  useEffect(() => {
+    console.log('📊 listaCuarteles state updated:', {
+      length: listaCuarteles.length,
+      data: listaCuarteles,
+      isArray: Array.isArray(listaCuarteles)
+    });
+  }, [listaCuarteles]);
   
   // Function to fetch lista cuarteles data
   const fetchListaCuarteles = async () => {
+    if (!propertyId) {
+      console.log('❌ Cannot fetch cuarteles: no propertyId');
+      toast({
+        title: "Error",
+        description: "No hay una propiedad seleccionada",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
+    console.log('🚀 Starting fetchListaCuarteles with propertyId:', propertyId);
+    
     try {
-      const data = await listaCuartelesService.findAll();
-      setListaCuarteles(data.data || data);
+      const rawData = await listaCuartelesService.findAll();
+      console.log('📥 Raw data received from service:', rawData);
+      
+      // Handle potential double-wrapped data
+      let processedData: BarracksList[];
+      
+      if (Array.isArray(rawData)) {
+        processedData = rawData;
+        console.log('✅ Data is already an array');
+      } else if (rawData && typeof rawData === 'object' && 'data' in rawData && Array.isArray((rawData as any).data)) {
+        processedData = (rawData as any).data;
+        console.log('✅ Extracted data from .data property');
+      } else if (rawData && typeof rawData === 'object' && 'data' in rawData && (rawData as any).data && typeof (rawData as any).data === 'object' && 'data' in (rawData as any).data && Array.isArray((rawData as any).data.data)) {
+        processedData = (rawData as any).data.data;
+        console.log('✅ Extracted data from nested .data.data property');
+      } else {
+        console.error('❌ Unexpected data structure:', rawData);
+        processedData = [];
+      }
+      
+      console.log('🔍 Processed data:', {
+        length: processedData.length,
+        sample: processedData.slice(0, 2),
+        isArray: Array.isArray(processedData)
+      });
+      
+      setListaCuarteles(processedData);
+      
+      if (processedData.length === 0) {
+        console.log('ℹ️ No cuarteles found for this property');
+        toast({
+          title: "Sin datos",
+          description: "No se encontraron cuarteles para esta propiedad",
+        });
+      } else {
+        console.log(`✅ Successfully loaded ${processedData.length} cuarteles`);
+      }
+      
     } catch (error) {
-      console.error("Error loading lista cuarteles:", error);
+      console.error("💥 Error loading lista cuarteles:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los datos. Por favor intente nuevamente.",
         variant: "destructive",
       });
+      setListaCuarteles([]); // Reset to empty array on error
     } finally {
       setIsLoading(false);
+      console.log('🏁 fetchListaCuarteles completed');
     }
   };
   
@@ -788,9 +857,10 @@ const ListaCuarteles = () => {
         data={listaCuarteles}
         columns={columns}
         idField="_id"
-        title="Lista de Cuarteles"
+        title={`Lista de Cuarteles (${listaCuarteles.length} registros)`}
         expandableContent={expandableContent}
         actions={actionsRenderer}
+        key={`cuarteles-grid-${listaCuarteles.length}-${propertyId}`}
       />
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

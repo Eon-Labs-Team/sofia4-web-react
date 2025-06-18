@@ -105,7 +105,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
         { icon: <Briefcase size={16} />, 
         label: "Configuraciones", 
         children: [
-
+          { icon: <Building2 size={16} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
           { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
           { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
         ] },
@@ -172,6 +172,7 @@ const Sidebar = ({
   // Estado local para los items de navegación
   const [localNavItems, setLocalNavItems] = useState<NavItem[]>([
     { icon: <Home size={20} />, label: "Inicio", path: "/" },
+    { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
     { 
       icon: <Briefcase size={20} />, 
       label: "Faenas", 
@@ -205,6 +206,7 @@ const Sidebar = ({
       // Restaurar ítems originales
       setLocalNavItems([
         { icon: <Home size={20} />, label: "Inicio", path: "/" },
+        { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
         { 
           icon: <Briefcase size={20} />, 
           label: "Faenas", 

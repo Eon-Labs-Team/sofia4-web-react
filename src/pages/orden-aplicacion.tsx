@@ -38,6 +38,8 @@ import machineryService from "@/_services/machineryService";
 import productService from "@/_services/productService";
 import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import { BarracksList } from "@/types/barracksList";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -71,6 +73,8 @@ interface Task {
   requiresRowCount?: boolean;
   requiresHourLog?: boolean;
 }
+
+// Interface for Cuarteles (Barracks) - using BarracksList type
 
 // Render function for the workState field
 const renderWorkState = (value: string) => {
@@ -316,10 +320,10 @@ const formSections: SectionConfig[] = [
       },
       {
         id: "barracks",
-        type: "text",
+        type: "select",
         label: "Cuartel",
         name: "barracks",
-        placeholder: "Nombre del cuartel",
+        placeholder: "Seleccione un cuartel",
         required: true
       },
       {
@@ -327,16 +331,18 @@ const formSections: SectionConfig[] = [
         type: "text",
         label: "Especie",
         name: "species",
-        placeholder: "Ej: Manzana, Pera, Uva",
-        required: true
+        placeholder: "Se llenará automáticamente al seleccionar cuartel",
+        required: true,
+        disabled: true
       },
       {
         id: "variety",
         type: "text",
         label: "Variedad",
         name: "variety",
-        placeholder: "Ej: Fuji, Bartlett, Cabernet",
-        required: true
+        placeholder: "Se llenará automáticamente al seleccionar cuartel",
+        required: true,
+        disabled: true
       },
       {
         id: "phenologicalState",
@@ -908,6 +914,10 @@ const OrdenAplicacion = () => {
   const [filteredTasks, setFilteredTasks] = useState<ITask[]>([]);
   const [selectedTaskType, setSelectedTaskType] = useState<string>("");
   
+  // Cuarteles state
+  const [cuarteles, setCuarteles] = useState<BarracksList[]>([]);
+  const [selectedCuartel, setSelectedCuartel] = useState<BarracksList | null>(null);
+  
   // Products state
   const [products, setProducts] = useState<IProduct[]>([]);
   
@@ -916,22 +926,47 @@ const OrdenAplicacion = () => {
     fetchOrdenesAplicacion();
     fetchTaskTypes();
     fetchTasks();
+    fetchCuarteles();
   }, []);
+
+  // Set selected cuartel when editing a work order
+  useEffect(() => {
+    if (isEditMode && selectedOrden && cuarteles.length > 0) {
+      const cuartelFromOrder = cuarteles.find(c => c._id === selectedOrden.barracks);
+      if (cuartelFromOrder) {
+        setSelectedCuartel(cuartelFromOrder);
+        console.log('🔧 Setting cuartel from order:', {
+          id: cuartelFromOrder._id,
+          name: cuartelFromOrder.barracksPaddockName,
+          species: cuartelFromOrder.varietySpecies,
+          variety: cuartelFromOrder.variety
+        });
+      }
+    }
+  }, [isEditMode, selectedOrden, cuarteles]);
   
   // Filter tasks when taskType changes
   useEffect(() => {
     // Log data for debugging
-    console.log('Selected taskType:', selectedTaskType);
-    console.log('All tasks:', allTasks);
+    console.log('📋 Filtering tasks - Selected taskType:', selectedTaskType, typeof selectedTaskType);
+    console.log('📋 All available tasks:', allTasks.length);
+    console.log('📋 AllTasks array:', allTasks);
     
-    if (selectedTaskType) {
+    if (selectedTaskType && selectedTaskType !== '' && selectedTaskType !== null && selectedTaskType !== undefined) {
+      // Filter tasks by selected taskType (faena) - even if result is empty
       const tasksForType = allTasks.filter(task => task.taskTypeId === selectedTaskType);
-      console.log('Filtered tasks:', tasksForType);
-      setFilteredTasks(tasksForType);
+      console.log('🔍 Filtered tasks for taskType:', tasksForType.length, tasksForType);
+      if (tasksForType.length === 0) {
+        console.log('⚠️ No labores found for selected faena - showing empty list');
+      }
+      setFilteredTasks(tasksForType); // This could be an empty array, and that's correct
     } else {
-      // Show all tasks when no taskType is selected instead of empty array
-      setFilteredTasks(allTasks);
+      // Show all tasks ONLY when no taskType is selected (empty string, null, or undefined)
+      console.log('📂 Showing all tasks (no faena selected):', allTasks.length);
+      setFilteredTasks([...allTasks]); // Create a copy to force re-render
     }
+    
+    console.log('📋 FilteredTasks after update:', filteredTasks.length);
   }, [selectedTaskType, allTasks]);
   
   // Fetch task types and tasks from services
@@ -964,10 +999,129 @@ const OrdenAplicacion = () => {
       });
     }
   };
+
+  const fetchCuarteles = async () => {
+    try {
+      const data = await listaCuartelesService.findAll();
+      console.log('Fetched cuarteles:', data);
+      setCuarteles(data);
+    } catch (error) {
+      console.error("Error loading cuarteles:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los cuarteles",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Function to handle taskType change
-  const handleTaskTypeChange = (taskTypeId: string) => {
+  const handleTaskTypeChange = (taskTypeId: string, formSetValue?: any, formGetValues?: any) => {
+    console.log('🏷️ TaskType (Faena) changed to:', taskTypeId);
     setSelectedTaskType(taskTypeId);
+    
+    // Check if there's a currently selected task and if it belongs to the new taskType
+    if (formSetValue && formGetValues) {
+      const currentTaskId = formGetValues('task');
+      
+      if (currentTaskId) {
+        // Find the currently selected task
+        const currentTask = allTasks.find(task => 
+          (task as any)._id === currentTaskId || (task as any).id === currentTaskId
+        );
+        
+        if (currentTask) {
+          // Check if the current task belongs to the new taskType
+          if (currentTask.taskTypeId !== taskTypeId) {
+            // Clear task selection if it doesn't belong to the new taskType
+            formSetValue('task', '');
+            console.log('🚨 Task cleared - it belonged to different faena:', {
+              taskName: currentTask.taskName,
+              oldTaskTypeId: currentTask.taskTypeId,
+              newTaskTypeId: taskTypeId
+            });
+          } else {
+            console.log('✅ Task maintained - it belongs to selected faena:', {
+              taskName: currentTask.taskName,
+              taskTypeId: taskTypeId
+            });
+          }
+        } else {
+          // If task not found, clear it to be safe
+          formSetValue('task', '');
+          console.log('⚠️ Task cleared - could not find task in allTasks');
+        }
+      } else {
+        console.log('ℹ️ No task currently selected, nothing to clear');
+      }
+    }
+  };
+
+  // Function to handle task change
+  const handleTaskChange = (taskId: string, formSetValue?: any) => {
+    console.log('🔧 Task (Labor) changed to:', taskId);
+    
+    if (!taskId) {
+      // If no task selected, don't change taskType - show all tasks
+      return;
+    }
+    
+    // Find the selected task
+    const selectedTask = allTasks.find(task => (task as any)._id === taskId || (task as any).id === taskId);
+    
+    if (selectedTask) {
+      // Automatically set the corresponding taskType (faena)
+      const correspondingTaskType = selectedTask.taskTypeId;
+      
+      console.log('🎯 Setting corresponding taskType:', {
+        taskId: taskId,
+        taskName: selectedTask.taskName,
+        taskTypeId: correspondingTaskType
+      });
+      
+      // Update both state and form
+      setSelectedTaskType(correspondingTaskType);
+      
+      if (formSetValue) {
+        formSetValue('taskType', correspondingTaskType);
+        console.log('✅ TaskType automatically set to:', correspondingTaskType);
+      }
+    } else {
+      console.log('❌ No task found for ID:', taskId);
+    }
+  };
+
+  // Function to handle cuartel change
+  const handleCuartelChange = (cuartelId: string, formSetValue?: any) => {
+    const cuartel = cuarteles.find(c => c._id === cuartelId);
+    if (cuartel) {
+      setSelectedCuartel(cuartel);
+      console.log('🏠 Cuartel selected:', {
+        id: cuartel._id,
+        name: cuartel.barracksPaddockName,
+        species: cuartel.varietySpecies,
+        variety: cuartel.variety
+      });
+      
+      // Update form values if setValue function is provided
+      if (formSetValue) {
+        formSetValue('species', cuartel.varietySpecies || '');
+        formSetValue('variety', cuartel.variety || '');
+        console.log('✅ Form values updated:', {
+          species: cuartel.varietySpecies,
+          variety: cuartel.variety
+        });
+      }
+    } else {
+      setSelectedCuartel(null);
+      console.log('❌ No cuartel found for ID:', cuartelId);
+      
+      // Clear form values if setValue function is provided
+      if (formSetValue) {
+        formSetValue('species', '');
+        formSetValue('variety', '');
+      }
+    }
   };
   
   // Function to fetch ordenes data
@@ -1109,14 +1263,19 @@ const OrdenAplicacion = () => {
     
     // Set the selected task type if available
     if (orden.taskType) {
-      setSelectedTaskType(String(orden.taskType));
+      const taskTypeId = String(orden.taskType);
+      setSelectedTaskType(taskTypeId);
       
-      // Filter tasks for this task type
-      console.log('Edit mode - orden.taskType:', orden.taskType);
-      const tasksForType = allTasks.filter(task => task.taskTypeId === String(orden.taskType));
-      console.log('Edit mode - filtered tasks:', tasksForType);
-      setFilteredTasks(tasksForType);
+      console.log('✏️ Edit mode - Setting taskType:', taskTypeId);
+      console.log('✏️ Edit mode - orden.taskType:', orden.taskType);
+    } else {
+      // Clear taskType selection if not present
+      setSelectedTaskType('');
+      console.log('✏️ Edit mode - No taskType found, clearing selection');
     }
+    
+    // Clear selected cuartel - it will be set by useEffect when cuarteles are loaded
+    setSelectedCuartel(null);
     
     setIsDialogOpen(true);
   };
@@ -1502,10 +1661,10 @@ const OrdenAplicacion = () => {
       const allMachineryData = Array.isArray(data) ? data : (data as any)?.data || [];
       console.log('Processed machinery data:', allMachineryData);
       
-      // Filter machinery that belongs to the current work
+      // Filter machinery that belongs to the current work and is active (state = true)
       const workMachinery = allMachineryData.filter((machine: any) => {
-        const matches = machine.workId === workId;
-        console.log(`Machinery ${machine.id} - workId: ${machine.workId}, matches: ${matches}`);
+        const matches = machine.workId === workId && machine.state !== false;
+        console.log(`Machinery ${machine.id} - workId: ${machine.workId}, state: ${machine.state}, matches: ${matches}`);
         return matches;
       });
       
@@ -1597,6 +1756,8 @@ const OrdenAplicacion = () => {
           onClick={() => {
             setSelectedOrden(null);
             setIsEditMode(false);
+            setSelectedCuartel(null); // Clear selected cuartel for new record
+            setSelectedTaskType(''); // Clear selected faena for new record
             setIsDialogOpen(true);
           }}
         >
@@ -1630,42 +1791,88 @@ const OrdenAplicacion = () => {
           <div className="w-full max-w-full overflow-hidden">
             <DynamicForm
               sections={formSections.map(section => {
+              if (section.id === "orden-info-basic") {
+                return {
+                  ...section,
+                  fields: section.fields.map(field => {
+                    if (field.id === "barracks") {
+                      console.log("Rendering barracks select with options:", cuarteles);
+                      return {
+                        ...field,
+                        options: cuarteles.map(cuartel => {
+                          const value = cuartel._id;
+                          console.log(`Cuartel option: ${cuartel.barracksPaddockName} (${value})`);
+                          return {
+                            value: value,
+                            label: cuartel.barracksPaddockName
+                          };
+                        }),
+                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
+                          console.log("Barracks changed to:", value);
+                          handleCuartelChange(value, formSetValue);
+                        }
+                      };
+                    }
+                    if (field.id === "species") {
+                      return {
+                        ...field,
+                        value: selectedCuartel?.varietySpecies || "",
+                        disabled: true
+                      };
+                    }
+                    if (field.id === "variety") {
+                      return {
+                        ...field,
+                        value: selectedCuartel?.variety || "",
+                        disabled: true
+                      };
+                    }
+                    return field;
+                  })
+                };
+              }
               if (section.id === "orden-info-task") {
                 return {
                   ...section,
                   fields: section.fields.map(field => {
                     if (field.id === "taskType") {
-  console.log("Rendering taskType select with options:", taskTypes);
-  return {
-    ...field,
-    options: taskTypes.map(type => {
-      const value = type._id || (type as any).id;
-      console.log(`TaskType option: ${type.name} (${value})`);
-      return {
-        value: value,
-        label: type.name
-      };
-    }),
-    onChange: (value: string) => {
-      console.log("TaskType changed to:", value);
-      handleTaskTypeChange(value);
-    }
-  };
-}
-if (field.id === "task") {
-  console.log("Rendering task select with options:", filteredTasks);
-  return {
-    ...field,
-    options: filteredTasks.map(task => {
-      const value = (task as any)._id || (task as any).id;
-      console.log(`Task option: ${task.taskName} (${value})`);
-      return {
-        value: value,
-        label: task.taskName
-      };
-    })
-  };
-}
+                      console.log("Rendering taskType select with options:", taskTypes);
+                      return {
+                        ...field,
+                        options: taskTypes.map(type => {
+                          const value = type._id || (type as any).id;
+                          console.log(`TaskType option: ${type.name} (${value})`);
+                          return {
+                            value: value,
+                            label: type.name
+                          };
+                        }),
+                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
+                          console.log("TaskType changed to:", value);
+                          handleTaskTypeChange(value, formSetValue, formGetValues);
+                        }
+                      };
+                    }
+                    if (field.id === "task") {
+                      console.log("🔧 Rendering task select with options:", filteredTasks.length, 'filteredTasks');
+                      console.log("🔧 FilteredTasks array:", filteredTasks);
+                      return {
+                        ...field,
+                        key: `task-field-${filteredTasks.length}-${selectedTaskType}`, // Force re-render
+                        options: filteredTasks.map(task => {
+                          const value = (task as any)._id || (task as any).id;
+                          console.log(`🔧 Task option: ${task.taskName} (${value})`);
+                          return {
+                            value: value,
+                            label: task.taskName
+                          };
+                        }),
+                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
+                          console.log("Task changed to:", value);
+                          handleTaskChange(value, formSetValue);
+                        }
+                      };
+                    }
                     return field;
                   })
                 };
@@ -1695,12 +1902,7 @@ if (field.id === "task") {
                   },
                   rowNumber: "",
                   taskType: "",
-                  task: {
-                    _id: "",
-                    taskTypeId: "",
-                    optionalCode: "",
-                    taskName: ""
-                  },
+                  task: "",
                   calibrationPerHectare: 0,
                   taskOptimalYield: 0,
                   initialBonusToWorkers: 0,
