@@ -226,4 +226,28 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/products/products`,
     byId: (id: string | number) => `${API_BASE_URL}/products/products/${id}`,
   },
+  warehouse: {
+    base: `${API_BASE_SOFIA}/warehouse`,
+    byId: (id: string | number) => `${API_BASE_SOFIA}/warehouse/${id}`,
+    byName: (name: string) => `${API_BASE_SOFIA}/warehouse/byName/${name}`,
+    findAll: `${API_BASE_SOFIA}/warehouse/findAll`,
+  },
+  warehouseProducts: {
+    base: `${API_BASE_SOFIA}/product`,
+    byId: (id: string | number) => `${API_BASE_SOFIA}/product/${id}`,
+    byName: (name: string) => `${API_BASE_SOFIA}/product/byName/${name}`,
+    findAll: `${API_BASE_SOFIA}/product/findAll`,
+  },
+  warehouseLots: {
+    base: `${API_BASE_SOFIA}/lot`,
+    byId: (id: string | number) => `${API_BASE_SOFIA}/lot/${id}`,
+    byName: (name: string) => `${API_BASE_SOFIA}/lot/byName/${name}`,
+    findAll: `${API_BASE_SOFIA}/lot/findAll`,
+  },
+  inventoryMovement: {
+    base: `${API_BASE_SOFIA}/inventoryMovement`,
+    byId: (id: string | number) => `${API_BASE_SOFIA}/inventoryMovement/${id}`,
+    byName: (name: string) => `${API_BASE_SOFIA}/inventoryMovement/byName/${name}`,
+    findAll: `${API_BASE_SOFIA}/inventoryMovement/findAll`,
+  },
 }; 

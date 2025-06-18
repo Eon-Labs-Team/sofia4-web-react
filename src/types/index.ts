@@ -96,3 +96,6 @@ export * from './IWindCondition';
 export * from './IWorkDay';
 export * from './ISubCategoryProduct';
 export * from './IGlobalConfig';
+export * from './IWarehouseProduct';
+export * from './IWarehouseLot';
+export * from './IInventoryMovement';
