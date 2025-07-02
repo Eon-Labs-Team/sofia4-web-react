@@ -28,6 +28,7 @@ import DynamicForm, {
 import { z } from "zod";
 import { IWork } from "@/types/IWork";
 import { IWorkers } from "@/types/IWorkers";
+import { IWorkerList } from "@/types/IWorkerList";
 import { IMachinery } from "@/types/IMachinery";
 import { IProduct } from "@/types/IProducts";
 import { IProductCategory } from "@/types/IProductCategory";
@@ -53,6 +54,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { workersMockup } from "@/lib/mockups/workersMockup";
 
 // Interfaces for TaskType (Faena) and Task (Labor)
 interface TaskType {
@@ -909,6 +911,9 @@ const OrdenAplicacion = () => {
   // Workers state
   const [workers, setWorkers] = useState<IWorkers[]>([]);
   
+  // Worker list state (for selectable dropdown)
+  const [workerList, setWorkerList] = useState<IWorkerList[]>([]);
+  
   // Machinery state
   const [machinery, setMachinery] = useState<IMachinery[]>([]);
   
@@ -938,6 +943,7 @@ const OrdenAplicacion = () => {
     fetchCuarteles();
     fetchProductCategories();
     fetchWarehouseProducts();
+    fetchWorkerList();
   }, []);
 
   // Set selected cuartel when editing a work order
@@ -1347,10 +1353,14 @@ const OrdenAplicacion = () => {
   const workersColumns: Column[] = [
     {
       id: "worker",
-      header: "ID Trabajador",
+      header: "Trabajador",
       accessor: "worker",
       visible: true,
       sortable: true,
+      render: (value: string) => {
+        const worker = workerList.find(w => w._id === value);
+        return worker ? `${worker.names} ${worker.lastName}` : value;
+      },
     },
     {
       id: "classification",
@@ -1781,6 +1791,26 @@ const OrdenAplicacion = () => {
     }
   };
 
+  // Function to fetch worker list for selectable dropdown
+  const fetchWorkerList = async () => {
+    try {
+      console.log('Fetching worker list for selectable dropdown...');
+      
+      // Using mockup data for now - replace with real service call later
+      const data = workersMockup;
+      console.log('Fetched worker list:', data);
+      
+      setWorkerList(data);
+    } catch (error) {
+      console.error("Error loading worker list:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar la lista de trabajadores",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Render action buttons for each row
   const renderActions = (row: WorkWithId) => {
     return (
@@ -2047,6 +2077,23 @@ const OrdenAplicacion = () => {
                   "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
                 ]}
                 customEditRender={{
+                  worker: (value, onChange) => (
+                    <Select
+                      value={value || ""}
+                      onValueChange={(newValue) => onChange(newValue)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar trabajador" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {workerList.map((worker) => (
+                          <SelectItem key={worker._id} value={worker._id || ""}>
+                            {worker.names} {worker.lastName} ({worker.rut})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
                   date: (value, onChange) => (
                     <Input
                       type="date"
@@ -2122,6 +2169,23 @@ const OrdenAplicacion = () => {
                   "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
                 ]}
                 customAddRender={{
+                  worker: (value, onChange) => (
+                    <Select
+                      value={value || ""}
+                      onValueChange={(newValue) => onChange(newValue)}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar trabajador" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {workerList.map((worker) => (
+                          <SelectItem key={worker._id} value={worker._id || ""}>
+                            {worker.names} {worker.lastName} ({worker.rut})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
                   date: (value, onChange) => (
                     <Input
                       type="date"
