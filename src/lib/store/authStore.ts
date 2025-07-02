@@ -2,6 +2,27 @@ import { create } from 'zustand';
 import { User, LoginCredentials } from '@/types/auth';
 import authService from '@/_services/authService';
 
+// Constants for localStorage keys
+const PROPERTY_ID_KEY = 'selected_property_id';
+
+// Helper functions for localStorage
+const savePropertyIdToStorage = (id: string | number): void => {
+  localStorage.setItem(PROPERTY_ID_KEY, id.toString());
+};
+
+const getPropertyIdFromStorage = (): string | number | null => {
+  const stored = localStorage.getItem(PROPERTY_ID_KEY);
+  if (!stored) return null;
+  
+  // Try to parse as number, if it fails return as string
+  const asNumber = Number(stored);
+  return isNaN(asNumber) ? stored : asNumber;
+};
+
+const removePropertyIdFromStorage = (): void => {
+  localStorage.removeItem(PROPERTY_ID_KEY);
+};
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -20,14 +41,14 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  // Initial state
+  // Initial state - load propertyId from localStorage
   user: authService.getCurrentUser(),
   token: authService.getAuthToken(),
   isAuthenticated: authService.isLoggedIn(),
   isLoading: false,
   error: null,
   enterpriseId: null,
-  propertyId: null,
+  propertyId: getPropertyIdFromStorage(),
   
   // Login action
   login: async (credentials: LoginCredentials) => {
@@ -54,6 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Logout action
   logout: () => {
     authService.logout();
+    removePropertyIdFromStorage(); // Clear propertyId from localStorage
     set({
       user: null,
       token: null,
@@ -67,13 +89,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
   },
 
-  // Set the current property ID
+  // Set the current property ID and save to localStorage
   setPropertyId: (id: string | number) => {
+    savePropertyIdToStorage(id);
     set({ propertyId: id });
   },
   
-  // Clear the current property ID
+  // Clear the current property ID and remove from localStorage
   clearPropertyId: () => {
+    removePropertyIdFromStorage();
     set({ propertyId: null });
   }
 })); 

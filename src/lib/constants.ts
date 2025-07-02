@@ -236,7 +236,7 @@ export const ENDPOINTS = {
     base: `${API_BASE_SOFIA}/product`,
     byId: (id: string | number) => `${API_BASE_SOFIA}/product/${id}`,
     byName: (name: string) => `${API_BASE_SOFIA}/product/byName/${name}`,
-    findAll: `${API_BASE_SOFIA}/product/findAll`,
+    findAll: `${API_BASE_SOFIA}/product/`,
   },
   warehouseLots: {
     base: `${API_BASE_SOFIA}/lot`,

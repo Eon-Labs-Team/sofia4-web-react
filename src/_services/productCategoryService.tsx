@@ -1,4 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
+import { useAuthStore } from '@/lib/store/authStore';
 import { IProductCategory } from '@/types/IProductCategory';
 
 /**
@@ -12,8 +13,16 @@ class ProductCategoryService {
   async findByEnterpriseId(): Promise<IProductCategory[]> {
     try {
       const enterpriseId = "1234"; // todo: manejar session
+      const { propertyId } = useAuthStore.getState();
       
-      const response = await fetch(ENDPOINTS.productCategory.byEnterpriseId, {
+      // Create a URL with query parameters
+      const url = new URL(ENDPOINTS.productCategory.byEnterpriseId);
+      if (propertyId) {
+        url.searchParams.append('propertyId', propertyId.toString());
+      }
+      
+      
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           'enterpriseId': enterpriseId

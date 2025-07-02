@@ -30,12 +30,16 @@ import { IWork } from "@/types/IWork";
 import { IWorkers } from "@/types/IWorkers";
 import { IMachinery } from "@/types/IMachinery";
 import { IProduct } from "@/types/IProducts";
+import { IProductCategory } from "@/types/IProductCategory";
+import { IWarehouseProduct } from "@/types/IWarehouseProduct";
 import { ITaskType } from "@/types/ITaskType";
 import { ITask } from "@/types/ITask";
 import workService from "@/_services/workService";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
 import productService from "@/_services/productService";
+import productCategoryService from "@/_services/productCategoryService";
+import warehouseProductService from "@/_services/warehouseProductService";
 import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
@@ -921,12 +925,19 @@ const OrdenAplicacion = () => {
   // Products state
   const [products, setProducts] = useState<IProduct[]>([]);
   
+  // Product categories and warehouse products state
+  const [productCategories, setProductCategories] = useState<IProductCategory[]>([]);
+  const [warehouseProducts, setWarehouseProducts] = useState<IWarehouseProduct[]>([]);
+  const [filteredWarehouseProducts, setFilteredWarehouseProducts] = useState<IWarehouseProduct[]>([]);
+  
   // Fetch ordenes on component mount
   useEffect(() => {
     fetchOrdenesAplicacion();
     fetchTaskTypes();
     fetchTasks();
     fetchCuarteles();
+    fetchProductCategories();
+    fetchWarehouseProducts();
   }, []);
 
   // Set selected cuartel when editing a work order
@@ -1015,6 +1026,58 @@ const OrdenAplicacion = () => {
     }
   };
   
+  const fetchProductCategories = async () => {
+    try {
+      const data = await productCategoryService.findByEnterpriseId();
+      console.log('Fetched product categories:', data);
+      // Ensure we always have an array
+      const categoriesArray = Array.isArray(data) ? data : [];
+      setProductCategories(categoriesArray);
+    } catch (error) {
+      console.error("Error loading product categories:", error);
+      // Set empty array on error
+      setProductCategories([]);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las categorías de producto",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const fetchWarehouseProducts = async () => {
+    try {
+      const data = await warehouseProductService.findAll();
+      console.log('Fetched warehouse products:', data);
+      // Ensure we always have an array
+      const productsArray = Array.isArray(data) ? data : [];
+      setWarehouseProducts(productsArray);
+      setFilteredWarehouseProducts(productsArray);
+    } catch (error) {
+      console.error("Error loading warehouse products:", error);
+      // Set empty arrays on error
+      setWarehouseProducts([]);
+      setFilteredWarehouseProducts([]);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los productos del almacén",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Function to filter warehouse products by category
+  const filterWarehouseProductsByCategory = (categoryDescription: string) => {
+    if (!categoryDescription || categoryDescription === '') {
+      setFilteredWarehouseProducts(warehouseProducts);
+    } else {
+      const filtered = warehouseProducts.filter(product => 
+        product.category === categoryDescription
+      );
+      setFilteredWarehouseProducts(filtered);
+    }
+  };
+
   // Function to handle taskType change
   const handleTaskTypeChange = (taskTypeId: string, formSetValue?: any, formGetValues?: any) => {
     console.log('🏷️ TaskType (Faena) changed to:', taskTypeId);
@@ -1702,7 +1765,7 @@ const OrdenAplicacion = () => {
       // Filter products that belong to the current work
       const workProducts = allProductsData.filter((product: any) => {
         const matches = product.workId === workId;
-        console.log(`Product ${product.id || product._id} - workId: ${product.workId}, matches: ${matches}`);
+        console.log(`Product ${product._id} - workId: ${product.workId}, matches: ${matches}`);
         return matches;
       });
       
@@ -2419,6 +2482,100 @@ const OrdenAplicacion = () => {
                   "category", "product", "unitOfMeasurement", "amountPerHour", 
                   "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
                 ]}
+                customEditRender={{
+                  category: (value, onChange) => (
+                    <Select
+                      value={value === "" || !value ? "all" : value}
+                      onValueChange={(newValue) => {
+                        const categoryValue = newValue === "all" ? "" : newValue;
+                        onChange(categoryValue);
+                        filterWarehouseProductsByCategory(categoryValue);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas las categorías</SelectItem>
+                        {Array.isArray(productCategories) && productCategories.map((category) => (
+                          <SelectItem key={category._id} value={category.description}>
+                            {category.description}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                  product: (value, onChange, rowData) => (
+                    <Select
+                      value={value || ""}
+                      onValueChange={onChange}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar producto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.isArray(filteredWarehouseProducts) && filteredWarehouseProducts.length > 0 ? (
+                          filteredWarehouseProducts.map((product) => (
+                            <SelectItem key={product._id} value={product.name}>
+                              {product.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-products" disabled>
+                            No hay productos disponibles
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  ),
+                }}
+                customAddRender={{
+                  category: (value, onChange) => (
+                    <Select
+                      value={value === "" || !value ? "all" : value}
+                      onValueChange={(newValue) => {
+                        const categoryValue = newValue === "all" ? "" : newValue;
+                        onChange(categoryValue);
+                        filterWarehouseProductsByCategory(categoryValue);
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas las categorías</SelectItem>
+                        {Array.isArray(productCategories) && productCategories.map((category) => (
+                          <SelectItem key={category._id} value={category.description}>
+                            {category.description}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ),
+                  product: (value, onChange, rowData) => (
+                    <Select
+                      value={value || ""}
+                      onValueChange={onChange}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Seleccionar producto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.isArray(filteredWarehouseProducts) && filteredWarehouseProducts.length > 0 ? (
+                          filteredWarehouseProducts.map((product) => (
+                            <SelectItem key={product._id} value={product.name}>
+                              {product.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-products" disabled>
+                            No hay productos disponibles
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  ),
+                }}
                 onInlineAdd={async (newProduct) => {
                   try {
                     if (!selectedOrden) {
@@ -2432,7 +2589,6 @@ const OrdenAplicacion = () => {
 
                     // Validate required fields
                     const requiredFields = {
-                      'category': newProduct.category,
                       'product': newProduct.product,
                       'unitOfMeasurement': newProduct.unitOfMeasurement,
                       'amount': newProduct.amount,
