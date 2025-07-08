@@ -78,8 +78,8 @@ const MapView: React.FC<MapViewProps> = ({
     <Card className="w-full">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Mapa de Órdenes de Aplicación
+          {/* <MapPin className="h-5 w-5" />
+          Mapa de Órdenes de Aplicación */}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">

@@ -52,6 +52,7 @@ import warehouseProductService from "@/_services/warehouseProductService";
 import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
+import workerListService from "@/_services/workerListService";
 import { BarracksList } from "@/types/barracksList";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,7 @@ import MapView from "@/components/MapView/MapView";
 import { mapLocations } from "@/lib/mockups/mapMockup";
 import GanttChart from "@/components/GanttChart/GanttChart";
 import { transformWorkToGanttTask, GanttTask } from "@/lib/mockups/ganttMockup";
+import { DESIGN_TOKENS, LAYOUT_CONSTANTS } from "@/lib/constants";
 
 // Interfaces for TaskType (Faena) and Task (Labor)
 interface TaskType {
@@ -923,14 +925,9 @@ const OrdenAplicacion = () => {
   const [filteredWarehouseProducts, setFilteredWarehouseProducts] = useState<IWarehouseProduct[]>([]);
   
   // State for visibility controls
-  const [showMap, setShowMap] = useState(() => {
-    const saved = localStorage.getItem('ordenAplicacion_showMap');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-  const [showGantt, setShowGantt] = useState(() => {
-    const saved = localStorage.getItem('ordenAplicacion_showGantt');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
+  const [showMap, setShowMap] = useState(false);
+  const [showGantt, setShowGantt] = useState(false);
+  const [showActivity, setShowActivity] = useState(true);
 
   // State for Gantt chart data
   const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
@@ -1844,8 +1841,8 @@ const OrdenAplicacion = () => {
     try {
       console.log('Fetching worker list for selectable dropdown...');
       
-      // Using mockup data for now - replace with real service call later
-      const data = workersMockup;
+      // Using real service to fetch worker data
+      const data = await workerListService.findAll();
       console.log('Fetched worker list:', data);
       
       setWorkerList(data);
@@ -1899,183 +1896,476 @@ const OrdenAplicacion = () => {
   const stats = calculateStatistics();
 
   return (
-    <div className="container mx-auto p-4">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Órdenes</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              Órdenes totales registradas
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Container */}
+      <div 
+        className="mx-auto"
+        style={{ 
+          maxWidth: LAYOUT_CONSTANTS.container.maxWidth,
+          padding: LAYOUT_CONSTANTS.container.padding 
+        }}
+      >
+        {/* 1. HEADER SECTION - SOFIA Title, Description & Action Buttons */}
+        <div 
+          className="bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-between"
+          style={{ 
+            minHeight: LAYOUT_CONSTANTS.header.minHeight,
+            padding: LAYOUT_CONSTANTS.header.padding,
+            marginBottom: LAYOUT_CONSTANTS.header.marginBottom 
+          }}
+        >
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 
+                className="font-bold text-gray-900"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['3xl'] }}
+              >
+                Ordenes de aplicación
+              </h1>
+            </div>
+            <p 
+              className="text-gray-600"
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.base }}
+            >
+              Gestione y monitoree las órdenes de aplicación de productos
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Confirmadas</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? `${((stats.confirmed / stats.total) * 100).toFixed(1)}%` : '0%'} del total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
-            <Clock className="h-4 w-4 text-amber-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? `${((stats.pending / stats.total) * 100).toFixed(1)}%` : '0%'} del total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bloqueadas</CardTitle>
-            <Ban className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.blocked}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? `${((stats.blocked / stats.total) * 100).toFixed(1)}%` : '0%'} del total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nulas</CardTitle>
-            <XCircle className="h-4 w-4 text-gray-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats.void}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? `${((stats.void / stats.total) * 100).toFixed(1)}%` : '0%'} del total
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Mapa georeferenciado */}
-      {showMap && (
-        <div className="mb-6 component-enter">
-          <MapView 
-            locations={mapLocations}
-            height="500px"
-            onMarkerClick={(location) => {
-              console.log('Marcador seleccionado:', location);
-              // Aquí podrías agregar lógica adicional como filtrar la tabla o mostrar detalles
-            }}
-          />
-        </div>
-      )}
-
-      {/* Gráfico Gantt */}
-      {showGantt && (
-        <div className="mb-6 component-enter">
-          <GanttChart 
-            tasks={ganttTasks}
-            height="600px"
-            showViewModeSelector={true}
-            onTaskClick={(task) => {
-              console.log('Tarea seleccionada:', task);
-              // Buscar la orden completa usando el ID de la tarea
-              const fullOrder = ordenesAplicacion.find(orden => 
-                (orden._id || orden.id) === task.id
-              );
-              if (fullOrder) {
-                setSelectedOrden(fullOrder);
-                setIsEditMode(true);
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* View Toggle Buttons */}
+            <div className="flex items-center gap-2 mr-4">
+              <Button
+                variant={showMap ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowMap(!showMap)}
+                className="flex items-center gap-2"
+                title={showMap ? "Ocultar mapa" : "Mostrar mapa"}
+              >
+                <Map className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {showMap ? "Ocultar" : "Mostrar"} Mapa
+                </span>
+              </Button>
+              <Button
+                variant={showGantt ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowGantt(!showGantt)}
+                className="flex items-center gap-2"
+                title={showGantt ? "Ocultar cronograma" : "Mostrar cronograma"}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {showGantt ? "Ocultar" : "Mostrar"} Gantt
+                </span>
+              </Button>
+              <Button
+                variant={showActivity ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowActivity(!showActivity)}
+                className="flex items-center gap-2"
+                title={showActivity ? "Ocultar actividad" : "Mostrar actividad"}
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {showActivity ? "Ocultar" : "Mostrar"} Actividad
+                </span>
+              </Button>
+            </div>
+            
+            {/* Action Buttons */}
+            {/* <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </Button> */}
+            <Button
+              onClick={() => {
+                setSelectedOrden(null);
+                setIsEditMode(false);
+                setSelectedCuartel(null);
+                setSelectedTaskType('');
                 setIsDialogOpen(true);
-                console.log('Editando orden desde Gantt:', fullOrder);
-              }
-            }}
-          />
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Órdenes de Aplicación</h1>
-          <p className="text-muted-foreground">
-            Gestione las órdenes de aplicación de productos
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Toggle buttons for Map and Gantt */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant={showMap ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowMap(!showMap)}
-              className="flex items-center gap-2 toggle-button"
-              title={showMap ? "Ocultar mapa" : "Mostrar mapa"}
+              }}
+              className="flex items-center gap-2"
             >
-              <Map className="h-4 w-4" />
-              {showMap ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              <span className="hidden sm:inline">
-                {showMap ? "Ocultar" : "Mostrar"} Mapa
-              </span>
-              <span className="sm:hidden">Mapa</span>
-            </Button>
-            <Button
-              variant={showGantt ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowGantt(!showGantt)}
-              className="flex items-center gap-2 toggle-button"
-              title={showGantt ? "Ocultar cronograma" : "Mostrar cronograma"}
-            >
-              <BarChart3 className="h-4 w-4" />
-              {showGantt ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              <span className="hidden sm:inline">
-                {showGantt ? "Ocultar" : "Mostrar"} Gantt
-              </span>
-              <span className="sm:hidden">Gantt</span>
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Agregar Orden</span>
             </Button>
           </div>
-          <Button
-            onClick={() => {
-              setSelectedOrden(null);
-              setIsEditMode(false);
-              setSelectedCuartel(null); // Clear selected cuartel for new record
-              setSelectedTaskType(''); // Clear selected faena for new record
-              setIsDialogOpen(true);
+        </div>
+
+        {/* 2. INDICATORS SECTION - Key Performance Indicators */}
+        <div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5"
+          style={{ 
+            gap: LAYOUT_CONSTANTS.indicators.gap,
+            marginBottom: LAYOUT_CONSTANTS.indicators.marginBottom 
+          }}
+        >
+          <Card className="bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle 
+                className="text-gray-600 font-medium"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Total Órdenes
+              </CardTitle>
+              <BarChart3 className="h-5 w-5 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="font-bold text-gray-900"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
+              >
+                {stats.total}
+              </div>
+              <p 
+                className="text-gray-500 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+              >
+                Órdenes registradas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle 
+                className="text-gray-600 font-medium"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Confirmadas
+              </CardTitle>
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="font-bold text-green-600"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
+              >
+                {stats.confirmed}
+              </div>
+              <p 
+                className="text-gray-500 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+              >
+                {stats.total > 0 ? `${((stats.confirmed / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle 
+                className="text-gray-600 font-medium"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Pendientes
+              </CardTitle>
+              <Clock className="h-5 w-5 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="font-bold text-amber-600"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
+              >
+                {stats.pending}
+              </div>
+              <p 
+                className="text-gray-500 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+              >
+                {stats.total > 0 ? `${((stats.pending / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle 
+                className="text-gray-600 font-medium"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Bloqueadas
+              </CardTitle>
+              <Ban className="h-5 w-5 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="font-bold text-red-600"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
+              >
+                {stats.blocked}
+              </div>
+              <p 
+                className="text-gray-500 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+              >
+                {stats.total > 0 ? `${((stats.blocked / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle 
+                className="text-gray-600 font-medium"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Nulas
+              </CardTitle>
+              <XCircle className="h-5 w-5 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="font-bold text-gray-600"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
+              >
+                {stats.void}
+              </div>
+              <p 
+                className="text-gray-500 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+              >
+                {stats.total > 0 ? `${((stats.void / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 3. GANTT CHART SECTION - Full Width Chronogram */}
+        {showGantt && (
+          <div 
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-300 ease-in-out"
+            style={{ 
+              minHeight: LAYOUT_CONSTANTS.gantt.minHeight,
+              marginBottom: LAYOUT_CONSTANTS.gantt.marginBottom 
             }}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar Orden
-          </Button>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+                <h2 
+                  className="font-semibold text-gray-900"
+                  style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+                >
+                  Cronograma de Órdenes
+                </h2>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGantt(false)}
+                className="text-gray-500"
+              >
+                <EyeOff className="h-4 w-4" />
+              </Button>
+            </div>
+            <GanttChart 
+              tasks={ganttTasks}
+              height="400px"
+              showViewModeSelector={true}
+              onTaskClick={(task) => {
+                console.log('Tarea seleccionada:', task);
+                const fullOrder = ordenesAplicacion.find(orden => 
+                  (orden._id || orden.id) === task.id
+                );
+                if (fullOrder) {
+                  setSelectedOrden(fullOrder);
+                  setIsEditMode(true);
+                  setIsDialogOpen(true);
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* 4. BOTTOM SECTION - Map & Activity Side by Side */}
+        {(showMap || showActivity) && (
+          <div 
+            className={`grid ${
+              showMap && showActivity 
+                ? "grid-cols-1 lg:grid-cols-2" 
+                : "grid-cols-1"
+            }`}
+            style={{ 
+              gap: LAYOUT_CONSTANTS.bottomSection.gap,
+              marginBottom: LAYOUT_CONSTANTS.bottomSection.marginBottom 
+            }}
+          >
+            {/* Map Section */}
+            {showMap && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Map className="h-6 w-6 text-blue-600" />
+                    <h2 
+                      className="font-semibold text-gray-900"
+                      style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+                    >
+                      Mapa Georeferenciado
+                    </h2>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMap(false)}
+                    className="text-gray-500"
+                  >
+                    <EyeOff className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div style={{ minHeight: LAYOUT_CONSTANTS.map.minHeight }}>
+                  <MapView 
+                    locations={mapLocations}
+                    height="320px"
+                    onMarkerClick={(location) => {
+                      console.log('Marcador seleccionado:', location);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Activity/Others Section */}
+            {showActivity && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                    <h2 
+                      className="font-semibold text-gray-900"
+                      style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+                    >
+                      Actividad Reciente
+                    </h2>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowActivity(false)}
+                    className="text-gray-500"
+                  >
+                    <EyeOff className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div style={{ minHeight: LAYOUT_CONSTANTS.map.minHeight }}>
+                  <div className="space-y-4">
+                    {/* Recent Activity Items */}
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p 
+                          className="font-medium text-gray-900"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+                        >
+                          Orden #{ordenesAplicacion[0]?.orderNumber || 'N/A'} confirmada
+                        </p>
+                        <p 
+                          className="text-gray-500"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+                        >
+                          Hace 2 horas
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Clock className="h-5 w-5 text-amber-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p 
+                          className="font-medium text-gray-900"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+                        >
+                          {stats.pending} órdenes pendientes de revisión
+                        </p>
+                        <p 
+                          className="text-gray-500"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+                        >
+                          Requieren atención
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <BarChart3 className="h-5 w-5 text-blue-500 mt-0.5" />
+                      <div className="flex-1">
+                        <p 
+                          className="font-medium text-gray-900"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+                        >
+                          Eficiencia: {stats.total > 0 ? ((stats.confirmed / stats.total) * 100).toFixed(1) : 0}%
+                        </p>
+                        <p 
+                          className="text-gray-500"
+                          style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
+                        >
+                          Órdenes completadas
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 5. DATA GRID SECTION */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div 
+            className="flex items-center justify-between border-b border-gray-200"
+            style={{ padding: LAYOUT_CONSTANTS.header.padding }}
+          >
+            <div>
+              <h2 
+                className="font-semibold text-gray-900"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+              >
+                Órdenes de Aplicación
+              </h2>
+              <p 
+                className="text-gray-600 mt-1"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Gestione y monitoree las órdenes de aplicación de productos
+              </p>
+            </div>
+          </div>
+          <div 
+            style={{ 
+              minHeight: LAYOUT_CONSTANTS.grid.minHeight,
+              padding: DESIGN_TOKENS.spacing.lg 
+            }}
+          >
+            <Grid
+              columns={columns}
+              data={ordenesAplicacion}
+              expandableContent={expandableContent}
+              actions={renderActions}
+              gridId="orden-aplicacion-grid"
+              title=""
+            />
+          </div>
         </div>
       </div>
 
-      <Grid
-        columns={columns}
-        data={ordenesAplicacion}
-        expandableContent={expandableContent}
-        actions={renderActions}
-        gridId="orden-aplicacion-grid"
-        title="Órdenes de Aplicación"
-      />
-
+      {/* DIALOG - Form Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle 
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+            >
               {isEditMode ? "Editar Orden de Aplicación" : "Nueva Orden de Aplicación"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription 
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+            >
               {isEditMode
                 ? "Actualice los detalles de la orden de aplicación existente"
                 : "Complete el formulario para crear una nueva orden de aplicación"}
@@ -2275,9 +2565,17 @@ const OrdenAplicacion = () => {
           
           {/* Workers section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+            <div 
+              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
+              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Trabajadores</h3>
+                <h3 
+                  className="font-medium text-gray-900"
+                  style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
+                >
+                  Trabajadores
+                </h3>
               </div>
               
               {/* Workers grid */}
@@ -2521,9 +2819,17 @@ const OrdenAplicacion = () => {
           
           {/* Machinery section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+            <div 
+              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
+              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Maquinaria</h3>
+                <h3 
+                  className="font-medium text-gray-900"
+                  style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
+                >
+                  Maquinaria
+                </h3>
               </div>
               
               {/* Machinery grid */}
@@ -2705,9 +3011,17 @@ const OrdenAplicacion = () => {
           
           {/* Products section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
-            <div className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden">
+            <div 
+              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
+              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Productos</h3>
+                <h3 
+                  className="font-medium text-gray-900"
+                  style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
+                >
+                  Productos
+                </h3>
               </div>
               
               {/* Products grid */}
@@ -2953,11 +3267,21 @@ const OrdenAplicacion = () => {
             </div>
           )}
           
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+          <DialogFooter 
+            className="mt-6 px-4"
+          >
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+            >
               Cancelar
             </Button>
-            <Button type="submit" form="dynamic-form">
+            <Button 
+              type="submit" 
+              form="dynamic-form"
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+            >
               {isEditMode ? "Actualizar" : "Crear"}
             </Button>
           </DialogFooter>

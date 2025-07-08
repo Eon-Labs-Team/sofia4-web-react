@@ -165,8 +165,8 @@ const GanttChart: React.FC<GanttChartProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Cronograma de Órdenes de Aplicación
+              {/* <BarChart3 className="h-5 w-5" />
+              Cronograma de Órdenes de Aplicación */}
             </CardTitle>
             <div className="flex gap-2">
               {showViewModeSelector && (

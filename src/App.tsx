@@ -5,6 +5,7 @@ import Faenas from "./pages/Faenas";
 import Labores from "./pages/Labores";
 import ListaCuarteles from "./pages/ListaCuarteles";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
+import ListaTrabajadores from "./pages/ListaTrabajadores";
 import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
 import MonitoreoMaleza from "./pages/MonitoreoMaleza";
 import SoilAnalysis from "./pages/SoilAnalysis";
@@ -162,6 +163,19 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <ListaCuadrillas />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/lista-trabajadores"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ListaTrabajadores />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>
