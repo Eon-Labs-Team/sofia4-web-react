@@ -52,7 +52,7 @@ import TipoCultivo from "./pages/TipoCultivo";
 import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
-import OrdenAplicacion from "./pages/orden-aplicacion";
+import OrdenAplicacion from "./pages/OrdenAplicacion";
 import FaenasAgricolas from "./pages/faenas-agricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 

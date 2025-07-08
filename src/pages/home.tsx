@@ -187,6 +187,7 @@ const HomePage = () => {
     setIsLoading(true);
     try {
       const response = await propertyService.findAll();
+      console.log("Properties fetched:", response);
       setProperties(response);
     } catch (error) {
       console.error("Error loading properties:", error);

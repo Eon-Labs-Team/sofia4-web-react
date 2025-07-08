@@ -10,7 +10,14 @@ import {
   Trash2,
   FileSpreadsheet,
   Save,
-  X
+  X,
+  BarChart3,
+  TrendingUp,
+  Clock,
+  Ban,
+  Map,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
@@ -55,6 +63,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { workersMockup } from "@/lib/mockups/workersMockup";
+import MapView from "@/components/MapView/MapView";
+import { mapLocations } from "@/lib/mockups/mapMockup";
+import GanttChart from "@/components/GanttChart/GanttChart";
+import { transformWorkToGanttTask, GanttTask } from "@/lib/mockups/ganttMockup";
 
 // Interfaces for TaskType (Faena) and Task (Labor)
 interface TaskType {
@@ -598,60 +610,35 @@ const formSections: SectionConfig[] = [
     fields: [
       {
         id: "responsibles.supervisor.userId",
-        type: "text",
-        label: "ID Supervisor",
+        type: "select",
+        label: "Supervisor",
         name: "responsibles.supervisor.userId",
-        placeholder: "ID del supervisor"
-      },
-      {
-        id: "responsibles.supervisor.name",
-        type: "text",
-        label: "Nombre Supervisor",
-        name: "responsibles.supervisor.name",
-        placeholder: "Nombre del supervisor"
+        placeholder: "Seleccione un supervisor",
+        options: [] // Will be populated dynamically
       },
       {
         id: "responsibles.planner.userId",
-        type: "text",
-        label: "ID Planificador",
+        type: "select",
+        label: "Planificador",
         name: "responsibles.planner.userId",
-        placeholder: "ID del planificador"
-      },
-      {
-        id: "responsibles.planner.name",
-        type: "text",
-        label: "Nombre Planificador",
-        name: "responsibles.planner.name",
-        placeholder: "Nombre del planificador"
+        placeholder: "Seleccione un planificador",
+        options: [] // Will be populated dynamically
       },
       {
         id: "responsibles.technicalVerifier.userId",
-        type: "text",
-        label: "ID Verificador Técnico",
+        type: "select",
+        label: "Verificador Técnico",
         name: "responsibles.technicalVerifier.userId",
-        placeholder: "ID del verificador técnico"
+        placeholder: "Seleccione un verificador técnico",
+        options: [] // Will be populated dynamically
       },
-      {
-        id: "responsibles.technicalVerifier.name",
-        type: "text",
-        label: "Nombre Verificador Técnico",
-        name: "responsibles.technicalVerifier.name",
-        placeholder: "Nombre del verificador técnico"
-      },
-      // Nota: Los aplicadores son un array, pero por simplicidad, implementaremos un solo aplicador
       {
         id: "responsibles.applicators.0.userId",
-        type: "text",
-        label: "ID Aplicador Principal",
+        type: "select",
+        label: "Aplicador Principal",
         name: "responsibles.applicators.0.userId",
-        placeholder: "ID del aplicador principal"
-      },
-      {
-        id: "responsibles.applicators.0.name",
-        type: "text",
-        label: "Nombre Aplicador Principal",
-        name: "responsibles.applicators.0.name",
-        placeholder: "Nombre del aplicador principal"
+        placeholder: "Seleccione un aplicador principal",
+        options: [] // Will be populated dynamically
       },
     ],
   },
@@ -935,6 +922,38 @@ const OrdenAplicacion = () => {
   const [warehouseProducts, setWarehouseProducts] = useState<IWarehouseProduct[]>([]);
   const [filteredWarehouseProducts, setFilteredWarehouseProducts] = useState<IWarehouseProduct[]>([]);
   
+  // State for visibility controls
+  const [showMap, setShowMap] = useState(() => {
+    const saved = localStorage.getItem('ordenAplicacion_showMap');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [showGantt, setShowGantt] = useState(() => {
+    const saved = localStorage.getItem('ordenAplicacion_showGantt');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // State for Gantt chart data
+  const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
+
+  // Convert ordenesAplicacion to GanttTask format
+  useEffect(() => {
+    if (ordenesAplicacion.length > 0) {
+      const convertedTasks = ordenesAplicacion.map(orden => transformWorkToGanttTask(orden));
+      setGanttTasks(convertedTasks);
+    } else {
+      setGanttTasks([]);
+    }
+  }, [ordenesAplicacion]);
+
+  // Save visibility preferences to localStorage
+  useEffect(() => {
+    localStorage.setItem('ordenAplicacion_showMap', JSON.stringify(showMap));
+  }, [showMap]);
+
+  useEffect(() => {
+    localStorage.setItem('ordenAplicacion_showGantt', JSON.stringify(showGantt));
+  }, [showGantt]);
+
   // Fetch ordenes on component mount
   useEffect(() => {
     fetchOrdenesAplicacion();
@@ -1517,7 +1536,7 @@ const OrdenAplicacion = () => {
       ),
     },
   ];
-
+  
   // Machinery grid columns
   const machineryColumns: Column[] = [
     {
@@ -1791,6 +1810,35 @@ const OrdenAplicacion = () => {
     }
   };
 
+  // Function to handle responsible change
+  const handleResponsibleChange = (responsibleType: string, workerId: string, formSetValue: any) => {
+    console.log(`${responsibleType} changed to:`, workerId);
+    
+    // Find the selected worker
+    const selectedWorker = workerList.find(worker => worker._id === workerId);
+    
+    if (selectedWorker && formSetValue) {
+      const workerName = `${selectedWorker.names} ${selectedWorker.lastName}`;
+      
+      // Update both userId and name fields
+      if (responsibleType === 'supervisor') {
+        formSetValue('responsibles.supervisor.userId', workerId);
+        formSetValue('responsibles.supervisor.name', workerName);
+      } else if (responsibleType === 'planner') {
+        formSetValue('responsibles.planner.userId', workerId);
+        formSetValue('responsibles.planner.name', workerName);
+      } else if (responsibleType === 'technicalVerifier') {
+        formSetValue('responsibles.technicalVerifier.userId', workerId);
+        formSetValue('responsibles.technicalVerifier.name', workerName);
+      } else if (responsibleType === 'applicator') {
+        formSetValue('responsibles.applicators.0.userId', workerId);
+        formSetValue('responsibles.applicators.0.name', workerName);
+      }
+      
+      console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
+    }
+  };
+
   // Function to fetch worker list for selectable dropdown
   const fetchWorkerList = async () => {
     try {
@@ -1836,8 +1884,128 @@ const OrdenAplicacion = () => {
     );
   };
 
+  // Calculate statistics based on work states
+  const calculateStatistics = () => {
+    const stats = {
+      total: ordenesAplicacion.length,
+      confirmed: ordenesAplicacion.filter(orden => orden.workState === 'confirmed').length,
+      pending: ordenesAplicacion.filter(orden => orden.workState === 'pending').length,
+      void: ordenesAplicacion.filter(orden => orden.workState === 'void').length,
+      blocked: ordenesAplicacion.filter(orden => orden.workState === 'blocked').length,
+    };
+    return stats;
+  };
+
+  const stats = calculateStatistics();
+
   return (
     <div className="container mx-auto p-4">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Órdenes</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground">
+              Órdenes totales registradas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Confirmadas</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? `${((stats.confirmed / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+            <Clock className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? `${((stats.pending / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Bloqueadas</CardTitle>
+            <Ban className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.blocked}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? `${((stats.blocked / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Nulas</CardTitle>
+            <XCircle className="h-4 w-4 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">{stats.void}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? `${((stats.void / stats.total) * 100).toFixed(1)}%` : '0%'} del total
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mapa georeferenciado */}
+      {showMap && (
+        <div className="mb-6 component-enter">
+          <MapView 
+            locations={mapLocations}
+            height="500px"
+            onMarkerClick={(location) => {
+              console.log('Marcador seleccionado:', location);
+              // Aquí podrías agregar lógica adicional como filtrar la tabla o mostrar detalles
+            }}
+          />
+        </div>
+      )}
+
+      {/* Gráfico Gantt */}
+      {showGantt && (
+        <div className="mb-6 component-enter">
+          <GanttChart 
+            tasks={ganttTasks}
+            height="600px"
+            showViewModeSelector={true}
+            onTaskClick={(task) => {
+              console.log('Tarea seleccionada:', task);
+              // Buscar la orden completa usando el ID de la tarea
+              const fullOrder = ordenesAplicacion.find(orden => 
+                (orden._id || orden.id) === task.id
+              );
+              if (fullOrder) {
+                setSelectedOrden(fullOrder);
+                setIsEditMode(true);
+                setIsDialogOpen(true);
+                console.log('Editando orden desde Gantt:', fullOrder);
+              }
+            }}
+          />
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Órdenes de Aplicación</h1>
@@ -1845,18 +2013,51 @@ const OrdenAplicacion = () => {
             Gestione las órdenes de aplicación de productos
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedOrden(null);
-            setIsEditMode(false);
-            setSelectedCuartel(null); // Clear selected cuartel for new record
-            setSelectedTaskType(''); // Clear selected faena for new record
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Orden
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Toggle buttons for Map and Gantt */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showMap ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowMap(!showMap)}
+              className="flex items-center gap-2 toggle-button"
+              title={showMap ? "Ocultar mapa" : "Mostrar mapa"}
+            >
+              <Map className="h-4 w-4" />
+              {showMap ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span className="hidden sm:inline">
+                {showMap ? "Ocultar" : "Mostrar"} Mapa
+              </span>
+              <span className="sm:hidden">Mapa</span>
+            </Button>
+            <Button
+              variant={showGantt ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowGantt(!showGantt)}
+              className="flex items-center gap-2 toggle-button"
+              title={showGantt ? "Ocultar cronograma" : "Mostrar cronograma"}
+            >
+              <BarChart3 className="h-4 w-4" />
+              {showGantt ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span className="hidden sm:inline">
+                {showGantt ? "Ocultar" : "Mostrar"} Gantt
+              </span>
+              <span className="sm:hidden">Gantt</span>
+            </Button>
+          </div>
+          <Button
+            onClick={() => {
+              setSelectedOrden(null);
+              setIsEditMode(false);
+              setSelectedCuartel(null); // Clear selected cuartel for new record
+              setSelectedTaskType(''); // Clear selected faena for new record
+              setIsDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar Orden
+          </Button>
+        </div>
       </div>
 
       <Grid
@@ -1963,6 +2164,55 @@ const OrdenAplicacion = () => {
                         onChange: (value: string, formSetValue: any, formGetValues: any) => {
                           console.log("Task changed to:", value);
                           handleTaskChange(value, formSetValue);
+                        }
+                      };
+                    }
+                    return field;
+                  })
+                };
+              }
+              if (section.id === "orden-info-responsibles") {
+                return {
+                  ...section,
+                  fields: section.fields.map(field => {
+                    const workerOptions = workerList.map(worker => ({
+                      value: worker._id || "",
+                      label: `${worker.names} ${worker.lastName} (${worker.rut})`
+                    }));
+
+                    if (field.id === "responsibles.supervisor.userId") {
+                      return {
+                        ...field,
+                        options: workerOptions,
+                        onChange: (value: string, formSetValue: any) => {
+                          handleResponsibleChange('supervisor', value, formSetValue);
+                        }
+                      };
+                    }
+                    if (field.id === "responsibles.planner.userId") {
+                      return {
+                        ...field,
+                        options: workerOptions,
+                        onChange: (value: string, formSetValue: any) => {
+                          handleResponsibleChange('planner', value, formSetValue);
+                        }
+                      };
+                    }
+                    if (field.id === "responsibles.technicalVerifier.userId") {
+                      return {
+                        ...field,
+                        options: workerOptions,
+                        onChange: (value: string, formSetValue: any) => {
+                          handleResponsibleChange('technicalVerifier', value, formSetValue);
+                        }
+                      };
+                    }
+                    if (field.id === "responsibles.applicators.0.userId") {
+                      return {
+                        ...field,
+                        options: workerOptions,
+                        onChange: (value: string, formSetValue: any) => {
+                          handleResponsibleChange('applicator', value, formSetValue);
                         }
                       };
                     }
