@@ -4,7 +4,12 @@ import {
   ChevronUp,
   ChevronRight,
   ChevronLeft,
-  Search
+  Search,
+  Edit,
+  Save,
+  X,
+  Plus,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +18,31 @@ import ColumnConfiguration from "./ColumnConfiguration";
 import ExportMenu from "./ExportMenu";
 import GroupingMenu from "./GroupingMenu";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { toast } from "@/components/ui/use-toast";
 
-interface GridProps {
+interface FormGridProps {
   data: any[];
   columns: Column[];
   idField?: string;
@@ -29,9 +51,36 @@ interface GridProps {
   expandableContent?: (row: any) => React.ReactNode;
   gridId: string;
   actions?: (row: any) => React.ReactNode;
+  // Form validation props
+  editValidationSchema?: z.ZodSchema<any>;
+  addValidationSchema?: z.ZodSchema<any>;
+  // Inline editing props
+  enableInlineEdit?: boolean;
+  onEditStart?: (row: any) => void;
+  onEditSave?: (originalRow: any, updatedRow: any) => Promise<void>;
+  onEditCancel?: (row: any) => void;
+  editableColumns?: string[];
+  customEditRender?: { [columnId: string]: (control: any, field: any, formState: any) => React.ReactNode };
+  // Inline add props
+  enableInlineAdd?: boolean;
+  onInlineAdd?: (newRow: any) => Promise<void>;
+  defaultNewRow?: any;
+  addableColumns?: string[];
+  customAddRender?: { [columnId: string]: (control: any, field: any, formState: any) => React.ReactNode };
+  // Field configurations
+  fieldConfigurations?: {
+    [columnId: string]: {
+      type?: 'text' | 'number' | 'email' | 'select' | 'checkbox' | 'date' | 'time' | 'datetime-local';
+      placeholder?: string;
+      options?: { value: string; label: string }[];
+      min?: number;
+      max?: number;
+      step?: number;
+    };
+  };
 }
 
-const GridComponent: React.FC<GridProps> = ({
+const FormGridComponent: React.FC<FormGridProps> = ({
   data,
   columns: initialColumns,
   idField = "id",
@@ -40,7 +89,29 @@ const GridComponent: React.FC<GridProps> = ({
   expandableContent,
   gridId,
   actions,
+  editValidationSchema,
+  addValidationSchema,
+  enableInlineEdit = false,
+  onEditStart,
+  onEditSave,
+  onEditCancel,
+  editableColumns = [],
+  customEditRender = {},
+  enableInlineAdd = false,
+  onInlineAdd,
+  defaultNewRow = {},
+  addableColumns = [],
+  customAddRender = {},
+  fieldConfigurations = {},
 }) => {
+  // State for inline editing
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editingSaving, setEditingSaving] = useState(false);
+
+  // State for inline adding
+  const [isAddingNewRow, setIsAddingNewRow] = useState(false);
+  const [addingSaving, setAddingSaving] = useState(false);
+
   // Get grid state from Zustand
   const {
     grid,
@@ -52,6 +123,18 @@ const GridComponent: React.FC<GridProps> = ({
     isRowExpanded,
   } = useGrid(gridId);
 
+  // Forms for editing and adding
+  const editForm = useForm({
+    resolver: editValidationSchema ? zodResolver(editValidationSchema) : undefined,
+    mode: "onChange",
+  });
+
+  const addForm = useForm({
+    resolver: addValidationSchema ? zodResolver(addValidationSchema) : undefined,
+    mode: "onChange",
+    defaultValues: defaultNewRow,
+  });
+
   // Initialize grid if not already initialized
   useEffect(() => {
     initializeGrid(initialColumns);
@@ -62,6 +145,274 @@ const GridComponent: React.FC<GridProps> = ({
   const sortState = grid?.sortState || { column: null, direction: null };
   const groupState = grid?.groupState || { column: null };
   const searchTerm = grid?.searchTerm || "";
+
+  // Functions for inline editing
+  const startEditing = (row: any) => {
+    const rowId = row[idField];
+    setEditingRowId(String(rowId));
+    editForm.reset(row);
+    onEditStart?.(row);
+  };
+
+  const cancelEditing = () => {
+    if (editingRowId) {
+      const originalRow = data.find(row => String(row[idField]) === editingRowId);
+      onEditCancel?.(originalRow);
+    }
+    setEditingRowId(null);
+    editForm.reset();
+  };
+
+  const saveEditing = async () => {
+    if (!editingRowId || !onEditSave) return;
+    
+    const isValid = await editForm.trigger();
+    if (!isValid) {
+      toast({
+        title: "Error de validación",
+        description: "Por favor corrija los errores en el formulario",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setEditingSaving(true);
+    try {
+      const originalRow = data.find(row => String(row[idField]) === editingRowId);
+      const updatedRow = editForm.getValues();
+      await onEditSave(originalRow, updatedRow);
+      setEditingRowId(null);
+      editForm.reset();
+      toast({
+        title: "Éxito",
+        description: "Registro actualizado correctamente",
+      });
+    } catch (error) {
+      console.error('Error saving edit:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar los cambios",
+        variant: "destructive",
+      });
+    } finally {
+      setEditingSaving(false);
+    }
+  };
+
+  // Functions for inline adding
+  const startAdding = () => {
+    setIsAddingNewRow(true);
+    addForm.reset(defaultNewRow);
+  };
+
+  const cancelAdding = () => {
+    setIsAddingNewRow(false);
+    addForm.reset(defaultNewRow);
+  };
+
+  const saveAdding = async () => {
+    if (!onInlineAdd) return;
+    
+    const isValid = await addForm.trigger();
+    if (!isValid) {
+      toast({
+        title: "Error de validación",
+        description: "Por favor corrija los errores en el formulario",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAddingSaving(true);
+    try {
+      const newRow = addForm.getValues();
+      await onInlineAdd(newRow);
+      setIsAddingNewRow(false);
+      addForm.reset(defaultNewRow);
+      toast({
+        title: "Éxito",
+        description: "Registro agregado correctamente",
+      });
+    } catch (error) {
+      console.error('Error adding row:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo agregar el registro",
+        variant: "destructive",
+      });
+    } finally {
+      setAddingSaving(false);
+    }
+  };
+
+  // Render field based on configuration
+  const renderFormField = (
+    column: Column,
+    control: any,
+    mode: 'edit' | 'add',
+    customRender?: { [columnId: string]: (control: any, field: any, formState: any) => React.ReactNode }
+  ) => {
+    const fieldConfig = fieldConfigurations[column.id] || {};
+    const isColumnEditable = mode === 'edit' ? editableColumns.includes(column.id) : (addableColumns.length > 0 ? addableColumns.includes(column.id) : editableColumns.includes(column.id));
+    
+    if (!isColumnEditable) {
+      return null;
+    }
+
+    return (
+      <FormField
+        control={control}
+        name={column.accessor}
+        render={({ field, formState }) => (
+          <FormItem>
+            <FormControl>
+              {customRender?.[column.id] ? (
+                customRender[column.id](control, field, formState)
+              ) : (
+                renderDefaultField(field, fieldConfig, formState)
+              )}
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
+  };
+
+  const renderDefaultField = (field: any, config: any, formState: any) => {
+    const { type = 'text', placeholder, options, min, max, step } = config;
+    
+    switch (type) {
+      case 'select':
+        return (
+          <Select
+            value={field.value || ""}
+            onValueChange={field.onChange}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options?.map((option: any) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'checkbox':
+        return (
+          <input
+            type="checkbox"
+            checked={field.value || false}
+            onChange={(e) => field.onChange(e.target.checked)}
+            className="h-4 w-4"
+          />
+        );
+      
+      case 'number':
+        return (
+          <Input
+            type="number"
+            value={field.value || ""}
+            onChange={field.onChange}
+            placeholder={placeholder}
+            min={min}
+            max={max}
+            step={step}
+            className="h-8 text-xs"
+          />
+        );
+      
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={field.value || ""}
+            onChange={field.onChange}
+            className="h-8 text-xs"
+          />
+        );
+      
+      case 'time':
+        return (
+          <Input
+            type="time"
+            value={field.value || ""}
+            onChange={field.onChange}
+            className="h-8 text-xs"
+          />
+        );
+      
+      case 'datetime-local':
+        return (
+          <Input
+            type="datetime-local"
+            value={field.value || ""}
+            onChange={field.onChange}
+            className="h-8 text-xs"
+          />
+        );
+      
+      case 'email':
+        return (
+          <Input
+            type="email"
+            value={field.value || ""}
+            onChange={field.onChange}
+            placeholder={placeholder}
+            className="h-8 text-xs"
+          />
+        );
+      
+      default:
+        return (
+          <Input
+            type="text"
+            value={field.value || ""}
+            onChange={field.onChange}
+            placeholder={placeholder}
+            className="h-8 text-xs"
+          />
+        );
+    }
+  };
+
+  const renderEditableCell = (column: Column, row: any) => {
+    const rowId = String(row[idField]);
+    const isEditing = rowId === editingRowId;
+    const isColumnEditable = editableColumns.includes(column.id);
+    
+    if (!isEditing || !isColumnEditable) {
+      return column.render
+        ? column.render(row[column.accessor], row)
+        : row[column.accessor] != null
+          ? String(row[column.accessor])
+          : "";
+    }
+
+    return (
+      <Form {...editForm}>
+        {renderFormField(column, editForm.control, 'edit', customEditRender)}
+      </Form>
+    );
+  };
+
+  const renderNewRowCell = (column: Column) => {
+    const isColumnAddable = addableColumns.length > 0 ? addableColumns.includes(column.id) : editableColumns.includes(column.id);
+    
+    if (!isColumnAddable) {
+      return "";
+    }
+
+    return (
+      <Form {...addForm}>
+        {renderFormField(column, addForm.control, 'add', customAddRender)}
+      </Form>
+    );
+  };
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -156,9 +507,6 @@ const GridComponent: React.FC<GridProps> = ({
     
     return (
       <tr className="border-b">
-        {expandableContent && (
-          <th className="px-4 py-3 w-8"></th>
-        )}
         {visibleColumns.map((column) => (
           <th
             key={column.id}
@@ -188,7 +536,7 @@ const GridComponent: React.FC<GridProps> = ({
             </div>
           </th>
         ))}
-        {actions && (
+        {(actions || enableInlineEdit) && (
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             Acciones
           </th>
@@ -202,13 +550,108 @@ const GridComponent: React.FC<GridProps> = ({
     
     return visibleColumns.map((column) => (
       <td key={column.id} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-        {column.render
-          ? column.render(row[column.accessor], row)
-          : row[column.accessor] != null
-            ? String(row[column.accessor])
-            : ""}
+        {renderEditableCell(column, row)}
       </td>
     ));
+  };
+
+  const renderEditActions = (row: any) => {
+    const rowId = String(row[idField]);
+    const isEditing = rowId === editingRowId;
+    
+    if (isEditing) {
+      return (
+        <div className="flex space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={saveEditing}
+            disabled={editingSaving}
+            title="Guardar"
+            className="h-8 w-8"
+          >
+            <Save className="h-4 w-4 text-green-600" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={cancelEditing}
+            disabled={editingSaving}
+            title="Cancelar"
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex space-x-1">
+        {enableInlineEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => startEditing(row)}
+            title="Editar"
+            className="h-8 w-8"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
+        {actions && actions(row)}
+      </div>
+    );
+  };
+
+  const renderAddActions = () => {
+    if (isAddingNewRow) {
+      return (
+        <div className="flex space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={saveAdding}
+            disabled={addingSaving}
+            title="Guardar"
+            className="h-8 w-8"
+          >
+            <Save className="h-4 w-4 text-green-600" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={cancelAdding}
+            disabled={addingSaving}
+            title="Cancelar"
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4 text-red-600" />
+          </Button>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  const renderNewRow = () => {
+    if (!isAddingNewRow) return null;
+    
+    const visibleColumns = columns.filter((col) => col.visible);
+    
+    return (
+      <tr className="border-b bg-blue-50">
+        {visibleColumns.map((column) => (
+          <td key={column.id} className="px-4 py-3 whitespace-nowrap text-sm">
+            {renderNewRowCell(column)}
+          </td>
+        ))}
+        <td className="px-4 py-3 whitespace-nowrap text-sm">
+          {renderAddActions()}
+        </td>
+      </tr>
+    );
   };
 
   const renderRows = () => {
@@ -216,11 +659,7 @@ const GridComponent: React.FC<GridProps> = ({
       return (
         <tr>
           <td
-            colSpan={
-              columns.filter((col) => col.visible).length +
-              (expandableContent ? 1 : 0) +
-              (actions ? 1 : 0)
-            }
+            colSpan={columns.filter((col) => col.visible).length + 1}
             className="px-4 py-8 text-center text-gray-500"
           >
             No hay datos para mostrar
@@ -263,9 +702,9 @@ const GridComponent: React.FC<GridProps> = ({
               </td>
             )}
             {renderCells(row)}
-            {actions && (
+            {(actions || enableInlineEdit) && (
               <td className="px-4 py-3 whitespace-nowrap text-sm">
-                {actions(row)}
+                {renderEditActions(row)}
               </td>
             )}
           </tr>
@@ -275,7 +714,7 @@ const GridComponent: React.FC<GridProps> = ({
                 colSpan={
                   columns.filter((col) => col.visible).length +
                   (expandableContent ? 1 : 0) +
-                  (actions ? 1 : 0)
+                  (actions || enableInlineEdit ? 1 : 0)
                 }
                 className="p-0"
               >
@@ -298,7 +737,7 @@ const GridComponent: React.FC<GridProps> = ({
             colSpan={
               columns.filter((col) => col.visible).length +
               (expandableContent ? 1 : 0) +
-              (actions ? 1 : 0)
+              (actions || enableInlineEdit ? 1 : 0)
             }
             className="px-4 py-2 font-semibold text-gray-700"
           >
@@ -335,9 +774,9 @@ const GridComponent: React.FC<GridProps> = ({
                   </td>
                 )}
                 {renderCells(row)}
-                {actions && (
+                {(actions || enableInlineEdit) && (
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {actions(row)}
+                    {renderEditActions(row)}
                   </td>
                 )}
               </tr>
@@ -347,7 +786,7 @@ const GridComponent: React.FC<GridProps> = ({
                     colSpan={
                       columns.filter((col) => col.visible).length +
                       (expandableContent ? 1 : 0) +
-                      (actions ? 1 : 0)
+                      (actions || enableInlineEdit ? 1 : 0)
                     }
                     className="p-0"
                   >
@@ -380,8 +819,21 @@ const GridComponent: React.FC<GridProps> = ({
           
           <GroupingMenu
             columns={columns.filter((col) => col.groupable)}
-            gridId={gridId}
+            currentGroup={groupState.column}
+            onGroupChange={(column) => setGroupState({ column })}
           />
+          
+          {enableInlineAdd && !isAddingNewRow && (
+            <Button
+              onClick={startAdding}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-1"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Agregar</span>
+            </Button>
+          )}
         </div>
 
         <div className="flex space-x-2">
@@ -412,6 +864,7 @@ const GridComponent: React.FC<GridProps> = ({
               {renderHeaders()}
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
+              {renderNewRow()}
               {renderRows()}
             </tbody>
           </table>
@@ -479,8 +932,6 @@ const GridComponent: React.FC<GridProps> = ({
   );
 };
 
-export const Grid: React.FC<GridProps> = (props) => {
-  return <GridComponent {...props} />;
-};
-
-export default Grid
+export const FormGrid: React.FC<FormGridProps> = (props) => {
+  return <FormGridComponent {...props} />;
+}; 

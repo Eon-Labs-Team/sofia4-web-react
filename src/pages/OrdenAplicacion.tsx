@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { FormGrid } from "@/components/Grid/FormGrid";
 import {
   Building2,
   CheckCircle,
@@ -20,6 +21,14 @@ import {
   EyeOff
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
+import { 
+  workerFormSchema, 
+  machineryFormSchema, 
+  productFormSchema,
+  WorkerFormData,
+  MachineryFormData,
+  ProductFormData 
+} from "@/lib/validationSchemas";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -2579,10 +2588,12 @@ const OrdenAplicacion = () => {
               </div>
               
               {/* Workers grid */}
-              <Grid
+              <FormGrid
                 columns={workersColumns}
                 data={workers}
                 idField="_id"
+                editValidationSchema={workerFormSchema}
+                addValidationSchema={workerFormSchema}
                 actions={(row: IWorkers) => (
                   <Button
                     variant="ghost"
@@ -2624,57 +2635,138 @@ const OrdenAplicacion = () => {
                   "additionalBonuses", "dayValue", "totalDeal", "dailyTotal", 
                   "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
                 ]}
-                customEditRender={{
-                  worker: (value, onChange) => (
-                    <Select
-                      value={value || ""}
-                      onValueChange={(newValue) => onChange(newValue)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar trabajador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {workerList.map((worker) => (
-                          <SelectItem key={worker._id} value={worker._id || ""}>
-                            {worker.names} {worker.lastName} ({worker.rut})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                  date: (value, onChange) => (
-                    <Input
-                      type="date"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
-                  state: (value, onChange) => (
-                    <input
-                      type="checkbox"
-                      checked={value || false}
-                      onChange={(e) => onChange(e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                  )
+                fieldConfigurations={{
+                  worker: {
+                    type: 'select',
+                    placeholder: "Seleccionar trabajador",
+                    options: workerList.map((worker) => ({
+                      value: worker._id || "",
+                      label: `${worker.names} ${worker.lastName} (${worker.rut})`
+                    }))
+                  },
+                  classification: {
+                    type: 'text',
+                    placeholder: "Clasificación del trabajador"
+                  },
+                  quadrille: {
+                    type: 'text',
+                    placeholder: "Cuadrilla"
+                  },
+                  workingDay: {
+                    type: 'text',
+                    placeholder: "Jornada laboral"
+                  },
+                  paymentMethod: {
+                    type: 'text',
+                    placeholder: "Método de pago"
+                  },
+                  contractor: {
+                    type: 'text',
+                    placeholder: "Contratista"
+                  },
+                  date: {
+                    type: 'date'
+                  },
+                  salary: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  yield: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  totalHoursYield: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  yieldValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  overtime: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  bonus: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  additionalBonuses: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  dayValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  totalDeal: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  dailyTotal: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  value: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  exportPerformance: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  juicePerformance: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  othersPerformance: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  state: {
+                    type: 'checkbox'
+                  }
                 }}
                 onEditSave={async (originalRow, updatedRow) => {
                   try {
                     console.log('Saving worker edit:', { originalRow, updatedRow });
-                    await workerService.updateWorker(originalRow._id, updatedRow);
-                    toast({
-                      title: "Éxito",
-                      description: "Trabajador actualizado correctamente",
-                    });
+                    // Convert numeric fields to strings as expected by IWorkers interface
+                    const workerData = {
+                      ...updatedRow,
+                      salary: String(updatedRow.salary || 0),
+                      yield: String(updatedRow.yield || 0),
+                      totalHoursYield: String(updatedRow.totalHoursYield || 0),
+                      yieldValue: String(updatedRow.yieldValue || 0),
+                      overtime: String(updatedRow.overtime || 0),
+                      bonus: String(updatedRow.bonus || 0),
+                      additionalBonuses: String(updatedRow.additionalBonuses || 0),
+                      dayValue: String(updatedRow.dayValue || 0),
+                      totalDeal: String(updatedRow.totalDeal || 0),
+                      dailyTotal: String(updatedRow.dailyTotal || 0),
+                      value: String(updatedRow.value || 0),
+                      exportPerformance: String(updatedRow.exportPerformance || 0),
+                      juicePerformance: String(updatedRow.juicePerformance || 0),
+                      othersPerformance: String(updatedRow.othersPerformance || 0),
+                    };
+                    await workerService.updateWorker(originalRow._id, workerData);
                     await fetchWorkers();
                   } catch (error) {
                     console.error('Error updating worker:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo actualizar el trabajador",
-                      variant: "destructive",
-                    });
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
                 onEditStart={(row) => {
@@ -2692,20 +2784,20 @@ const OrdenAplicacion = () => {
                   paymentMethod: "",
                   contractor: "",
                   date: new Date().toISOString().split('T')[0],
-                  salary: "0",
-                  yield: "0",
-                  totalHoursYield: "0",
-                  yieldValue: "0",
-                  overtime: "0",
-                  bonus: "0",
-                  additionalBonuses: "0",
-                  dayValue: "0",
-                  totalDeal: "0",
-                  dailyTotal: "0",
-                  value: "0",
-                  exportPerformance: "0",
-                  juicePerformance: "0",
-                  othersPerformance: "0",
+                  salary: 0,
+                  yield: 0,
+                  totalHoursYield: 0,
+                  yieldValue: 0,
+                  overtime: 0,
+                  bonus: 0,
+                  additionalBonuses: 0,
+                  dayValue: 0,
+                  totalDeal: 0,
+                  dailyTotal: 0,
+                  value: 0,
+                  exportPerformance: 0,
+                  juicePerformance: 0,
+                  othersPerformance: 0,
                   workId: selectedOrden ? String(selectedOrden.id || (selectedOrden as any)._id) : "",
                   state: true
                 }}
@@ -2716,101 +2808,40 @@ const OrdenAplicacion = () => {
                   "additionalBonuses", "dayValue", "totalDeal", "dailyTotal", 
                   "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
                 ]}
-                customAddRender={{
-                  worker: (value, onChange) => (
-                    <Select
-                      value={value || ""}
-                      onValueChange={(newValue) => onChange(newValue)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar trabajador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {workerList.map((worker) => (
-                          <SelectItem key={worker._id} value={worker._id || ""}>
-                            {worker.names} {worker.lastName} ({worker.rut})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                  date: (value, onChange) => (
-                    <Input
-                      type="date"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Fecha"
-                    />
-                  ),
-                  state: (value, onChange) => (
-                    <input
-                      type="checkbox"
-                      checked={value || false}
-                      onChange={(e) => onChange(e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                  )
-                }}
-                onInlineAdd={async (newWorker) => {
+                onInlineAdd={async (newWorker: WorkerFormData) => {
                   try {
                     if (!selectedOrden) {
-                      toast({
-                        title: "Error",
-                        description: "No hay una orden seleccionada",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    // Validate required fields
-                    const requiredFields = {
-                      'worker': newWorker.worker,
-                      'yield': newWorker.yield,
-                      'totalHoursYield': newWorker.totalHoursYield,
-                      'yieldValue': newWorker.yieldValue,
-                      'totalDeal': newWorker.totalDeal,
-                      'value': newWorker.value,
-                      'salary': newWorker.salary
-                    };
-                    
-                    const missingFields = Object.entries(requiredFields)
-                      .filter(([key, value]) => !value || value === "")
-                      .map(([key]) => key);
-                    
-                    if (missingFields.length > 0) {
-                      toast({
-                        title: "Error de validación",
-                        description: `Los siguientes campos son requeridos: ${missingFields.join(', ')}`,
-                        variant: "destructive",
-                      });
-                      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                      throw new Error("No hay una orden seleccionada");
                     }
 
                     const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    // Convert numeric fields to strings as expected by IWorkers interface
                     const workerData = {
                       ...newWorker,
                       workId: String(workId),
-                      state: true
+                      state: true,
+                      salary: String(newWorker.salary || 0),
+                      yield: String(newWorker.yield || 0),
+                      totalHoursYield: String(newWorker.totalHoursYield || 0),
+                      yieldValue: String(newWorker.yieldValue || 0),
+                      overtime: String(newWorker.overtime || 0),
+                      bonus: String(newWorker.bonus || 0),
+                      additionalBonuses: String(newWorker.additionalBonuses || 0),
+                      dayValue: String(newWorker.dayValue || 0),
+                      totalDeal: String(newWorker.totalDeal || 0),
+                      dailyTotal: String(newWorker.dailyTotal || 0),
+                      value: String(newWorker.value || 0),
+                      exportPerformance: String(newWorker.exportPerformance || 0),
+                      juicePerformance: String(newWorker.juicePerformance || 0),
+                      othersPerformance: String(newWorker.othersPerformance || 0),
                     };
                     
                     console.log('Adding new worker:', workerData);
                     await workerService.createWorker(workerData);
-                    
-                    toast({
-                      title: "Éxito",
-                      description: "Trabajador agregado correctamente",
-                    });
-                    
                     await fetchWorkers();
                   } catch (error) {
                     console.error('Error adding worker:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo agregar el trabajador",
-                      variant: "destructive",
-                    });
-                    throw error; // Re-throw to prevent the row from being removed
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
               />
@@ -2833,10 +2864,12 @@ const OrdenAplicacion = () => {
               </div>
               
               {/* Machinery grid */}
-              <Grid
+              <FormGrid
                 columns={machineryColumns}
                 data={machinery}
                 idField="_id"
+                editValidationSchema={machineryFormSchema}
+                addValidationSchema={machineryFormSchema}
                 actions={(row: IMachinery) => (
                   <Button
                     variant="ghost"
@@ -2874,40 +2907,46 @@ const OrdenAplicacion = () => {
                 editableColumns={[
                   "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
                 ]}
-                customEditRender={{
-                  startTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
-                  endTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
+                fieldConfigurations={{
+                  machinery: {
+                    type: 'text',
+                    placeholder: "Nombre de la maquinaria"
+                  },
+                  startTime: {
+                    type: 'time'
+                  },
+                  endTime: {
+                    type: 'time'
+                  },
+                  finalHours: {
+                    type: 'text',
+                    placeholder: "Horas finales"
+                  },
+                  timeValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  totalValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  }
                 }}
                 onEditSave={async (originalRow, updatedRow) => {
                   try {
                     console.log('Saving machinery edit:', { originalRow, updatedRow });
-                    await machineryService.updateMachinery(originalRow._id, updatedRow);
-                    toast({
-                      title: "Éxito",
-                      description: "Maquinaria actualizada correctamente",
-                    });
+                    // Convert numeric fields to strings as expected by IMachinery interface
+                    const machineryData = {
+                      ...updatedRow,
+                      timeValue: String(updatedRow.timeValue || 0),
+                      totalValue: String(updatedRow.totalValue || 0),
+                    };
+                    await machineryService.updateMachinery(originalRow._id, machineryData);
                     await fetchMachinery();
                   } catch (error) {
                     console.error('Error updating machinery:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo actualizar la maquinaria",
-                      variant: "destructive",
-                    });
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
                 onEditStart={(row) => {
@@ -2922,87 +2961,34 @@ const OrdenAplicacion = () => {
                   startTime: "",
                   endTime: "",
                   finalHours: "",
-                  timeValue: "0",
-                  totalValue: "0",
+                  timeValue: 0,
+                  totalValue: 0,
                   workId: selectedOrden ? String(selectedOrden.id || (selectedOrden as any)._id) : "",
                 }}
                 addableColumns={[
                   "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
                 ]}
-                customAddRender={{
-                  startTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Hora inicio"
-                    />
-                  ),
-                  endTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Hora fin"
-                    />
-                  ),
-                }}
-                onInlineAdd={async (newMachinery) => {
+                onInlineAdd={async (newMachinery: MachineryFormData) => {
                   try {
                     if (!selectedOrden) {
-                      toast({
-                        title: "Error",
-                        description: "No hay una orden seleccionada",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    // Validate required fields
-                    const requiredFields = {
-                      'machinery': newMachinery.machinery,
-                      'timeValue': newMachinery.timeValue,
-                      'totalValue': newMachinery.totalValue
-                    };
-                    
-                    const missingFields = Object.entries(requiredFields)
-                      .filter(([key, value]) => !value || value === "")
-                      .map(([key]) => key);
-                    
-                    if (missingFields.length > 0) {
-                      toast({
-                        title: "Error de validación",
-                        description: `Los siguientes campos son requeridos: ${missingFields.join(', ')}`,
-                        variant: "destructive",
-                      });
-                      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                      throw new Error("No hay una orden seleccionada");
                     }
 
                     const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    // Convert numeric fields to strings as expected by IMachinery interface
                     const machineryData = {
                       ...newMachinery,
                       workId: String(workId),
+                      timeValue: String(newMachinery.timeValue || 0),
+                      totalValue: String(newMachinery.totalValue || 0),
                     };
                     
                     console.log('Adding new machinery:', machineryData);
                     await machineryService.createMachinery(machineryData);
-                    
-                    toast({
-                      title: "Éxito",
-                      description: "Maquinaria agregada correctamente",
-                    });
-                    
                     await fetchMachinery();
                   } catch (error) {
                     console.error('Error adding machinery:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo agregar la maquinaria",
-                      variant: "destructive",
-                    });
-                    throw error; // Re-throw to prevent the row from being removed
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
               />
@@ -3025,10 +3011,12 @@ const OrdenAplicacion = () => {
               </div>
               
               {/* Products grid */}
-              <Grid
+              <FormGrid
                 columns={productsColumns}
                 data={products}
                 idField="_id"
+                editValidationSchema={productFormSchema}
+                addValidationSchema={productFormSchema}
                 actions={(row: IProduct) => (
                   <Button
                     variant="ghost"
@@ -3067,22 +3055,87 @@ const OrdenAplicacion = () => {
                   "category", "product", "unitOfMeasurement", "amountPerHour", 
                   "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
                 ]}
+                fieldConfigurations={{
+                  category: {
+                    type: 'select',
+                    placeholder: "Seleccionar categoría",
+                    options: [
+                      { value: "", label: "Todas las categorías" },
+                      ...(Array.isArray(productCategories) ? productCategories.map(category => ({
+                        value: category.description,
+                        label: category.description
+                      })) : [])
+                    ]
+                  },
+                  product: {
+                    type: 'select',
+                    placeholder: "Seleccionar producto",
+                    options: filteredWarehouseProducts.length > 0 ? 
+                      filteredWarehouseProducts.map(product => ({
+                        value: product.name,
+                        label: product.name
+                      })) : 
+                      [{ value: "", label: "No hay productos disponibles" }]
+                  },
+                  unitOfMeasurement: {
+                    type: 'text',
+                    placeholder: "Unidad de medida"
+                  },
+                  amountPerHour: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  amount: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  netUnitValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  totalValue: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  return: {
+                    type: 'number',
+                    min: 0,
+                    placeholder: "0"
+                  },
+                  machineryRelationship: {
+                    type: 'text',
+                    placeholder: "Relación con maquinaria"
+                  },
+                  packagingCode: {
+                    type: 'text',
+                    placeholder: "Código de envase"
+                  },
+                  invoiceNumber: {
+                    type: 'text',
+                    placeholder: "Número de factura"
+                  }
+                }}
                 onEditSave={async (originalRow, updatedRow) => {
                   try {
                     console.log('Saving product edit:', { originalRow, updatedRow });
-                    await productService.updateProduct(originalRow._id, updatedRow);
-                    toast({
-                      title: "Éxito",
-                      description: "Producto actualizado correctamente",
-                    });
+                    // Convert numeric fields to strings as expected by IProduct interface
+                    const productData = {
+                      ...updatedRow,
+                      amountPerHour: String(updatedRow.amountPerHour || 0),
+                      amount: String(updatedRow.amount || 0),
+                      netUnitValue: String(updatedRow.netUnitValue || 0),
+                      totalValue: String(updatedRow.totalValue || 0),
+                      return: String(updatedRow.return || 0),
+                    };
+                    await productService.updateProduct(originalRow._id, productData);
                     await fetchProducts();
                   } catch (error) {
                     console.error('Error updating product:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo actualizar el producto",
-                      variant: "destructive",
-                    });
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
                 onEditStart={(row) => {
@@ -3096,11 +3149,11 @@ const OrdenAplicacion = () => {
                   category: "",
                   product: "",
                   unitOfMeasurement: "",
-                  amountPerHour: "0",
-                  amount: "0",
-                  netUnitValue: "0",
-                  totalValue: "0",
-                  return: "0",
+                  amountPerHour: 0,
+                  amount: 0,
+                  netUnitValue: 0,
+                  totalValue: 0,
+                  return: 0,
                   machineryRelationship: "",
                   packagingCode: "",
                   invoiceNumber: "",
@@ -3110,157 +3163,31 @@ const OrdenAplicacion = () => {
                   "category", "product", "unitOfMeasurement", "amountPerHour", 
                   "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
                 ]}
-                customEditRender={{
-                  category: (value, onChange) => (
-                    <Select
-                      value={value === "" || !value ? "all" : value}
-                      onValueChange={(newValue) => {
-                        const categoryValue = newValue === "all" ? "" : newValue;
-                        onChange(categoryValue);
-                        filterWarehouseProductsByCategory(categoryValue);
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas las categorías</SelectItem>
-                        {Array.isArray(productCategories) && productCategories.map((category) => (
-                          <SelectItem key={category._id} value={category.description}>
-                            {category.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                  product: (value, onChange, rowData) => (
-                    <Select
-                      value={value || ""}
-                      onValueChange={onChange}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar producto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(filteredWarehouseProducts) && filteredWarehouseProducts.length > 0 ? (
-                          filteredWarehouseProducts.map((product) => (
-                            <SelectItem key={product._id} value={product.name}>
-                              {product.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-products" disabled>
-                            No hay productos disponibles
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  ),
-                }}
-                customAddRender={{
-                  category: (value, onChange) => (
-                    <Select
-                      value={value === "" || !value ? "all" : value}
-                      onValueChange={(newValue) => {
-                        const categoryValue = newValue === "all" ? "" : newValue;
-                        onChange(categoryValue);
-                        filterWarehouseProductsByCategory(categoryValue);
-                      }}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todas las categorías</SelectItem>
-                        {Array.isArray(productCategories) && productCategories.map((category) => (
-                          <SelectItem key={category._id} value={category.description}>
-                            {category.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ),
-                  product: (value, onChange, rowData) => (
-                    <Select
-                      value={value || ""}
-                      onValueChange={onChange}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Seleccionar producto" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(filteredWarehouseProducts) && filteredWarehouseProducts.length > 0 ? (
-                          filteredWarehouseProducts.map((product) => (
-                            <SelectItem key={product._id} value={product.name}>
-                              {product.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-products" disabled>
-                            No hay productos disponibles
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  ),
-                }}
-                onInlineAdd={async (newProduct) => {
+                onInlineAdd={async (newProduct: ProductFormData) => {
                   try {
                     if (!selectedOrden) {
-                      toast({
-                        title: "Error",
-                        description: "No hay una orden seleccionada",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    // Validate required fields
-                    const requiredFields = {
-                      'product': newProduct.product,
-                      'unitOfMeasurement': newProduct.unitOfMeasurement,
-                      'amount': newProduct.amount,
-                      'netUnitValue': newProduct.netUnitValue,
-                      'totalValue': newProduct.totalValue
-                    };
-                    
-                    const missingFields = Object.entries(requiredFields)
-                      .filter(([key, value]) => !value || value === "")
-                      .map(([key]) => key);
-                    
-                    if (missingFields.length > 0) {
-                      toast({
-                        title: "Error de validación",
-                        description: `Los siguientes campos son requeridos: ${missingFields.join(', ')}`,
-                        variant: "destructive",
-                      });
-                      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                      throw new Error("No hay una orden seleccionada");
                     }
 
                     const workId = selectedOrden.id || (selectedOrden as any)._id;
+                    // Convert numeric fields to strings as expected by IProduct interface
                     const productData = {
                       ...newProduct,
                       workId: String(workId),
-                      machineryRelationship: "", // Default empty relationship
+                      machineryRelationship: newProduct.machineryRelationship || "",
+                      amountPerHour: String(newProduct.amountPerHour || 0),
+                      amount: String(newProduct.amount || 0),
+                      netUnitValue: String(newProduct.netUnitValue || 0),
+                      totalValue: String(newProduct.totalValue || 0),
+                      return: String(newProduct.return || 0),
                     };
                     
                     console.log('Adding new product:', productData);
                     await productService.createProduct(productData);
-                    
-                    toast({
-                      title: "Éxito",
-                      description: "Producto agregado correctamente",
-                    });
-                    
                     await fetchProducts();
                   } catch (error) {
                     console.error('Error adding product:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo agregar el producto",
-                      variant: "destructive",
-                    });
-                    throw error; // Re-throw to prevent the row from being removed
+                    throw error; // Let FormGrid handle the error notification
                   }
                 }}
               />
