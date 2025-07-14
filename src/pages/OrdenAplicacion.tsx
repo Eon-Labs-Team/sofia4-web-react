@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Grid } from "@/components/Grid/Grid";
 import { FormGrid } from "@/components/Grid/FormGrid";
 import {
@@ -27,7 +27,9 @@ import {
   productFormSchema,
   WorkerFormData,
   MachineryFormData,
-  ProductFormData 
+  ProductFormData,
+  FormGridRules,
+  FieldRule 
 } from "@/lib/validationSchemas";
 import { Button } from "@/components/ui/button";
 import {
@@ -488,10 +490,17 @@ const formSections: SectionConfig[] = [
       },
       {
         id: "paymentMethodToWorkers",
-        type: "text",
+        type: "select",
         label: "Método de Pago a Trabajadores",
         name: "paymentMethodToWorkers",
-        placeholder: "Método de pago a trabajadores"
+        placeholder: "Método de pago a trabajadores",
+        options:[
+          { value: "trato", label: "Trato" },
+          { value: "trato-dia", label: "Trato + Día" },
+          { value: "dia-laboral", label: "Día laboral" },
+          { value: "mayor-trato-dia", label: "Mayor entre trato o día laboral" },
+          { value: "trato-dia-laboral", label: "Trato - dia laboral" }
+        ]
       },
       {
         id: "taskPrice",
@@ -900,6 +909,13 @@ interface WorkWithId extends IWork {
 }
 
 const OrdenAplicacion = () => {
+  // ====================================
+  // CONFIGURACIONES
+  // ====================================
+  
+  // Variable configurable para las horas por jornada
+  const HOURS_PER_WORKDAY = 8; // 1 jornada = 8 horas
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [ordenesAplicacion, setOrdenesAplicacion] = useState<WorkWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -940,6 +956,311 @@ const OrdenAplicacion = () => {
 
   // State for Gantt chart data
   const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
+
+  // ====================================
+  // FIELD RULES FOR WORKERS GRID
+  // ====================================
+  const workerGridRules: FormGridRules = useMemo(() => ({
+    rules: [
+      // 1. Preseleccionar "valor rendimiento" desde "precio de tarea" del padre
+      {
+        trigger: { field: 'worker' },
+        action: {
+          type: 'preset',
+          targetField: 'yieldValue',
+          source: 'parent',
+          sourceField: 'taskPrice'
+        }
+      },
+      
+      // 2. Preseleccionar datos del trabajador seleccionado
+      {
+        trigger: { field: 'worker' },
+        action: {
+          type: 'preset',
+          targetField: 'classification',
+          preset: (formData, parentData, externalData) => {
+            const worker = externalData?.workerList?.find((w: any) => w._id === formData.worker);
+            return worker?.defaultClassification || 'General';
+          }
+        }
+      },
+      // preseleccionar tipo de pago
+      {
+        trigger: { field: 'worker' },
+        action: {
+          type: 'preset',
+          targetField: 'paymentMethod',
+          source: 'parent',
+          sourceField: 'paymentMethodToWorkers'
+        }
+      },
+      
+      // 3. Preseleccionar fecha actual
+      {
+        trigger: { field: 'worker' },
+        action: {
+          type: 'preset',
+          targetField: 'date',
+          preset: () => new Date().toISOString().split('T')[0]
+        }
+      },
+      
+      // 4. Calcular total horas rendimiento inicial (1 jornada = 8 horas por defecto)
+      {
+        trigger: { field: 'worker' },
+        action: {
+          type: 'calculate',
+          targetField: 'totalHoursYield',
+          calculate: (formData) => {
+            const workingDay = parseFloat(formData.workingDay) || 1; // Por defecto 1 jornada
+            const totalHours = workingDay * HOURS_PER_WORKDAY;
+            console.log('Calculating initial totalHoursYield:', {
+              workingDay,
+              hoursPerWorkday: HOURS_PER_WORKDAY,
+              totalHours
+            });
+            return totalHours;
+          }
+        }
+      },
+      
+              // 5. Calcular "total horas rendimiento" = jornada * horas por jornada
+        {
+          trigger: { field: 'workingDay' },
+          action: {
+            type: 'calculate',
+            targetField: 'totalHoursYield',
+            calculate: (formData) => {
+              const workingDay = parseFloat(formData.workingDay) || 0;
+              const totalHours = workingDay * HOURS_PER_WORKDAY;
+              console.log('Calculating totalHoursYield:', {
+                workingDay,
+                hoursPerWorkday: HOURS_PER_WORKDAY,
+                totalHours
+              });
+              return totalHours;
+            }
+          }
+        },
+        
+        // 6. Calcular "valor día" = sueldo / 30 (si sueldo > 0)
+      {
+        trigger: { field: 'salary' },
+        action: {
+          type: 'calculate',
+          targetField: 'dayValue',
+          calculate: (formData) => {
+            const salary = parseFloat(formData.salary) || 0;
+            return salary > 0 ? salary / 30 : 0;
+          }
+        }
+      },
+      
+              // 7. Calcular "total trato" = rendimiento * valor rendimiento
+        {
+          trigger: { field: 'yield' },
+          action: {
+            type: 'calculate',
+            targetField: 'totalDeal',
+            calculate: (formData) => {
+              const yield_value = parseFloat(formData.yield) || 0;
+              const yieldValue = parseFloat(formData.yieldValue) || 0;
+              return yield_value * yieldValue;
+            }
+          }
+        },
+        
+        {
+          trigger: { field: 'yieldValue' },
+          action: {
+            type: 'calculate',
+            targetField: 'totalDeal',
+            calculate: (formData) => {
+              const yield_value = parseFloat(formData.yield) || 0;
+              const yieldValue = parseFloat(formData.yieldValue) || 0;
+              return yield_value * yieldValue;
+            }
+          }
+        },
+        
+        // 8. Calcular "total diario" = valor día x jornada (para día laboral)
+      {
+        trigger: { field: 'workingDay' },
+        action: {
+          type: 'calculate',
+          targetField: 'dailyTotal',
+          calculate: (formData) => {
+            const dayValue = parseFloat(formData.dayValue) || 0;
+            const workingDay = parseFloat(formData.workingDay) || 1;
+            return dayValue * workingDay;
+          }
+        }
+      },
+      
+      {
+        trigger: { field: 'dayValue' },
+        action: {
+          type: 'calculate',
+          targetField: 'dailyTotal',
+          calculate: (formData) => {
+            const dayValue = parseFloat(formData.dayValue) || 0;
+            const workingDay = parseFloat(formData.workingDay) || 1;
+            return dayValue * workingDay;
+          }
+        }
+      },
+      
+              // 9. Función auxiliar para calcular value según método de pago
+        ...[
+          'paymentMethod', 'totalDeal', 'bonus', 'dailyTotal'
+        ].map(field => ({
+        trigger: { field },
+        action: {
+          type: 'calculate' as const,
+          targetField: 'value' as const,
+          calculate: (formData: any) => {
+            // Recalcular totalDeal basado en valores actuales
+            const yield_value = parseFloat(formData.yield) || 0;
+            const yieldValue = parseFloat(formData.yieldValue) || 0;
+            const recalculatedTotalDeal = yield_value * yieldValue;
+            
+            // Recalcular dailyTotal basado en valores actuales
+            const salary = parseFloat(formData.salary) || 0;
+            const dayValue = salary > 0 ? salary / 30 : parseFloat(formData.dayValue) || 0;
+            const workingDay = parseFloat(formData.workingDay) || 1;
+            const recalculatedDailyTotal = dayValue * workingDay;
+            
+            const bonus = parseFloat(formData.bonus) || 0;
+            const paymentMethod = formData.paymentMethod;
+            
+            console.log('Calculating value for payment method:', paymentMethod, {
+              recalculatedTotalDeal,
+              recalculatedDailyTotal,
+              bonus,
+              yield_value,
+              yieldValue,
+              dayValue,
+              workingDay
+            });
+            
+            switch (paymentMethod) {
+              case 'trato':
+                // Total = (rendimiento x valor trato) + bono
+                return recalculatedTotalDeal + bonus;
+                
+                            case 'trato-dia':
+                // Total = ((rendimiento x valor trato) + bono) + valor día
+                return recalculatedTotalDeal + bonus + recalculatedDailyTotal;
+                
+              case 'ajuste-septimodia':
+                // Total = valor día + bono (mismo cálculo que día laboral)
+                return recalculatedDailyTotal + bonus;
+                
+              case 'dia-laboral':
+                // Total = valor día + bono
+                return recalculatedDailyTotal + bonus;
+                
+              case 'mayor-trato-dia':
+                // Total = mayor entre (trato + bono) o (día + bono)
+                const tratoTotal = recalculatedTotalDeal + bonus;
+                const diaTotal = recalculatedDailyTotal + bonus;
+                const maxValue = Math.max(tratoTotal, diaTotal);
+                console.log('Mayor entre trato y día:', {
+                  tratoTotal,
+                  diaTotal,
+                  maxValue
+                });
+                return maxValue;
+                
+              case 'trato-dia-laboral':
+                // Total = (trato + bono) - día laboral
+                return (recalculatedTotalDeal + bonus) - recalculatedDailyTotal;
+                
+              default:
+                return 0;
+            }
+          }
+        }
+      })),
+      
+              // 10. Cadena de recálculos cuando cambia el salario
+        {
+          trigger: { field: 'salary' },
+          action: {
+            type: 'calculate',
+            targetField: 'dailyTotal',
+          calculate: (formData) => {
+            const salary = parseFloat(formData.salary) || 0;
+            const dayValue = salary > 0 ? salary / 30 : parseFloat(formData.dayValue) || 0;
+            const workingDay = parseFloat(formData.workingDay) || 1;
+            return dayValue * workingDay;
+          }
+        }
+      },
+      
+      {
+        trigger: { field: 'salary' },
+        action: {
+          type: 'calculate',
+          targetField: 'value',
+          calculate: (formData) => {
+            const salary = parseFloat(formData.salary) || 0;
+            const dayValue = salary > 0 ? salary / 30 : parseFloat(formData.dayValue) || 0;
+            const workingDay = parseFloat(formData.workingDay) || 1;
+            const calculatedDailyTotal = dayValue * workingDay;
+            
+            // Recalcular totalDeal basado en valores actuales
+            const yield_value = parseFloat(formData.yield) || 0;
+            const yieldValue = parseFloat(formData.yieldValue) || 0;
+            const recalculatedTotalDeal = yield_value * yieldValue;
+            
+            const bonus = parseFloat(formData.bonus) || 0;
+            const paymentMethod = formData.paymentMethod;
+            
+            console.log('Calculating value after salary change:', paymentMethod, {
+              recalculatedTotalDeal,
+              calculatedDailyTotal,
+              bonus,
+              salary,
+              dayValue,
+              workingDay
+            });
+            
+            switch (paymentMethod) {
+              case 'trato':
+                return recalculatedTotalDeal + bonus;
+              case 'trato-dia':
+                return recalculatedTotalDeal + bonus + calculatedDailyTotal;
+              case 'ajuste-septimodia':
+                return calculatedDailyTotal + bonus;
+              case 'dia-laboral':
+                return calculatedDailyTotal + bonus;
+              case 'mayor-trato-dia':
+                const tratoTotal = recalculatedTotalDeal + bonus;
+                const diaTotal = calculatedDailyTotal + bonus;
+                const maxValue = Math.max(tratoTotal, diaTotal);
+                console.log('Mayor entre trato y día (salary change):', {
+                  tratoTotal,
+                  diaTotal,
+                  maxValue
+                });
+                return maxValue;
+              case 'trato-dia-laboral':
+                return (recalculatedTotalDeal + bonus) - calculatedDailyTotal;
+              default:
+                return 0;
+            }
+          }
+        }
+      }
+    ],
+    parentData: selectedOrden,
+    externalData: {
+      workerList: workerList,
+      taskPrice: selectedOrden?.taskPrice || selectedOrden?.task?.taskPrice || 0
+    }
+  }), [selectedOrden, workerList]);
 
   // Convert ordenesAplicacion to GanttTask format
   useEffect(() => {
@@ -1501,7 +1822,7 @@ const OrdenAplicacion = () => {
     },
     {
       id: "value",
-      header: "Valor",
+      header: "Total",
       accessor: "value",
       visible: true,
       sortable: true,
@@ -2589,8 +2910,12 @@ const OrdenAplicacion = () => {
               
               {/* Workers grid */}
               <FormGrid
+                key={`workers-grid-${selectedOrden._id || selectedOrden.id}`}
                 columns={workersColumns}
-                data={workers}
+                data={workers.map((worker, index) => ({
+                  ...worker,
+                  _id: worker._id || `worker-${index}-${Date.now()}`
+                }))}
                 idField="_id"
                 editValidationSchema={workerFormSchema}
                 addValidationSchema={workerFormSchema}
@@ -2625,7 +2950,7 @@ const OrdenAplicacion = () => {
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 )}
-                gridId="workers-grid-aplication-order"
+                gridId={`workers-grid-${selectedOrden._id || selectedOrden.id}`}
                 title="Listado de Trabajadores"
                 enableInlineEdit={true}
                 editableColumns={[
@@ -2635,110 +2960,145 @@ const OrdenAplicacion = () => {
                   "additionalBonuses", "dayValue", "totalDeal", "dailyTotal", 
                   "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
                 ]}
+                fieldRules={workerGridRules}
                 fieldConfigurations={{
                   worker: {
                     type: 'select',
                     placeholder: "Seleccionar trabajador",
+                    style: { minWidth: '150px' },
                     options: workerList.map((worker) => ({
                       value: worker._id || "",
                       label: `${worker.names} ${worker.lastName} (${worker.rut})`
                     }))
-                  },
+                  },    
                   classification: {
                     type: 'text',
-                    placeholder: "Clasificación del trabajador"
+                    placeholder: "Clasificación del trabajador",
+                    style: { minWidth: '120px' }
                   },
                   quadrille: {
                     type: 'text',
-                    placeholder: "Cuadrilla"
+                    placeholder: "Cuadrilla",
+                    style: { minWidth: '80px' }
                   },
                   workingDay: {
-                    type: 'text',
-                    placeholder: "Jornada laboral"
+                    type: 'number',
+                    placeholder: "1.0",
+                    min: 0,
+                    max: 99,
+                    step: 0.1,
+                    style: { minWidth: '70px' }
                   },
                   paymentMethod: {
-                    type: 'text',
-                    placeholder: "Método de pago"
+                    type: 'select',
+                    placeholder: "Método de pago",
+                    style: { minWidth: '130px' },
+                    options: [
+                      { value: "trato", label: "Trato" },
+                      { value: "trato-dia", label: "Trato + Día" },
+                      { value: "dia-laboral", label: "Día laboral" },
+                      { value: "mayor-trato-dia", label: "Mayor entre trato o día laboral" },
+                      { value: "trato-dia-laboral", label: "Trato - dia laboral" },
+                      { value: "ajuste-septimodia", label: "Ajuste al 7mo día" }
+
+                    ]
                   },
                   contractor: {
                     type: 'text',
-                    placeholder: "Contratista"
+                    placeholder: "Contratista",
+                    style: { minWidth: '100px' }
                   },
                   date: {
-                    type: 'date'
+                    type: 'date',
+                    style: { minWidth: '120px' }
                   },
                   salary: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   yield: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   totalHoursYield: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   yieldValue: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   overtime: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   bonus: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   additionalBonuses: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   dayValue: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   totalDeal: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   dailyTotal: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   value: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   exportPerformance: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   juicePerformance: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   othersPerformance: {
                     type: 'number',
                     min: 0,
-                    placeholder: "0"
+                    placeholder: "0",
+                    style: { minWidth: '80px' }
                   },
                   state: {
-                    type: 'checkbox'
+                    type: 'checkbox',
+                    style: { minWidth: '50px' }
                   }
                 }}
                 onEditSave={async (originalRow, updatedRow) => {
@@ -2815,29 +3175,29 @@ const OrdenAplicacion = () => {
                     }
 
                     const workId = selectedOrden.id || (selectedOrden as any)._id;
-                    // Convert numeric fields to strings as expected by IWorkers interface
+                    // Convert numeric fields to numbers for WorkerFormData and then to strings for IWorkers
                     const workerData = {
                       ...newWorker,
                       workId: String(workId),
                       state: true,
-                      salary: String(newWorker.salary || 0),
-                      yield: String(newWorker.yield || 0),
-                      totalHoursYield: String(newWorker.totalHoursYield || 0),
-                      yieldValue: String(newWorker.yieldValue || 0),
-                      overtime: String(newWorker.overtime || 0),
-                      bonus: String(newWorker.bonus || 0),
-                      additionalBonuses: String(newWorker.additionalBonuses || 0),
-                      dayValue: String(newWorker.dayValue || 0),
-                      totalDeal: String(newWorker.totalDeal || 0),
-                      dailyTotal: String(newWorker.dailyTotal || 0),
-                      value: String(newWorker.value || 0),
-                      exportPerformance: String(newWorker.exportPerformance || 0),
-                      juicePerformance: String(newWorker.juicePerformance || 0),
-                      othersPerformance: String(newWorker.othersPerformance || 0),
+                      salary: Number(newWorker.salary || 0),
+                      yield: Number(newWorker.yield || 0),
+                      totalHoursYield: Number(newWorker.totalHoursYield || 0),
+                      yieldValue: Number(newWorker.yieldValue || 0),
+                      overtime: Number(newWorker.overtime || 0),
+                      bonus: Number(newWorker.bonus || 0),
+                      additionalBonuses: Number(newWorker.additionalBonuses || 0),
+                      dayValue: Number(newWorker.dayValue || 0),
+                      totalDeal: Number(newWorker.totalDeal || 0),
+                      dailyTotal: Number(newWorker.dailyTotal || 0),
+                      value: Number(newWorker.value || 0),
+                      exportPerformance: Number(newWorker.exportPerformance || 0),
+                      juicePerformance: Number(newWorker.juicePerformance || 0),
+                      othersPerformance: Number(newWorker.othersPerformance || 0),
                     };
                     
                     console.log('Adding new worker:', workerData);
-                    await workerService.createWorker(workerData);
+                    await workerService.createWorker(workerData as any);
                     await fetchWorkers();
                   } catch (error) {
                     console.error('Error adding worker:', error);
@@ -2865,8 +3225,12 @@ const OrdenAplicacion = () => {
               
               {/* Machinery grid */}
               <FormGrid
+                key={`machinery-grid-${selectedOrden._id || selectedOrden.id}`}
                 columns={machineryColumns}
-                data={machinery}
+                data={machinery.map((machine, index) => ({
+                  ...machine,
+                  _id: (machine as any)._id || (machine as any).id || `machinery-${index}-${Date.now()}`
+                }))}
                 idField="_id"
                 editValidationSchema={machineryFormSchema}
                 addValidationSchema={machineryFormSchema}
@@ -2901,7 +3265,7 @@ const OrdenAplicacion = () => {
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 )}
-                gridId="machinery-grid-application-order"
+                gridId={`machinery-grid-${selectedOrden._id || selectedOrden.id}`}
                 title="Listado de Maquinaria"
                 enableInlineEdit={true}
                 editableColumns={[
@@ -2942,7 +3306,7 @@ const OrdenAplicacion = () => {
                       timeValue: String(updatedRow.timeValue || 0),
                       totalValue: String(updatedRow.totalValue || 0),
                     };
-                    await machineryService.updateMachinery(originalRow._id, machineryData);
+                    await machineryService.updateMachinery((originalRow as any)._id, machineryData);
                     await fetchMachinery();
                   } catch (error) {
                     console.error('Error updating machinery:', error);
@@ -3012,8 +3376,12 @@ const OrdenAplicacion = () => {
               
               {/* Products grid */}
               <FormGrid
+                key={`products-grid-${selectedOrden._id || selectedOrden.id}`}
                 columns={productsColumns}
-                data={products}
+                data={products.map((product, index) => ({
+                  ...product,
+                  _id: (product as any)._id || (product as any).id || `product-${index}-${Date.now()}`
+                }))}
                 idField="_id"
                 editValidationSchema={productFormSchema}
                 addValidationSchema={productFormSchema}
@@ -3048,7 +3416,7 @@ const OrdenAplicacion = () => {
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 )}
-                gridId="products-grid-application-order"
+                gridId={`products-grid-${selectedOrden._id || selectedOrden.id}`}
                 title="Listado de Productos"
                 enableInlineEdit={true}
                 editableColumns={[
@@ -3131,7 +3499,7 @@ const OrdenAplicacion = () => {
                       totalValue: String(updatedRow.totalValue || 0),
                       return: String(updatedRow.return || 0),
                     };
-                    await productService.updateProduct(originalRow._id, productData);
+                    await productService.updateProduct((originalRow as any)._id, productData);
                     await fetchProducts();
                   } catch (error) {
                     console.error('Error updating product:', error);

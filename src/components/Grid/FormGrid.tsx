@@ -41,6 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
+import { FormGridRules, FieldRulesEngine } from "@/lib/validationSchemas";
 
 interface FormGridProps {
   data: any[];
@@ -76,8 +77,11 @@ interface FormGridProps {
       min?: number;
       max?: number;
       step?: number;
+      style?: React.CSSProperties;
     };
   };
+  // Field rules system
+  fieldRules?: FormGridRules;
 }
 
 const FormGridComponent: React.FC<FormGridProps> = ({
@@ -103,6 +107,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
   addableColumns = [],
   customAddRender = {},
   fieldConfigurations = {},
+  fieldRules,
 }) => {
   // State for inline editing
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
@@ -111,6 +116,22 @@ const FormGridComponent: React.FC<FormGridProps> = ({
   // State for inline adding
   const [isAddingNewRow, setIsAddingNewRow] = useState(false);
   const [addingSaving, setAddingSaving] = useState(false);
+
+  // Create rules engine instance
+  const rulesEngine = useMemo(() => {
+    if (!fieldRules) return null;
+    return new FieldRulesEngine(fieldRules);
+  }, [fieldRules]);
+
+  // Update rules engine when fieldRules change
+  useEffect(() => {
+    if (rulesEngine && fieldRules?.parentData) {
+      rulesEngine.updateParentData(fieldRules.parentData);
+    }
+    if (rulesEngine && fieldRules?.externalData) {
+      rulesEngine.updateExternalData(fieldRules.externalData);
+    }
+  }, [rulesEngine, fieldRules]);
 
   // Get grid state from Zustand
   const {
@@ -151,6 +172,17 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     const rowId = row[idField];
     setEditingRowId(String(rowId));
     editForm.reset(row);
+    
+    // Execute initialization rules for editing
+    if (rulesEngine) {
+      setTimeout(() => {
+        rulesEngine.executeInitializationRules(
+          editForm.getValues(),
+          (field: string, value: any) => editForm.setValue(field, value)
+        );
+      }, 0);
+    }
+    
     onEditStart?.(row);
   };
 
@@ -203,6 +235,16 @@ const FormGridComponent: React.FC<FormGridProps> = ({
   const startAdding = () => {
     setIsAddingNewRow(true);
     addForm.reset(defaultNewRow);
+    
+    // Execute initialization rules for new row
+    if (rulesEngine) {
+      setTimeout(() => {
+        rulesEngine.executeInitializationRules(
+          addForm.getValues(),
+          (field: string, value: any) => addForm.setValue(field, value)
+        );
+      }, 0);
+    }
   };
 
   const cancelAdding = () => {
@@ -269,7 +311,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
               {customRender?.[column.id] ? (
                 customRender[column.id](control, field, formState)
               ) : (
-                renderDefaultField(field, fieldConfig, formState)
+                renderDefaultField(field, fieldConfig, formState, column.accessor, mode)
               )}
             </FormControl>
             <FormMessage />
@@ -279,17 +321,35 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     );
   };
 
-  const renderDefaultField = (field: any, config: any, formState: any) => {
-    const { type = 'text', placeholder, options, min, max, step } = config;
+  const renderDefaultField = (field: any, config: any, formState: any, columnAccessor?: string, mode?: 'edit' | 'add') => {
+    const { type = 'text', placeholder, options, min, max, step, style } = config;
+    
+    // Helper function to handle field changes and execute rules
+    const handleFieldChange = (value: any) => {
+      field.onChange(value);
+      
+      // Execute rules if engine is available and we have the column accessor
+      if (rulesEngine && columnAccessor) {
+        const currentForm = mode === 'edit' ? editForm : addForm;
+        setTimeout(() => {
+          rulesEngine.executeRules(
+            columnAccessor,
+            value,
+            currentForm.getValues(),
+            (fieldName: string, newValue: any) => currentForm.setValue(fieldName, newValue)
+          );
+        }, 0);
+      }
+    };
     
     switch (type) {
       case 'select':
         return (
           <Select
             value={field.value || ""}
-            onValueChange={field.onChange}
+            onValueChange={handleFieldChange}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className="h-8 text-xs" style={style}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -307,8 +367,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <input
             type="checkbox"
             checked={field.value || false}
-            onChange={(e) => field.onChange(e.target.checked)}
+            onChange={(e) => handleFieldChange(e.target.checked)}
             className="h-4 w-4"
+            style={style}
           />
         );
       
@@ -317,12 +378,13 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="number"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
             min={min}
             max={max}
             step={step}
             className="h-8 text-xs"
+            style={style}
           />
         );
       
@@ -331,8 +393,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="date"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             className="h-8 text-xs"
+            style={style}
           />
         );
       
@@ -341,8 +404,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="time"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             className="h-8 text-xs"
+            style={style}
           />
         );
       
@@ -351,8 +415,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="datetime-local"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             className="h-8 text-xs"
+            style={style}
           />
         );
       
@@ -361,9 +426,10 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="email"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
             className="h-8 text-xs"
+            style={style}
           />
         );
       
@@ -372,9 +438,10 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="text"
             value={field.value || ""}
-            onChange={field.onChange}
+            onChange={(e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
             className="h-8 text-xs"
+            style={style}
           />
         );
     }
@@ -819,8 +886,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           
           <GroupingMenu
             columns={columns.filter((col) => col.groupable)}
-            currentGroup={groupState.column}
-            onGroupChange={(column) => setGroupState({ column })}
+            gridId={gridId}
           />
           
           {enableInlineAdd && !isAddingNewRow && (

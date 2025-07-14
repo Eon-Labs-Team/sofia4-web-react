@@ -181,3 +181,207 @@ const workerData = {
 ## Conclusión
 
 La implementación del FormGrid proporciona una base sólida para formularios complejos con validaciones robustas, mejorando significativamente la experiencia del usuario y la calidad de los datos en la aplicación. 
+
+## 🔄 Sistema de Reglas de Campos (Field Rules System)
+
+El FormGrid incluye un poderoso sistema de reglas que permite:
+1. **Preseleccionar automáticamente** valores de campos basados en selecciones
+2. **Calcular automáticamente** valores entre campos
+3. **Acceder a datos** del formulario padre y registros externos
+
+### 📋 Características Principales
+
+- **Declarativo**: Se define QUÉ hacer, no CÓMO hacerlo
+- **Flexible**: Soporta preselección y cálculos complejos
+- **Reutilizable**: Se puede usar en cualquier FormGrid
+- **Acceso completo**: Datos del padre, registro seleccionado y externos
+- **Condicional**: Reglas que se ejecutan solo bajo ciertas condiciones
+- **Tiempo real**: Se ejecuta automáticamente al cambiar campos
+
+### 🚀 Uso Básico
+
+```typescript
+import { FormGridRules, FieldRule } from "@/lib/validationSchemas";
+
+// Definir reglas
+const workerGridRules: FormGridRules = {
+  rules: [
+    // Preseleccionar valor del formulario padre
+    {
+      trigger: { field: 'worker' },
+      action: {
+        type: 'preset',
+        targetField: 'yieldValue',
+        source: 'parent',
+        sourceField: 'taskPrice'
+      }
+    },
+    
+    // Calcular valores automáticamente
+    {
+      trigger: { field: 'yield' },
+      action: {
+        type: 'calculate',
+        targetField: 'totalDeal',
+        calculate: (formData) => (formData.yield || 0) * (formData.yieldValue || 0)
+      }
+    },
+    
+    // Preselección con función personalizada
+    {
+      trigger: { field: 'worker' },
+      action: {
+        type: 'preset',
+        targetField: 'classification',
+        preset: (formData, parentData, externalData) => {
+          const worker = externalData?.workerList?.find(w => w._id === formData.worker);
+          return worker?.defaultClassification || 'General';
+        }
+      }
+    }
+  ],
+  parentData: selectedOrder, // datos del formulario padre
+  externalData: {
+    workerList: workerList,
+    taskPrice: selectedOrder?.taskPrice
+  }
+};
+
+// Usar en FormGrid
+<FormGrid
+  // ... otras props
+  fieldRules={workerGridRules}
+/>
+```
+
+### 📖 API de Reglas
+
+#### FieldRule Interface
+```typescript
+interface FieldRule {
+  trigger: {
+    field: string; // campo que dispara la regla
+    condition?: (value: any, formData: any, parentData?: any) => boolean; // condición opcional
+  };
+  
+  action: {
+    type: 'preset' | 'calculate';
+    targetField: string; // campo a modificar
+    source?: 'parent' | 'external' | 'custom'; // fuente de datos para preset
+    sourceField?: string; // campo fuente para preset
+    calculate?: (formData: any, parentData?: any, externalData?: any) => any; // función de cálculo
+    preset?: (formData: any, parentData?: any, externalData?: any) => any; // función de preselección
+  };
+}
+```
+
+#### FormGridRules Interface
+```typescript
+interface FormGridRules {
+  rules: FieldRule[];
+  parentData?: any; // datos del formulario padre
+  externalData?: { [key: string]: any }; // datos externos (listas, etc.)
+}
+```
+
+### 🎯 Casos de Uso Comunes
+
+#### 1. Preselección desde Formulario Padre
+```typescript
+{
+  trigger: { field: 'worker' },
+  action: {
+    type: 'preset',
+    targetField: 'yieldValue',
+    source: 'parent',
+    sourceField: 'taskPrice' // toma taskPrice del formulario padre
+  }
+}
+```
+
+#### 2. Cálculo Automático Entre Campos
+```typescript
+{
+  trigger: { field: 'yield' },
+  action: {
+    type: 'calculate',
+    targetField: 'totalDeal',
+    calculate: (formData) => {
+      return (formData.yield || 0) * (formData.yieldValue || 0);
+    }
+  }
+}
+```
+
+#### 3. Preselección con Lógica Personalizada
+```typescript
+{
+  trigger: { field: 'worker' },
+  action: {
+    type: 'preset',
+    targetField: 'date',
+    preset: () => new Date().toISOString().split('T')[0] // fecha actual
+  }
+}
+```
+
+#### 4. Reglas Condicionales
+```typescript
+{
+  trigger: { 
+    field: 'workingDay',
+    condition: (value) => value === 'complete' // solo si es jornada completa
+  },
+  action: {
+    type: 'calculate',
+    targetField: 'dayValue',
+    calculate: () => 15000 // salario base
+  }
+}
+```
+
+#### 5. Múltiples Cálculos Encadenados
+```typescript
+// Calcular total diario cuando cambie cualquier componente
+['salary', 'totalDeal', 'overtime', 'bonus'].map(field => ({
+  trigger: { field },
+  action: {
+    type: 'calculate',
+    targetField: 'dailyTotal',
+    calculate: (formData) => {
+      return (formData.salary || 0) + 
+             (formData.totalDeal || 0) + 
+             (formData.overtime || 0) + 
+             (formData.bonus || 0);
+    }
+  }
+}))
+```
+
+### 💡 Mejores Prácticas
+
+1. **Agrupa reglas relacionadas** para mejor legibilidad
+2. **Usa funciones helper** para cálculos complejos
+3. **Valida datos** antes de usar en cálculos (`|| 0` para números)
+4. **Usa useMemo** para reglas que dependen de props
+5. **Documenta reglas complejas** con comentarios
+6. **Testa reglas** individualmente cuando sea posible
+
+### 🔧 Ejemplo Completo en OrdenAplicacion
+
+Ver implementación completa en `src/pages/OrdenAplicacion.tsx` líneas 970-1165, donde se implementan:
+
+- ✅ Preselección de valor de rendimiento desde precio de tarea padre
+- ✅ Preselección de clasificación de trabajador desde datos externos
+- ✅ Preselección automática de fecha actual
+- ✅ Cálculo automático de total trato (rendimiento × valor rendimiento)
+- ✅ Cálculo automático de total diario (suma de todos los componentes)
+- ✅ Cálculo de valor día basado en tipo de jornada
+
+### 🚀 Beneficios
+
+- **Reduce errores**: Cálculos automáticos eliminan errores manuales
+- **Mejora UX**: Preselección automática acelera entrada de datos
+- **Código limpio**: Lógica centralizada y declarativa
+- **Reutilizable**: Mismas reglas funcionan en diferentes contextos
+- **Mantenible**: Cambios en reglas de negocio son fáciles de implementar 

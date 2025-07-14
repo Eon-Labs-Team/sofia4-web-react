@@ -234,7 +234,8 @@ const GridComponent: React.FC<GridProps> = ({
     }
 
     return paginatedData.map((row, index) => {
-      const rowId = String(row[idField]);
+      // Ensure we always have a valid, unique key
+      const rowId = row[idField] ? String(row[idField]) : `row-${index}-${Date.now()}`;
       const isExpanded = expandableContent && isRowExpanded(rowId);
       
       return (
@@ -270,7 +271,7 @@ const GridComponent: React.FC<GridProps> = ({
             )}
           </tr>
           {isExpanded && expandableContent && (
-            <tr>
+            <tr key={`${rowId}-expanded`}>
               <td
                 colSpan={
                   columns.filter((col) => col.visible).length +
@@ -291,77 +292,83 @@ const GridComponent: React.FC<GridProps> = ({
   };
 
   const renderGroupedRows = () => {
-    return paginatedData.map((group: any) => (
-      <React.Fragment key={group.groupValue}>
-        <tr className="bg-gray-100 border-b">
-          <td
-            colSpan={
-              columns.filter((col) => col.visible).length +
-              (expandableContent ? 1 : 0) +
-              (actions ? 1 : 0)
-            }
-            className="px-4 py-2 font-semibold text-gray-700"
-          >
-            {group.groupValue} ({group.rows.length} elementos)
-          </td>
-        </tr>
-        {group.rows.map((row: any) => {
-          const rowId = String(row[idField]);
-          const isExpanded = expandableContent && isRowExpanded(rowId);
-          
-          return (
-            <React.Fragment key={rowId}>
-              <tr
-                className="border-b hover:bg-gray-50 cursor-pointer"
-                onClick={() => onRowClick && onRowClick(row)}
-              >
-                {expandableContent && (
-                  <td className="px-4 py-3 w-8">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRowExpanded(rowId);
-                      }}
-                      className="h-6 w-6"
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </td>
-                )}
-                {renderCells(row)}
-                {actions && (
-                  <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {actions(row)}
-                  </td>
-                )}
-              </tr>
-              {isExpanded && expandableContent && (
-                <tr>
-                  <td
-                    colSpan={
-                      columns.filter((col) => col.visible).length +
-                      (expandableContent ? 1 : 0) +
-                      (actions ? 1 : 0)
-                    }
-                    className="p-0"
-                  >
-                    <div className="bg-gray-50 border-l-4 border-blue-500">
-                      {expandableContent(row)}
-                    </div>
-                  </td>
+    return paginatedData.map((group: any, groupIndex: number) => {
+      // Ensure group key is always valid
+      const groupKey = group.groupValue ? String(group.groupValue) : `group-${groupIndex}`;
+      
+      return (
+        <React.Fragment key={groupKey}>
+          <tr className="bg-gray-100 border-b">
+            <td
+              colSpan={
+                columns.filter((col) => col.visible).length +
+                (expandableContent ? 1 : 0) +
+                (actions ? 1 : 0)
+              }
+              className="px-4 py-2 font-semibold text-gray-700"
+            >
+              {group.groupValue} ({group.rows.length} elementos)
+            </td>
+          </tr>
+          {group.rows.map((row: any, rowIndex: number) => {
+            // Ensure we always have a valid, unique key within the group
+            const rowId = row[idField] ? String(row[idField]) : `${groupKey}-row-${rowIndex}-${Date.now()}`;
+            const isExpanded = expandableContent && isRowExpanded(rowId);
+            
+            return (
+              <React.Fragment key={rowId}>
+                <tr
+                  className="border-b hover:bg-gray-50 cursor-pointer"
+                  onClick={() => onRowClick && onRowClick(row)}
+                >
+                  {expandableContent && (
+                    <td className="px-4 py-3 w-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRowExpanded(rowId);
+                        }}
+                        className="h-6 w-6"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </td>
+                  )}
+                  {renderCells(row)}
+                  {actions && (
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      {actions(row)}
+                    </td>
+                  )}
                 </tr>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </React.Fragment>
-    ));
+                {isExpanded && expandableContent && (
+                  <tr key={`${rowId}-expanded`}>
+                    <td
+                      colSpan={
+                        columns.filter((col) => col.visible).length +
+                        (expandableContent ? 1 : 0) +
+                        (actions ? 1 : 0)
+                      }
+                      className="p-0"
+                    >
+                      <div className="bg-gray-50 border-l-4 border-blue-500">
+                        {expandableContent(row)}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </React.Fragment>
+      );
+    });
   };
 
   const renderToolbar = () => {
