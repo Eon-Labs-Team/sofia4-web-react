@@ -45,6 +45,7 @@ const GridComponent: React.FC<GridProps> = ({
   const {
     grid,
     initializeGrid,
+    getMergedColumns,
     setSortState,
     setGroupState,
     setSearchTerm,
@@ -58,7 +59,8 @@ const GridComponent: React.FC<GridProps> = ({
   }, [initialColumns, initializeGrid]);
 
   // Always define these, even when grid is null
-  const columns = grid?.columns || initialColumns;
+  // Use getMergedColumns to combine persisted config with render functions from code
+  const columns = getMergedColumns(initialColumns);
   const sortState = grid?.sortState || { column: null, direction: null };
   const groupState = grid?.groupState || { column: null };
   const searchTerm = grid?.searchTerm || "";
@@ -237,7 +239,7 @@ const GridComponent: React.FC<GridProps> = ({
       // Ensure we always have a valid, unique key
       const rowId = row[idField] ? String(row[idField]) : `row-${index}-${Date.now()}`;
       const isExpanded = expandableContent && isRowExpanded(rowId);
-      
+      console.log("isExpanded", isExpanded);
       return (
         <React.Fragment key={rowId}>
           <tr

@@ -15,17 +15,22 @@ export const ENDPOINTS = {
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/wareHouse/subcategoryProduct/${id}/state/${state}`,
   },
   workers: {
-    base: `${API_BASE_URL}/harvest/workers`,
-    byId: (id: string | number) => `${API_BASE_URL}/harvest/workers/${id}`,
+    base: `${API_BASE_URL}/work/workers`,
+    byId: (id: string | number) => `${API_BASE_URL}/work/workers/${id}`,
   },
   machinery: {
-    base: `${API_BASE_URL}/harvest/machinery`,
-    byId: (id: string | number) => `${API_BASE_URL}/harvest/machinery/${id}`,
+    base: `${API_BASE_URL}/work/machinery`,
+    byId: (id: string | number) => `${API_BASE_URL}/work/machinery/${id}`,
   },
   listaCuarteles: {
     base: `${API_BASE_URL}/agriculturalWork/barracksList`,
     byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}/state/${state}`,
+  },
+  listaMaquinarias: {
+    base: `${API_BASE_URL}/config/machineryList`,
+    byId: (id: string | number) => `${API_BASE_URL}/config/machineryList/${id}`,
+    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/machineryList/${id}/state/${state}`,
   },
   measurementUnits: {
     base: `${API_BASE_URL}/config/measurementUnits`,
@@ -208,9 +213,9 @@ export const ENDPOINTS = {
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/soilType/${id}/state/${state}`,
   },
   work: {
-    base: `${API_BASE_URL}/work`,
-    byId: (id: string | number) => `${API_BASE_URL}/work/${id}`,
-    changeState: (id: string | number, state: string) => `${API_BASE_URL}/work/${id}/state/${state}`,
+    base: `${API_BASE_URL}/work/work`,
+    byId: (id: string | number) => `${API_BASE_URL}/work/work/${id}`,
+    changeState: (id: string | number, state: string) => `${API_BASE_URL}/work/work/${id}/state/${state}`,
   },
   properties: {
     base: `${API_BASE_URL}/property`,

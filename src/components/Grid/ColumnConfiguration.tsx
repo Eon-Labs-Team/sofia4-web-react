@@ -25,14 +25,16 @@ const ColumnConfiguration: React.FC<ColumnConfigurationProps> = ({
 }) => {
   const {
     grid,
+    getMergedColumns,
     toggleColumnVisibility,
     resetColumnConfiguration,
   } = useGrid(gridId);
 
-  // Use the columns from the grid if available, otherwise use the provided ones
+  // Use the merged columns (which includes both persisted config and render functions)
+  // for display purposes, but toggle visibility affects only the persisted config
   const configuredColumns = useMemo(() => {
-    return grid?.columns || columns;
-  }, [grid, columns]);
+    return getMergedColumns(columns);
+  }, [getMergedColumns, columns]);
 
   // Save column configuration by persisting the columns
   // The store will automatically persist changes to localStorage

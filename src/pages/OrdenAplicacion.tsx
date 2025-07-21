@@ -49,6 +49,7 @@ import { IWork } from "@/types/IWork";
 import { IWorkers } from "@/types/IWorkers";
 import { IWorkerList } from "@/types/IWorkerList";
 import { IMachinery } from "@/types/IMachinery";
+import { IMachineryList } from "@/types/IMachineryList";
 import { IProduct } from "@/types/IProducts";
 import { IProductCategory } from "@/types/IProductCategory";
 import { IWarehouseProduct } from "@/types/IWarehouseProduct";
@@ -64,6 +65,7 @@ import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import workerListService from "@/_services/workerListService";
+import listaMaquinariasService from "@/_services/listaMaquinariasService";
 import { BarracksList } from "@/types/barracksList";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
@@ -931,6 +933,9 @@ const OrdenAplicacion = () => {
   // Machinery state
   const [machinery, setMachinery] = useState<IMachinery[]>([]);
   
+  // Machinery list state (for selectable dropdown)
+  const [machineryList, setMachineryList] = useState<IMachineryList[]>([]);
+  
   // State for taskTypes and tasks
   const [taskTypes, setTaskTypes] = useState<ITaskType[]>([]);
   const [allTasks, setAllTasks] = useState<ITask[]>([]);
@@ -1262,6 +1267,76 @@ const OrdenAplicacion = () => {
     }
   }), [selectedOrden, workerList]);
 
+  // ====================================
+  // FIELD RULES FOR MACHINERY GRID
+  // ====================================
+    const machineryGridRules: FormGridRules = useMemo(() => ({
+    rules: [
+      // 1. Preseleccionar "valor tiempo" desde "precio por hora" de la maquinaria seleccionada
+      {
+        trigger: { field: 'machinery' },
+        action: {
+          type: 'preset',
+          targetField: 'timeValue',
+          preset: (formData, parentData, externalData) => {
+            const machine = externalData?.machineryList?.find((m: any) => m._id === formData.machinery);
+            const priceHour = machine?.priceHour ? parseFloat(machine.priceHour) : 0;
+            console.log('Preselecting timeValue for machinery:', {
+              machineryId: formData.machinery,
+              machineName: machine?.equipment,
+              priceHour: priceHour
+            });
+            return priceHour;
+          }
+        }
+      },
+      
+      // 2. Calcular "valor total" cuando cambie "horas finales"
+      {
+        trigger: { field: 'finalHours' },
+        action: {
+          type: 'calculate',
+          targetField: 'totalValue',
+          calculate: (formData) => {
+            const finalHours = parseFloat(formData.finalHours) || 0;
+            const timeValue = parseFloat(formData.timeValue) || 0;
+            const totalValue = finalHours * timeValue;
+            console.log('Calculating totalValue from finalHours change:', {
+              finalHours,
+              timeValue,
+              totalValue
+            });
+            return totalValue;
+          }
+        }
+      },
+      
+      // 3. Calcular "valor total" cuando cambie "valor tiempo"
+      {
+        trigger: { field: 'timeValue' },
+        action: {
+          type: 'calculate',
+          targetField: 'totalValue',
+          calculate: (formData) => {
+            const finalHours = parseFloat(formData.finalHours) || 0;
+            const timeValue = parseFloat(formData.timeValue) || 0;
+            const totalValue = finalHours * timeValue;
+            console.log('Calculating totalValue from timeValue change:', {
+              finalHours,
+              timeValue,
+              totalValue
+            });
+            return totalValue;
+          }
+        }
+      }
+    ],
+    parentData: selectedOrden,
+    externalData: {
+      machineryList: machineryList
+    }
+  }), [selectedOrden, machineryList]);
+
   // Convert ordenesAplicacion to GanttTask format
   useEffect(() => {
     if (ordenesAplicacion.length > 0) {
@@ -1290,6 +1365,7 @@ const OrdenAplicacion = () => {
     fetchProductCategories();
     fetchWarehouseProducts();
     fetchWorkerList();
+    fetchMachineryList();
   }, []);
 
   // Set selected cuartel when editing a work order
@@ -1872,6 +1948,10 @@ const OrdenAplicacion = () => {
       accessor: "machinery",
       visible: true,
       sortable: true,
+      render: (value: string) => {
+        const machine = machineryList.find(m => m._id === value);
+        return machine ? `${machine.equipment} - ${machine.machineryCode} (${machine.brand})` : value;
+      },
     },
     {
       id: "startTime",
@@ -2181,6 +2261,26 @@ const OrdenAplicacion = () => {
       toast({
         title: "Error",
         description: "No se pudieron cargar la lista de trabajadores",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to fetch machinery list for selectable dropdown
+  const fetchMachineryList = async () => {
+    try {
+      console.log('Fetching machinery list for selectable dropdown...');
+      
+      // Using real service to fetch machinery data
+      const data = await listaMaquinariasService.findAll();
+      console.log('Fetched machinery list:', data);
+      
+      setMachineryList(data);
+    } catch (error) {
+      console.error("Error loading machinery list:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar la lista de maquinarias",
         variant: "destructive",
       });
     }
@@ -2675,7 +2775,6 @@ const OrdenAplicacion = () => {
             <Grid
               columns={columns}
               data={ordenesAplicacion}
-              expandableContent={expandableContent}
               actions={renderActions}
               gridId="orden-aplicacion-grid"
               title=""
@@ -3271,10 +3370,16 @@ const OrdenAplicacion = () => {
                 editableColumns={[
                   "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
                 ]}
+                fieldRules={machineryGridRules}
                 fieldConfigurations={{
                   machinery: {
-                    type: 'text',
-                    placeholder: "Nombre de la maquinaria"
+                    type: 'select',
+                    placeholder: "Seleccionar maquinaria",
+                    style: { minWidth: '200px' },
+                    options: machineryList.map((machine) => ({
+                      value: machine._id || "",
+                      label: `${machine.equipment} - ${machine.machineryCode} (${machine.brand})`
+                    }))
                   },
                   startTime: {
                     type: 'time'

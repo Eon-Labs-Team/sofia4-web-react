@@ -4,6 +4,7 @@ import Home, { SidebarContext } from "./pages/home";
 import Faenas from "./pages/Faenas";
 import Labores from "./pages/Labores";
 import ListaCuarteles from "./pages/ListaCuarteles";
+import ListaMaquinarias from "./pages/ListaMaquinarias";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
 import ListaTrabajadores from "./pages/ListaTrabajadores";
 import MonitoreoEstadoFenologico from "./pages/MonitoreoEstadoFenologico";
@@ -150,6 +151,19 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <ListaCuarteles />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/lista-maquinarias"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ListaMaquinarias />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>

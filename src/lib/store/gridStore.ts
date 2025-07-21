@@ -1,14 +1,18 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Types for column configuration
-export interface Column {
+// Types for persistable column configuration (without render functions)
+export interface ColumnConfig {
   id: string;
   header: string;
   accessor: string;
   visible: boolean;
   sortable?: boolean;
   groupable?: boolean;
+}
+
+// Types for complete column configuration (includes render functions)
+export interface Column extends ColumnConfig {
   render?: (value: any, row: any) => React.ReactNode;
 }
 
@@ -23,9 +27,9 @@ export interface GroupState {
   column: string | null;
 }
 
-// Types for grid state
+// Types for grid state (only persistable data)
 export interface GridState {
-  columns: Column[];
+  columnConfigs: ColumnConfig[];  // Only persistable column configs
   sortState: SortState;
   groupState: GroupState;
   searchTerm: string;
@@ -47,7 +51,47 @@ interface GridStore {
   toggleRowExpanded: (gridId: string, rowId: string | number) => void;
   isRowExpanded: (gridId: string, rowId: string | number) => boolean;
   resetColumnConfiguration: (gridId: string, initialColumns: Column[]) => void;
+  // New method to get merged columns
+  getMergedColumns: (gridId: string, initialColumns: Column[]) => Column[];
 }
+
+// Helper function to extract persistable config from column
+const extractColumnConfig = (column: Column): ColumnConfig => ({
+  id: column.id,
+  header: column.header,
+  accessor: column.accessor,
+  visible: column.visible,
+  sortable: column.sortable,
+  groupable: column.groupable,
+});
+
+// Helper function to merge persisted config with render functions from code
+const mergeColumnConfigs = (
+  persistedConfigs: ColumnConfig[],
+  initialColumns: Column[]
+): Column[] => {
+  // Create a map of initial columns for quick lookup
+  const initialColumnsMap = new Map(
+    initialColumns.map(col => [col.id, col])
+  );
+
+  // For each persisted config, merge with initial column data
+  return persistedConfigs.map(config => {
+    const initialColumn = initialColumnsMap.get(config.id);
+    
+    if (!initialColumn) {
+      // If column doesn't exist in initial config, return just the config
+      return config;
+    }
+
+    // Merge: use persisted config for persistable properties,
+    // but always use render function from initial column
+    return {
+      ...config,           // Persistable properties from localStorage
+      render: initialColumn.render  // Render function from code
+    };
+  });
+};
 
 // Create the Zustand store with persistence
 export const useGridStore = create<GridStore>()(
@@ -65,7 +109,7 @@ export const useGridStore = create<GridStore>()(
           grids: {
             ...state.grids,
             [gridId]: {
-              columns: initialColumns,
+              columnConfigs: initialColumns.map(extractColumnConfig),
               sortState: { column: null, direction: null },
               groupState: { column: null },
               searchTerm: '',
@@ -81,7 +125,7 @@ export const useGridStore = create<GridStore>()(
             ...state.grids,
             [gridId]: {
               ...state.grids[gridId],
-              columns,
+              columnConfigs: columns.map(extractColumnConfig),
             },
           },
         }));
@@ -97,8 +141,8 @@ export const useGridStore = create<GridStore>()(
               ...state.grids,
               [gridId]: {
                 ...grid,
-                columns: grid.columns.map((col) =>
-                  col.id === columnId ? { ...col, visible: !col.visible } : col
+                columnConfigs: grid.columnConfigs.map((config) =>
+                  config.id === columnId ? { ...config, visible: !config.visible } : config
                 ),
               },
             },
@@ -183,10 +227,22 @@ export const useGridStore = create<GridStore>()(
             ...state.grids,
             [gridId]: {
               ...state.grids[gridId],
-              columns: initialColumns,
+              columnConfigs: initialColumns.map(extractColumnConfig),
             },
           },
         }));
+      },
+
+      // New method to get properly merged columns
+      getMergedColumns: (gridId, initialColumns) => {
+        const store = get();
+        const grid = store.grids[gridId];
+        
+        if (!grid || !grid.columnConfigs) {
+          return initialColumns;
+        }
+        
+        return mergeColumnConfigs(grid.columnConfigs, initialColumns);
       },
     }),
     {
@@ -206,10 +262,16 @@ export const useGrid = (gridId: string) => {
     gridStore.initializeGrid(gridId, initialColumns);
   };
   
+  // Get merged columns (persisted config + render functions from code)
+  const getMergedColumns = (initialColumns: Column[]) => {
+    return gridStore.getMergedColumns(gridId, initialColumns);
+  };
+  
   // Return grid state and actions specific to this grid
   return {
     grid,
     initializeGrid,
+    getMergedColumns,
     setColumns: (columns: Column[]) => gridStore.setColumns(gridId, columns),
     toggleColumnVisibility: (columnId: string) => gridStore.toggleColumnVisibility(gridId, columnId),
     setSortState: (sortState: SortState) => gridStore.setSortState(gridId, sortState),
