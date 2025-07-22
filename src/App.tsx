@@ -56,6 +56,8 @@ import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/OrdenAplicacion";
 import FaenasAgricolas from "./pages/faenas-agricolas";
+import SofiaAIChatPage from "./pages/SofiaAIChatPage";
+import { SofiaAIChatButton } from "./components/SofiaAIChatButton";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 
 function App() {
@@ -95,6 +97,8 @@ function App() {
             {children}
           </Suspense>
         </main>
+        {/* Botón flotante del chat de IA */}
+        <SofiaAIChatButton />
       </div>
     );
   };
@@ -711,6 +715,19 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <FaenasAgricolas />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/sofia-ai"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <SofiaAIChatPage />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>
