@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BarracksList } from "@/types/barracksList";
+import { OperationalArea } from "@/types/barracksList";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -73,9 +73,9 @@ const columns: Column[] = [
     render: renderProductiveType,
   },
   {
-    id: "barracksPaddockName",
-    header: "Nombre Cuartel/Potrero",
-    accessor: "barracksPaddockName",
+    id: "areaName",
+    header: "Nombre área",
+    accessor: "areaName",
     visible: true,
     sortable: true,
     groupable: true,
@@ -156,7 +156,7 @@ const expandableContent = (row: any) => (
       ) : (
         <Building2 className="h-5 w-5 text-blue-500 mr-2" />
       )}
-      {row.barracksPaddockName}
+      {row.areaName}
       <span className="ml-2 text-sm font-normal text-muted-foreground">
         ({row.isProductive ? "Productivo" : "No Productivo"})
       </span>
@@ -231,9 +231,9 @@ const expandableContent = (row: any) => (
 
 const ListaCuarteles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [listaCuarteles, setListaCuarteles] = useState<BarracksList[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCuartel, setSelectedCuartel] = useState<BarracksList | null>(null);
+  const [listaCuarteles, setListaCuarteles] = useState<OperationalArea[]>([]);
+  const [isLoading, setIsLoading] = useState(false);  
+  const [selectedCuartel, setSelectedCuartel] = useState<OperationalArea | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Get propertyId from auth store
@@ -279,7 +279,7 @@ const ListaCuarteles = () => {
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
-      let processedData: BarracksList[];
+      let processedData: OperationalArea[];
       
       if (Array.isArray(rawData)) {
         processedData = rawData;
@@ -328,14 +328,14 @@ const ListaCuarteles = () => {
   };
   
   // Function to handle adding a new lista cuarteles
-  const handleAddListaCuarteles = async (data: Partial<BarracksList>) => {
+  const handleAddListaCuarteles = async (data: Partial<OperationalArea>) => {
     try {
       const newListaCuarteles = await listaCuartelesService.createBarracksList(data);
       await fetchListaCuarteles();
       setIsDialogOpen(false);
       toast({
         title: "Cuartel creado",
-        description: `El cuartel ${newListaCuarteles.barracksPaddockName} ha sido creado exitosamente.`,
+        description: `El cuartel ${newListaCuarteles.areaName} ha sido creado exitosamente.`,
       });
     } catch (error) {
       console.error("Error creating lista cuarteles:", error);
@@ -348,7 +348,7 @@ const ListaCuarteles = () => {
   };
 
   // Function to handle updating an existing lista cuarteles
-  const handleUpdateListaCuarteles = async (id: string | number, data: Partial<BarracksList>) => {
+  const handleUpdateListaCuarteles = async (id: string | number, data: Partial<OperationalArea>) => {
     try {
       const updatedListaCuarteles = await listaCuartelesService.updateBarracksList(id, data);
       await fetchListaCuarteles();
@@ -357,7 +357,7 @@ const ListaCuarteles = () => {
       setSelectedCuartel(null);
       toast({
         title: "Cuartel actualizado",
-        description: `El cuartel ${data.barracksPaddockName} ha sido actualizado exitosamente.`,
+        description: `El cuartel ${data.areaName} ha sido actualizado exitosamente.`,
       });
     } catch (error) {
       console.error("Error updating lista cuarteles:", error);
@@ -389,7 +389,7 @@ const ListaCuarteles = () => {
   };
 
   // Handle edit button click
-  const handleEdit = (cuartel: BarracksList) => {
+  const handleEdit = (cuartel: OperationalArea) => {
     setSelectedCuartel(cuartel);
     setIsEditMode(true);
     setIsDialogOpen(true);
@@ -405,7 +405,7 @@ const ListaCuarteles = () => {
   };
 
   // Actions column renderer for the grid
-  const actionsRenderer = (row: BarracksList) => (
+  const actionsRenderer = (row: OperationalArea) => (
     <div className="flex space-x-2">
       <Button
         onClick={(e) => {
@@ -420,7 +420,7 @@ const ListaCuarteles = () => {
       <Button
         onClick={(e) => {
           e.stopPropagation();
-          if (window.confirm(`¿Está seguro que desea eliminar el cuartel ${row.barracksPaddockName}?`)) {
+          if (window.confirm(`¿Está seguro que desea eliminar el cuartel ${row.areaName}?`)) {
             handleDeleteListaCuarteles(row._id as string);
           }
         }}
@@ -485,7 +485,7 @@ const ListaCuarteles = () => {
                 ? {
                     isProductive: selectedCuartel.isProductive,
                     classificationZone: selectedCuartel.classificationZone,
-                    barracksPaddockName: selectedCuartel.barracksPaddockName,
+                    areaName: selectedCuartel.areaName,
                     codeOptional: selectedCuartel.codeOptional,
                     organic: selectedCuartel.organic,
                     varietySpecies: selectedCuartel.varietySpecies,

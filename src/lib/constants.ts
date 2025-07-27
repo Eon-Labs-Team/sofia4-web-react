@@ -23,9 +23,9 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/work/machinery/${id}`,
   },
   listaCuarteles: {
-    base: `${API_BASE_URL}/agriculturalWork/barracksList`,
-    byId: (id: string | number) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}`,
-    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/agriculturalWork/barracksList/${id}/state/${state}`,
+    base: `${API_BASE_URL}/config/operationalArea`,
+    byId: (id: string | number) => `${API_BASE_URL}/config/operationalArea/${id}`,
+    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/operationalArea/${id}/state/${state}`,
   },
   listaMaquinarias: {
     base: `${API_BASE_URL}/config/machineryList`,

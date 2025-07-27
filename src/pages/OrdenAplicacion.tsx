@@ -66,7 +66,7 @@ import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import workerListService from "@/_services/workerListService";
 import listaMaquinariasService from "@/_services/listaMaquinariasService";
-import { BarracksList } from "@/types/barracksList";
+import { OperationalArea } from "@/types/barracksList";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -943,8 +943,8 @@ const OrdenAplicacion = () => {
   const [selectedTaskType, setSelectedTaskType] = useState<string>("");
   
   // Cuarteles state
-  const [cuarteles, setCuarteles] = useState<BarracksList[]>([]);
-  const [selectedCuartel, setSelectedCuartel] = useState<BarracksList | null>(null);
+  const [cuarteles, setCuarteles] = useState<OperationalArea[]>([]);
+  const [selectedCuartel, setSelectedCuartel] = useState<OperationalArea | null>(null);
   
   // Products state
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -1376,7 +1376,7 @@ const OrdenAplicacion = () => {
         setSelectedCuartel(cuartelFromOrder);
         console.log('🔧 Setting cuartel from order:', {
           id: cuartelFromOrder._id,
-          name: cuartelFromOrder.barracksPaddockName,
+          name: cuartelFromOrder.areaName,
           species: cuartelFromOrder.varietySpecies,
           variety: cuartelFromOrder.variety
         });
@@ -1589,7 +1589,7 @@ const OrdenAplicacion = () => {
       setSelectedCuartel(cuartel);
       console.log('🏠 Cuartel selected:', {
         id: cuartel._id,
-        name: cuartel.barracksPaddockName,
+        name: cuartel.areaName,
         species: cuartel.varietySpecies,
         variety: cuartel.variety
       });
@@ -2814,10 +2814,10 @@ const OrdenAplicacion = () => {
                         ...field,
                         options: cuarteles.map(cuartel => {
                           const value = cuartel._id;
-                          console.log(`Cuartel option: ${cuartel.barracksPaddockName} (${value})`);
+                          console.log(`Cuartel option: ${cuartel.areaName} (${value})`);
                           return {
                             value: value,
-                            label: cuartel.barracksPaddockName
+                            label: cuartel.areaName
                           };
                         }),
                         onChange: (value: string, formSetValue: any, formGetValues: any) => {

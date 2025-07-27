@@ -50,7 +50,7 @@ class ListaCuartelesService {
       const barracksListData: Partial<BarracksList> = {
         isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
-        barracksPaddockName: barracksList.barracksPaddockName,
+        areaName: barracksList.areaName,
         codeOptional: barracksList.codeOptional,
         observation: barracksList.observation || '',
         state: barracksList.state !== undefined ? barracksList.state : true,
@@ -142,7 +142,7 @@ class ListaCuartelesService {
       const barracksListData: Partial<BarracksList> = {
         isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
-        barracksPaddockName: barracksList.barracksPaddockName,
+        areaName: barracksList.areaName,
         codeOptional: barracksList.codeOptional,
         observation: barracksList.observation || '',
         state: barracksList.state !== undefined ? barracksList.state : true,

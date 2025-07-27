@@ -16,7 +16,7 @@ interface BarracksWizardProps {
 const nonProductiveValidationSchema = z.object({
   isProductive: z.boolean().default(false),
   classificationZone: z.string().min(1, { message: "La zona de clasificación es obligatoria" }),
-  barracksPaddockName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
+  areaName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
   codeOptional: z.string().min(1, { message: "El código es obligatorio" }),
   observation: z.string().optional(),
   state: z.boolean().default(true)
@@ -26,7 +26,7 @@ const nonProductiveValidationSchema = z.object({
 const productiveValidationSchema = z.object({
   isProductive: z.boolean().default(true),
   classificationZone: z.string().min(1, { message: "La zona de clasificación es obligatoria" }),
-  barracksPaddockName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
+  areaName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
   codeOptional: z.string().min(1, { message: "El código es obligatorio" }),
   organic: z.boolean().default(false),
   varietySpecies: z.string().min(1, { message: "La especie de variedad es obligatoria" }),
@@ -89,10 +89,10 @@ const nonProductiveFormSections: SectionConfig[] = [
         helperText: "Zona donde se encuentra clasificado el cuartel"
       },
       {
-        id: "barracksPaddockName",
+        id: "areaName",
         type: "text",
         label: "Nombre Cuartel/Potrero",
-        name: "barracksPaddockName",
+        name: "areaName",
         placeholder: "Nombre del cuartel o potrero",
         required: true,
         helperText: "Nombre identificativo del cuartel o potrero"
@@ -144,10 +144,10 @@ const productiveFormSections: SectionConfig[] = [
         helperText: "Zona donde se encuentra clasificado el cuartel"
       },
       {
-        id: "barracksPaddockName",
+        id: "areaName",
         type: "text",
         label: "Nombre Cuartel/Potrero",
-        name: "barracksPaddockName",
+        name: "areaName",
         placeholder: "Nombre del cuartel o potrero",
         required: true,
         helperText: "Nombre identificativo del cuartel o potrero"
