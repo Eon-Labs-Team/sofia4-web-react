@@ -21,7 +21,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IHygieneSanitation } from "@/types/IHygieneSanitation";
+import { IHygieneSanitation } from "@eon-lib/eon-mongoose";
 import hygieneSanitationService from "@/_services/hygieneSanitationService";
 import { toast } from "@/components/ui/use-toast";
 

@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { OperationalArea } from "@/types/barracksList";
+import { IOperationalArea } from "@eon-lib/eon-mongoose";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -231,9 +231,9 @@ const expandableContent = (row: any) => (
 
 const ListaCuarteles = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [listaCuarteles, setListaCuarteles] = useState<OperationalArea[]>([]);
+  const [listaCuarteles, setListaCuarteles] = useState<IOperationalArea[]>([]);
   const [isLoading, setIsLoading] = useState(false);  
-  const [selectedCuartel, setSelectedCuartel] = useState<OperationalArea | null>(null);
+  const [selectedCuartel, setSelectedCuartel] = useState<IOperationalArea | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Get propertyId from auth store
@@ -279,7 +279,7 @@ const ListaCuarteles = () => {
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
-      let processedData: OperationalArea[];
+      let processedData: IOperationalArea[];
       
       if (Array.isArray(rawData)) {
         processedData = rawData;
@@ -328,7 +328,7 @@ const ListaCuarteles = () => {
   };
   
   // Function to handle adding a new lista cuarteles
-  const handleAddListaCuarteles = async (data: Partial<OperationalArea>) => {
+  const handleAddListaCuarteles = async (data: Partial<IOperationalArea>) => {
     try {
       const newListaCuarteles = await listaCuartelesService.createBarracksList(data);
       await fetchListaCuarteles();
@@ -348,7 +348,7 @@ const ListaCuarteles = () => {
   };
 
   // Function to handle updating an existing lista cuarteles
-  const handleUpdateListaCuarteles = async (id: string | number, data: Partial<OperationalArea>) => {
+  const handleUpdateListaCuarteles = async (id: string | number, data: Partial<IOperationalArea>) => {
     try {
       const updatedListaCuarteles = await listaCuartelesService.updateBarracksList(id, data);
       await fetchListaCuarteles();
@@ -389,7 +389,7 @@ const ListaCuarteles = () => {
   };
 
   // Handle edit button click
-  const handleEdit = (cuartel: OperationalArea) => {
+  const handleEdit = (cuartel: IOperationalArea) => {
     setSelectedCuartel(cuartel);
     setIsEditMode(true);
     setIsDialogOpen(true);
@@ -405,7 +405,7 @@ const ListaCuarteles = () => {
   };
 
   // Actions column renderer for the grid
-  const actionsRenderer = (row: OperationalArea) => (
+  const actionsRenderer = (row: IOperationalArea) => (
     <div className="flex space-x-2">
       <Button
         onClick={(e) => {

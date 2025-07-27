@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { BarracksList } from '@/types/barracksList';
+import { IOperationalArea } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**
@@ -10,7 +10,7 @@ class ListaCuartelesService {
    * Get all barracks list
    * @returns Promise with all barracks list
    */
-  async findAll(): Promise<BarracksList[]> {
+  async findAll(): Promise<IOperationalArea[]> {
     try {
       const { propertyId } = useAuthStore.getState();
       
@@ -43,11 +43,11 @@ class ListaCuartelesService {
    * @param barracksList BarracksList data
    * @returns Promise with created barracks list
    */
-  async createBarracksList(barracksList: Partial<BarracksList>): Promise<BarracksList> {
+  async createBarracksList(barracksList: Partial<IOperationalArea>): Promise<IOperationalArea> {
     try {
       const { propertyId, user } = useAuthStore.getState();
       
-      const barracksListData: Partial<BarracksList> = {
+      const barracksListData: Partial<IOperationalArea> = {
         isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
         areaName: barracksList.areaName,
@@ -135,11 +135,11 @@ class ListaCuartelesService {
    * @param barracksList Updated BarracksList data
    * @returns Promise with updated barracks list
    */
-  async updateBarracksList(id: string | number, barracksList: Partial<BarracksList>): Promise<BarracksList> {
+  async updateBarracksList(id: string | number, barracksList: Partial<IOperationalArea>): Promise<IOperationalArea> {
     try {
       const { user } = useAuthStore.getState();
       
-      const barracksListData: Partial<BarracksList> = {
+      const barracksListData: Partial<IOperationalArea> = {
         isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
         areaName: barracksList.areaName,
@@ -242,7 +242,7 @@ class ListaCuartelesService {
    * @param id BarracksList ID
    * @returns Promise with barracks list data
    */
-  async findById(id: string | number): Promise<BarracksList> {
+  async findById(id: string | number): Promise<IOperationalArea> {
     try {
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
         headers: {
