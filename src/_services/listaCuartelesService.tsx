@@ -48,47 +48,54 @@ class ListaCuartelesService {
       const { propertyId, user } = useAuthStore.getState();
       
       const barracksListData: Partial<BarracksList> = {
+        isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
         barracksPaddockName: barracksList.barracksPaddockName,
         codeOptional: barracksList.codeOptional,
-        organic: barracksList.organic !== undefined ? barracksList.organic : false,
-        varietySpecies: barracksList.varietySpecies,
-        variety: barracksList.variety,
-        qualityType: barracksList.qualityType,
-        totalHa: barracksList.totalHa,
-        totalPlants: barracksList.totalPlants,
-        percentToRepresent: barracksList.percentToRepresent,
-        availableRecord: barracksList.availableRecord,
-        active: barracksList.active !== undefined ? barracksList.active : true,
-        useProration: barracksList.useProration !== undefined ? barracksList.useProration : true,
-        firstHarvestDate: barracksList.firstHarvestDate,
-        firstHarvestDay: barracksList.firstHarvestDay,
-        secondHarvestDate: barracksList.secondHarvestDate,
-        secondHarvestDay: barracksList.secondHarvestDay,
-        thirdHarvestDate: barracksList.thirdHarvestDate,
-        thirdHarvestDay: barracksList.thirdHarvestDay,
-        soilType: barracksList.soilType,
-        texture: barracksList.texture,
-        depth: barracksList.depth,
-        soilPh: barracksList.soilPh,
-        percentPending: barracksList.percentPending,
-        pattern: barracksList.pattern,
-        plantationYear: barracksList.plantationYear,
-        plantNumber: barracksList.plantNumber,
-        rowsList: barracksList.rowsList,
-        plantForRow: barracksList.plantForRow,
-        distanceBetweenRowsMts: barracksList.distanceBetweenRowsMts,
-        rowsTotal: barracksList.rowsTotal,
-        area: barracksList.area,
-        irrigationType: barracksList.irrigationType,
-        itsByHa: barracksList.itsByHa,
-        irrigationZone: barracksList.irrigationZone !== undefined ? barracksList.irrigationZone : false,
-        barracksLotObject: barracksList.barracksLotObject,
-        investmentNumber: barracksList.investmentNumber,
-        observation: barracksList.observation,
-        mapSectorColor: barracksList.mapSectorColor,
+        observation: barracksList.observation || '',
         state: barracksList.state !== undefined ? barracksList.state : true,
       };
+
+      // Solo incluir campos productivos si el cuartel es productivo
+      if (barracksList.isProductive) {
+        Object.assign(barracksListData, {
+          organic: barracksList.organic !== undefined ? barracksList.organic : false,
+          varietySpecies: barracksList.varietySpecies,
+          variety: barracksList.variety,
+          qualityType: barracksList.qualityType,
+          totalHa: barracksList.totalHa,
+          totalPlants: barracksList.totalPlants,
+          percentToRepresent: barracksList.percentToRepresent,
+          availableRecord: barracksList.availableRecord,
+          active: barracksList.active !== undefined ? barracksList.active : true,
+          useProration: barracksList.useProration !== undefined ? barracksList.useProration : true,
+          firstHarvestDate: barracksList.firstHarvestDate,
+          firstHarvestDay: barracksList.firstHarvestDay,
+          secondHarvestDate: barracksList.secondHarvestDate,
+          secondHarvestDay: barracksList.secondHarvestDay,
+          thirdHarvestDate: barracksList.thirdHarvestDate,
+          thirdHarvestDay: barracksList.thirdHarvestDay,
+          soilType: barracksList.soilType,
+          texture: barracksList.texture,
+          depth: barracksList.depth,
+          soilPh: barracksList.soilPh,
+          percentPending: barracksList.percentPending,
+          pattern: barracksList.pattern,
+          plantationYear: barracksList.plantationYear,
+          plantNumber: barracksList.plantNumber,
+          rowsList: barracksList.rowsList,
+          plantForRow: barracksList.plantForRow,
+          distanceBetweenRowsMts: barracksList.distanceBetweenRowsMts,
+          rowsTotal: barracksList.rowsTotal,
+          area: barracksList.area,
+          irrigationType: barracksList.irrigationType,
+          itsByHa: barracksList.itsByHa,
+          irrigationZone: barracksList.irrigationZone !== undefined ? barracksList.irrigationZone : false,
+          barracksLotObject: barracksList.barracksLotObject,
+          investmentNumber: barracksList.investmentNumber,
+          mapSectorColor: barracksList.mapSectorColor,
+        });
+      }
       
       // Add propertyId if available
       if (propertyId) {
@@ -125,33 +132,75 @@ class ListaCuartelesService {
   /**
    * Update an existing barracks list
    * @param id BarracksList ID
-   * @param barracksList Updated barracks list data
+   * @param barracksList Updated BarracksList data
    * @returns Promise with updated barracks list
    */
   async updateBarracksList(id: string | number, barracksList: Partial<BarracksList>): Promise<BarracksList> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
+      const { user } = useAuthStore.getState();
       
-      const updateData = { ...barracksList };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        updateData.propertyId = propertyId;
+      const barracksListData: Partial<BarracksList> = {
+        isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
+        classificationZone: barracksList.classificationZone,
+        barracksPaddockName: barracksList.barracksPaddockName,
+        codeOptional: barracksList.codeOptional,
+        observation: barracksList.observation || '',
+        state: barracksList.state !== undefined ? barracksList.state : true,
+      };
+
+      // Solo incluir campos productivos si el cuartel es productivo
+      if (barracksList.isProductive) {
+        Object.assign(barracksListData, {
+          organic: barracksList.organic !== undefined ? barracksList.organic : false,
+          varietySpecies: barracksList.varietySpecies,
+          variety: barracksList.variety,
+          qualityType: barracksList.qualityType,
+          totalHa: barracksList.totalHa,
+          totalPlants: barracksList.totalPlants,
+          percentToRepresent: barracksList.percentToRepresent,
+          availableRecord: barracksList.availableRecord,
+          active: barracksList.active !== undefined ? barracksList.active : true,
+          useProration: barracksList.useProration !== undefined ? barracksList.useProration : true,
+          firstHarvestDate: barracksList.firstHarvestDate,
+          firstHarvestDay: barracksList.firstHarvestDay,
+          secondHarvestDate: barracksList.secondHarvestDate,
+          secondHarvestDay: barracksList.secondHarvestDay,
+          thirdHarvestDate: barracksList.thirdHarvestDate,
+          thirdHarvestDay: barracksList.thirdHarvestDay,
+          soilType: barracksList.soilType,
+          texture: barracksList.texture,
+          depth: barracksList.depth,
+          soilPh: barracksList.soilPh,
+          percentPending: barracksList.percentPending,
+          pattern: barracksList.pattern,
+          plantationYear: barracksList.plantationYear,
+          plantNumber: barracksList.plantNumber,
+          rowsList: barracksList.rowsList,
+          plantForRow: barracksList.plantForRow,
+          distanceBetweenRowsMts: barracksList.distanceBetweenRowsMts,
+          rowsTotal: barracksList.rowsTotal,
+          area: barracksList.area,
+          irrigationType: barracksList.irrigationType,
+          itsByHa: barracksList.itsByHa,
+          irrigationZone: barracksList.irrigationZone !== undefined ? barracksList.irrigationZone : false,
+          barracksLotObject: barracksList.barracksLotObject,
+          investmentNumber: barracksList.investmentNumber,
+          mapSectorColor: barracksList.mapSectorColor,
+        });
       }
 
       // Add updatedBy field with current user ID
       if (user?.id) {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
-        updateData.updatedBy = user.id;
+        barracksListData.updatedBy = user.id;
       }
-      
+
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(barracksListData),
       });
 
       if (!response.ok) {
@@ -160,30 +209,28 @@ class ListaCuartelesService {
 
       return await response.json();
     } catch (error) {
-      console.error(`Error updating barracks list ${id}:`, error);
+      console.error('Error updating barracks list:', error);
       throw error;
     }
   }
 
   /**
-   * Soft delete a barracks list by setting its state to inactive
+   * Soft delete a barracks list (sets state to false)
    * @param id BarracksList ID
-   * @returns Promise with operation result
+   * @returns Promise with result
    */
-  async softDeleteBarracksList(id: string | number): Promise<any> {
+  async softDeleteBarracksList(id: string | number): Promise<void> {
     try {
-      const response = await fetch(ENDPOINTS.listaCuarteles.changeState(id, false), {
-        method: 'PATCH',
+      const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
-      return await response.json();
     } catch (error) {
       console.error(`Error soft deleting barracks list ${id}:`, error);
       throw error;
@@ -215,7 +262,5 @@ class ListaCuartelesService {
   }
 }
 
-// Create a singleton instance
 const listaCuartelesService = new ListaCuartelesService();
-
 export default listaCuartelesService; 

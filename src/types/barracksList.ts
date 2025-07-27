@@ -3,6 +3,7 @@
  */
 export interface BarracksList {
   _id?: string | number;  // Campo automático generado por la base de datos
+  isProductive: boolean;  // Campo para diferenciar cuarteles productivos
   classificationZone: string;
   barracksPaddockName: string;
   codeOptional: string;

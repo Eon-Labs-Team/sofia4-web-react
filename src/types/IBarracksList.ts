@@ -2,6 +2,7 @@ import { document } from './document';
 
 export interface IBarracksList extends document {
 
+  isProductive: boolean,
   classificationZone: string,
   barracksPaddockName: string,
   codeOptional: string,
@@ -47,4 +48,5 @@ export interface IBarracksList extends document {
   observation: string,
   mapSectorColor: string,
   state: boolean
+
 }
