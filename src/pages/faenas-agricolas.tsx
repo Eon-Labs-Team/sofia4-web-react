@@ -24,14 +24,15 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWork } from "@/types/IWork";
-import { IWorkers } from "@/types/IWorkers";
-import { IMachinery } from "@/types/IMachinery";
-import { IProduct } from "@/types/IProducts";
-import { ITaskType } from "@/types/ITaskType";
-import { ITask } from "@/types/ITask";
+import { IWork } from "@eon-lib/eon-mongoose";
+import { IWorkers } from "@eon-lib/eon-mongoose";
+import { IMachinery } from "@eon-lib/eon-mongoose";
+import { IProducts } from "@eon-lib/eon-mongoose";
+import { ITaskType } from "@eon-lib/eon-mongoose";
+import { ITask } from "@eon-lib/eon-mongoose";
 import workService from "@/_services/workService";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
@@ -909,7 +910,7 @@ const FaenasAgricolas = () => {
   const [selectedTaskType, setSelectedTaskType] = useState<string>("");
   
   // Products state
-  const [products, setProducts] = useState<IProduct[]>([]);
+  const [products, setProducts] = useState<IProducts[]>([]);
   
   // Fetch faenas on component mount
   useEffect(() => {
@@ -1771,169 +1772,6 @@ if (field.id === "task") {
                 )}
                 gridId="workers-grid-aplication-order"
                 title="Listado de Trabajadores"
-                enableInlineEdit={true}
-                editableColumns={[
-                  "worker", "classification", "quadrille", "workingDay", 
-                  "paymentMethod", "contractor", "date", "salary", "yield", 
-                  "totalHoursYield", "yieldValue", "overtime", "bonus", 
-                  "additionalBonuses", "dayValue", "totalDeal", "dailyTotal", 
-                  "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
-                ]}
-                customEditRender={{
-                  date: (value, onChange) => (
-                    <Input
-                      type="date"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
-                  state: (value, onChange) => (
-                    <input
-                      type="checkbox"
-                      checked={value || false}
-                      onChange={(e) => onChange(e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                  )
-                }}
-                onEditSave={async (originalRow, updatedRow) => {
-                  try {
-                    console.log('Saving worker edit:', { originalRow, updatedRow });
-                    await workerService.updateWorker(originalRow._id, updatedRow);
-                    toast({
-                      title: "Éxito",
-                      description: "Trabajador actualizado correctamente",
-                    });
-                    await fetchWorkers();
-                  } catch (error) {
-                    console.error('Error updating worker:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo actualizar el trabajador",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                onEditStart={(row) => {
-                  console.log('Starting edit for worker:', row);
-                }}
-                onEditCancel={(row) => {
-                  console.log('Cancelled edit for worker:', row);
-                }}
-                enableInlineAdd={true}
-                defaultNewRow={{
-                  classification: "",
-                  worker: "",
-                  quadrille: "",
-                  workingDay: "",
-                  paymentMethod: "",
-                  contractor: "",
-                  date: new Date().toISOString().split('T')[0],
-                  salary: "0",
-                  yield: "0",
-                  totalHoursYield: "0",
-                  yieldValue: "0",
-                  overtime: "0",
-                  bonus: "0",
-                  additionalBonuses: "0",
-                  dayValue: "0",
-                  totalDeal: "0",
-                  dailyTotal: "0",
-                  value: "0",
-                  exportPerformance: "0",
-                  juicePerformance: "0",
-                  othersPerformance: "0",
-                  workId: selectedFaena ? String(selectedFaena.id || (selectedFaena as any)._id) : "",
-                  state: true
-                }}
-                addableColumns={[
-                  "worker", "classification", "quadrille", "workingDay", 
-                  "paymentMethod", "contractor", "date", "salary", "yield", 
-                  "totalHoursYield", "yieldValue", "overtime", "bonus", 
-                  "additionalBonuses", "dayValue", "totalDeal", "dailyTotal", 
-                  "value", "exportPerformance", "juicePerformance", "othersPerformance", "state"
-                ]}
-                customAddRender={{
-                  date: (value, onChange) => (
-                    <Input
-                      type="date"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Fecha"
-                    />
-                  ),
-                  state: (value, onChange) => (
-                    <input
-                      type="checkbox"
-                      checked={value || false}
-                      onChange={(e) => onChange(e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                  )
-                }}
-                onInlineAdd={async (newWorker) => {
-                  try {
-                    if (!selectedFaena) {
-                      toast({
-                        title: "Error",
-                        description: "No hay una orden seleccionada",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    // Validate required fields
-                    const requiredFields = {
-                      'worker': newWorker.worker,
-                      'yield': newWorker.yield,
-                      'totalHoursYield': newWorker.totalHoursYield,
-                      'yieldValue': newWorker.yieldValue,
-                      'totalDeal': newWorker.totalDeal,
-                      'value': newWorker.value,
-                      'salary': newWorker.salary
-                    };
-                    
-                    const missingFields = Object.entries(requiredFields)
-                      .filter(([key, value]) => !value || value === "")
-                      .map(([key]) => key);
-                    
-                    if (missingFields.length > 0) {
-                      toast({
-                        title: "Error de validación",
-                        description: `Los siguientes campos son requeridos: ${missingFields.join(', ')}`,
-                        variant: "destructive",
-                      });
-                      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-                    }
-
-                    const workId = selectedFaena.id || (selectedFaena as any)._id;
-                    const workerData = {
-                      ...newWorker,
-                      workId: String(workId),
-                      state: true
-                    };
-                    
-                    console.log('Adding new worker:', workerData);
-                    await workerService.createWorker(workerData);
-                    
-                    toast({
-                      title: "Éxito",
-                      description: "Trabajador agregado correctamente",
-                    });
-                    
-                    await fetchWorkers();
-                  } catch (error) {
-                    console.error('Error adding worker:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo agregar el trabajador",
-                      variant: "destructive",
-                    });
-                    throw error; // Re-throw to prevent the row from being removed
-                  }
-                }}
               />
             </div>
           )}
@@ -1983,141 +1821,6 @@ if (field.id === "task") {
                 )}
                 gridId="machinery-grid-application-order"
                 title="Listado de Maquinaria"
-                enableInlineEdit={true}
-                editableColumns={[
-                  "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
-                ]}
-                customEditRender={{
-                  startTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
-                  endTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  ),
-                }}
-                onEditSave={async (originalRow, updatedRow) => {
-                  try {
-                    console.log('Saving machinery edit:', { originalRow, updatedRow });
-                    await machineryService.updateMachinery(originalRow._id, updatedRow);
-                    toast({
-                      title: "Éxito",
-                      description: "Maquinaria actualizada correctamente",
-                    });
-                    await fetchMachinery();
-                  } catch (error) {
-                    console.error('Error updating machinery:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo actualizar la maquinaria",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                onEditStart={(row) => {
-                  console.log('Starting edit for machinery:', row);
-                }}
-                onEditCancel={(row) => {
-                  console.log('Cancelled edit for machinery:', row);
-                }}
-                enableInlineAdd={true}
-                defaultNewRow={{
-                  machinery: "",
-                  startTime: "",
-                  endTime: "",
-                  finalHours: "",
-                  timeValue: "0",
-                  totalValue: "0",
-                  workId: selectedFaena ? String(selectedFaena.id || (selectedFaena as any)._id) : "",
-                }}
-                addableColumns={[
-                  "machinery", "startTime", "endTime", "finalHours", "timeValue", "totalValue"
-                ]}
-                customAddRender={{
-                  startTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Hora inicio"
-                    />
-                  ),
-                  endTime: (value, onChange) => (
-                    <Input
-                      type="time"
-                      value={value || ""}
-                      onChange={(e) => onChange(e.target.value)}
-                      className="h-8 text-xs"
-                      placeholder="Hora fin"
-                    />
-                  ),
-                }}
-                onInlineAdd={async (newMachinery) => {
-                  try {
-                    if (!selectedFaena) {
-                      toast({
-                        title: "Error",
-                        description: "No hay una orden seleccionada",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-
-                    // Validate required fields
-                    const requiredFields = {
-                      'machinery': newMachinery.machinery,
-                      'timeValue': newMachinery.timeValue,
-                      'totalValue': newMachinery.totalValue
-                    };
-                    
-                    const missingFields = Object.entries(requiredFields)
-                      .filter(([key, value]) => !value || value === "")
-                      .map(([key]) => key);
-                    
-                    if (missingFields.length > 0) {
-                      toast({
-                        title: "Error de validación",
-                        description: `Los siguientes campos son requeridos: ${missingFields.join(', ')}`,
-                        variant: "destructive",
-                      });
-                      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-                    }
-
-                    const workId = selectedFaena.id || (selectedFaena as any)._id;
-                    const machineryData = {
-                      ...newMachinery,
-                      workId: String(workId),
-                    };
-                    
-                    console.log('Adding new machinery:', machineryData);
-                    await machineryService.createMachinery(machineryData);
-                    
-                    toast({
-                      title: "Éxito",
-                      description: "Maquinaria agregada correctamente",
-                    });
-                    
-                    await fetchMachinery();
-                  } catch (error) {
-                    console.error('Error adding machinery:', error);
-                    toast({
-                      title: "Error",
-                      description: "No se pudo agregar la maquinaria",
-                      variant: "destructive",
-                    });
-                    throw error; // Re-throw to prevent the row from being removed
-                  }
-                }}
               />
             </div>
           )}
@@ -2134,7 +1837,7 @@ if (field.id === "task") {
                 columns={productsColumns}
                 data={products}
                 idField="_id"
-                actions={(row: IProduct) => (
+                actions={(row: IProducts) => (
                   <Button
                     variant="ghost"
                     size="icon"

@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IChlorineRegistration } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IChlorineRegistration } from "@/types/IChlorineRegistration";
 import chlorineRegistrationService from "@/_services/chlorineRegistrationService";
 import { toast } from "@/components/ui/use-toast";
 

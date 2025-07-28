@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWorkerList } from "@/types/IWorkerList";
+import { IWorkerList } from "@eon-lib/eon-mongoose";
 import workerListService from "@/_services/workerListService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";

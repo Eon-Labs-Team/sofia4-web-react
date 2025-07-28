@@ -20,13 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { z } from "zod";
-import { ITask, AssociatedProductsType } from "@/types/ITask";
+import { ITask, AssociatedProductsType } from "@eon-lib/eon-mongoose";
 import laborService from "@/_services/laborService";
 import { toast } from "@/components/ui/use-toast";
 import faenaService from "@/_services/faenaService";
-import { ITaskType } from "@/types/ITaskType";
+import { ITaskType } from "@eon-lib/eon-mongoose";
+import { z } from "zod";
 
 // Extendemos la interfaz ITask para incluir _id que es usado en MongoDB
 interface ITaskWithId extends ITask {

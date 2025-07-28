@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import equipmentCalibrationService from "@/_services/equipmentCalibrationService";
-import { IEquipmentCalibration } from "@/types/IEquipmentCalibration";
+import { IEquipmentCalibration } from "@eon-lib/eon-mongoose";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 
 // Columns configuration for the grid

@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IWaterAnalysis } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IWaterAnalysis } from "@/types/IWaterAnalysis";
 import waterAnalysisService from "@/_services/waterAnalysisService";
 import { toast } from "@/components/ui/use-toast";
 

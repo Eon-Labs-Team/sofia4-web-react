@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IBackPumpCalculation } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IBackPumpCalculation } from "@/types/IBackPumpCalculation";
 import backPumpCalculationService from "@/_services/backPumpCalculationService";
 import { toast } from "@/components/ui/use-toast";
 

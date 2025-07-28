@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IMeasurementUnits } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IMeasurementUnits } from "@/types/IMeasurementUnits";
 import measurementUnitsService from "@/_services/measurementUnitsService";
 import { toast } from "@/components/ui/use-toast";
 

@@ -12,7 +12,7 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import Grid from "@/components/Grid/Grid";
 import { Column } from "@/lib/store/gridStore";
-import { IIrrigationRecord } from "@/types/IIrrigationRecord";
+import { IIrrigationRecord } from "@eon-lib/eon-mongoose";
 import irrigationRecordService from "@/_services/irrigationRecordService";
 import { z } from "zod";
 

@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IVisitorLog } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IVisitorLog } from "@/types/IVisitorLog";
 import visitorLogService from "@/_services/visitorLogService";
 import { toast } from "@/components/ui/use-toast";
 

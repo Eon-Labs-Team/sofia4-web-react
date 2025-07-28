@@ -43,18 +43,19 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWork } from "@/types/IWork";
-import { IWorkers } from "@/types/IWorkers";
-import { IWorkerList } from "@/types/IWorkerList";
-import { IMachinery } from "@/types/IMachinery";
-import { IMachineryList } from "@/types/IMachineryList";
-import { IProduct } from "@/types/IProducts";
-import { IProductCategory } from "@/types/IProductCategory";
-import { IWarehouseProduct } from "@/types/IWarehouseProduct";
-import { ITaskType } from "@/types/ITaskType";
-import { ITask } from "@/types/ITask";
+import { IWork } from "@eon-lib/eon-mongoose";
+import { IWorkers } from "@eon-lib/eon-mongoose";
+import { IWorkerList } from "@eon-lib/eon-mongoose";
+import { IMachinery } from "@eon-lib/eon-mongoose";
+import { IMachineryList } from "@eon-lib/eon-mongoose";
+import { IProducts } from "@eon-lib/eon-mongoose";
+import { IProductCategory } from "@eon-lib/eon-mongoose";
+import { IWarehouseProduct } from "@eon-lib/eon-mongoose";
+import { ITaskType } from "@eon-lib/eon-mongoose";
+import { ITask } from "@eon-lib/eon-mongoose";
 import workService from "@/_services/workService";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
@@ -947,7 +948,7 @@ const OrdenAplicacion = () => {
   const [selectedCuartel, setSelectedCuartel] = useState<OperationalArea | null>(null);
   
   // Products state
-  const [products, setProducts] = useState<IProduct[]>([]);
+  const [products, setProducts] = useState<IProducts[]>([]);
   
   // Product categories and warehouse products state
   const [productCategories, setProductCategories] = useState<IProductCategory[]>([]);
@@ -3490,7 +3491,7 @@ const OrdenAplicacion = () => {
                 idField="_id"
                 editValidationSchema={productFormSchema}
                 addValidationSchema={productFormSchema}
-                actions={(row: IProduct) => (
+                actions={(row: IProducts) => (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -3595,7 +3596,7 @@ const OrdenAplicacion = () => {
                 onEditSave={async (originalRow, updatedRow) => {
                   try {
                     console.log('Saving product edit:', { originalRow, updatedRow });
-                    // Convert numeric fields to strings as expected by IProduct interface
+                    // Convert numeric fields to strings as expected by IProducts interface
                     const productData = {
                       ...updatedRow,
                       amountPerHour: String(updatedRow.amountPerHour || 0),
@@ -3643,7 +3644,7 @@ const OrdenAplicacion = () => {
                     }
 
                     const workId = selectedOrden.id || (selectedOrden as any)._id;
-                    // Convert numeric fields to strings as expected by IProduct interface
+                    // Convert numeric fields to strings as expected by IProducts interface
                     const productData = {
                       ...newProduct,
                       workId: String(workId),

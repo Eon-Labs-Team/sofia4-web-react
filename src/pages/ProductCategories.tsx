@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, {
   SectionConfig,
+  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
+import { IProductCategory } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
-import { IProductCategory } from "@/types/IProductCategory";
 import productCategoryService from "@/_services/productCategoryService";
 import { toast } from "@/components/ui/use-toast";
 
