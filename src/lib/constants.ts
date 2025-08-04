@@ -24,6 +24,7 @@ export const ENDPOINTS = {
   },
   listaCuarteles: {
     base: `${API_BASE_URL}/config/operationalArea`,
+    getProductive: `${API_BASE_URL}/config/operationalArea/productive/all`,
     byId: (id: string | number) => `${API_BASE_URL}/config/operationalArea/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/operationalArea/${id}/state/${state}`,
   },

@@ -15,60 +15,66 @@ interface BarracksWizardProps {
 // Esquema de validación para cuarteles no productivos (campos básicos)
 const nonProductiveValidationSchema = z.object({
   isProductive: z.boolean().default(false),
-  classificationZone: z.string().min(1, { message: "La zona de clasificación es obligatoria" }),
+  classificationZone: z.string().optional(), // No es requerido según modelo
   areaName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
-  codeOptional: z.string().min(1, { message: "El código es obligatorio" }),
-  observation: z.string().optional(),
+  codeOptional: z.string().optional(), // No es requerido según modelo
+  availableRecord: z.string().transform(val => parseInt(val)).refine(val => val === 0 || val === 1, { 
+    message: "El registro disponible debe ser 0 (sofia y appsofia) o 1 (appsofia)" 
+  }),
+  active: z.boolean().default(true),
+  observation: z.string().default(""), // Puede estar vacío para no productivos
   state: z.boolean().default(true)
 });
 
 // Esquema de validación completo para cuarteles productivos
 const productiveValidationSchema = z.object({
   isProductive: z.boolean().default(true),
-  classificationZone: z.string().min(1, { message: "La zona de clasificación es obligatoria" }),
+  classificationZone: z.string().optional(), // No es requerido según modelo
   areaName: z.string().min(1, { message: "El nombre del cuartel/potrero es obligatorio" }),
-  codeOptional: z.string().min(1, { message: "El código es obligatorio" }),
+  codeOptional: z.string().optional(), // No es requerido según modelo
   organic: z.boolean().default(false),
   varietySpecies: z.string().min(1, { message: "La especie de variedad es obligatoria" }),
   variety: z.string().min(1, { message: "La variedad es obligatoria" }),
-  qualityType: z.string().min(1, { message: "El tipo de calidad es obligatorio" }),
+  qualityType: z.string().optional(),
   totalHa: z.number().positive({ message: "El total de hectáreas debe ser positivo" }),
   totalPlants: z.number().positive({ message: "El total de plantas debe ser positivo" }),
-  percentToRepresent: z.number().min(0).max(100, { message: "El porcentaje debe estar entre 0 y 100" }),
-  availableRecord: z.string().min(1, { message: "El registro disponible es obligatorio" }),
+  percentToRepresent: z.number().min(0).max(100, { message: "El porcentaje debe estar entre 0 y 100" }).optional(),
+  availableRecord: z.string().transform(val => parseInt(val)).refine(val => val === 0 || val === 1, { 
+    message: "El registro disponible debe ser 0 (sofia y appsofia) o 1 (appsofia)" 
+  }),
   active: z.boolean().default(true),
   useProration: z.boolean().default(true),
 
-  firstHarvestDate: z.string().min(1, { message: "La fecha de primera cosecha es obligatoria" }),
-  firstHarvestDay: z.number().positive({ message: "El día de primera cosecha debe ser positivo" }),
-  secondHarvestDate: z.string().min(1, { message: "La fecha de segunda cosecha es obligatoria" }),
-  secondHarvestDay: z.number().positive({ message: "El día de segunda cosecha debe ser positivo" }),
-  thirdHarvestDate: z.string().min(1, { message: "La fecha de tercera cosecha es obligatoria" }),
-  thirdHarvestDay: z.number().positive({ message: "El día de tercera cosecha debe ser positivo" }),
+  firstHarvestDate: z.string().optional(),
+  firstHarvestDay: z.number().positive({ message: "El día de primera cosecha debe ser positivo" }).optional(),
+  secondHarvestDate: z.string().optional(),
+  secondHarvestDay: z.number().positive({ message: "El día de segunda cosecha debe ser positivo" }).optional(),
+  thirdHarvestDate: z.string().optional(),
+  thirdHarvestDay: z.number().positive({ message: "El día de tercera cosecha debe ser positivo" }).optional(),
 
-  soilType: z.string().min(1, { message: "El tipo de suelo es obligatorio" }),
-  texture: z.string().min(1, { message: "La textura es obligatoria" }),
-  depth: z.string().min(1, { message: "La profundidad es obligatoria" }),
-  soilPh: z.number().positive({ message: "El pH del suelo debe ser positivo" }),
-  percentPending: z.number().min(0).max(100, { message: "El porcentaje pendiente debe estar entre 0 y 100" }),
+  soilType: z.string().optional(),
+  texture: z.string().optional(),
+  depth: z.string().optional(),
+  soilPh: z.number().positive({ message: "El pH del suelo debe ser positivo" }).optional(),
+  percentPending: z.number().min(0).max(100, { message: "El porcentaje pendiente debe estar entre 0 y 100" }).optional(),
 
-  pattern: z.string().min(1, { message: "El patrón es obligatorio" }),
-  plantationYear: z.number().positive({ message: "El año de plantación debe ser positivo" }),
-  plantNumber: z.number().positive({ message: "El número de planta debe ser positivo" }),
-  rowsList: z.string().min(1, { message: "La lista de filas es obligatoria" }),
-  plantForRow: z.number().positive({ message: "La planta por fila debe ser positiva" }),
-  distanceBetweenRowsMts: z.number().positive({ message: "La distancia entre filas debe ser positiva" }),
-  rowsTotal: z.number().positive({ message: "El total de filas debe ser positivo" }),
-  area: z.number().positive({ message: "El área debe ser positiva" }),
+  pattern: z.string().optional(),
+  plantationYear: z.number().positive({ message: "El año de plantación debe ser positivo" }).optional(),
+  plantNumber: z.number().positive({ message: "El número de planta debe ser positivo" }).optional(),
+  rowsList: z.string().optional(),
+  plantForRow: z.number().positive({ message: "La planta por fila debe ser positiva" }).optional(),
+  distanceBetweenRowsMts: z.number().positive({ message: "La distancia entre filas debe ser positiva" }).optional(),
+  rowsTotal: z.number().positive({ message: "El total de filas debe ser positivo" }).optional(),
+  area: z.number().positive({ message: "El área debe ser positiva" }).optional(),
 
-  irrigationType: z.string().min(1, { message: "El tipo de riego es obligatorio" }),
-  itsByHa: z.number().positive({ message: "ITsByHa debe ser positivo" }),
+  irrigationType: z.string().optional(),
+  ltsByHa: z.number().positive({ message: "Litros por hectárea debe ser positivo" }).optional(),
   irrigationZone: z.boolean().default(false),
 
-  barracksLotObject: z.string().min(1, { message: "El objeto de lote de cuarteles es obligatorio" }),
-  investmentNumber: z.string().min(1, { message: "El número de inversión es obligatorio" }),
-  observation: z.string().min(1, { message: "La observación es obligatoria" }),
-  mapSectorColor: z.string().min(1, { message: "El color del sector del mapa es obligatorio" }),
+  barracksLotObject: z.string().optional(),
+  investmentNumber: z.string().optional(),
+  observation: z.string().optional(),
+  mapSectorColor: z.string().optional(),
   state: z.boolean().default(true)
 });
 
@@ -84,8 +90,8 @@ const nonProductiveFormSections: SectionConfig[] = [
         type: "text",
         label: "Zona de Clasificación",
         name: "classificationZone",
-        placeholder: "Ingrese la zona de clasificación",
-        required: true,
+        placeholder: "Ingrese la zona de clasificación (opcional)",
+        required: false,
         helperText: "Zona donde se encuentra clasificado el cuartel"
       },
       {
@@ -102,9 +108,30 @@ const nonProductiveFormSections: SectionConfig[] = [
         type: "text",
         label: "Código",
         name: "codeOptional",
-        placeholder: "Ingrese el código",
-        required: true,
+        placeholder: "Ingrese el código (opcional)",
+        required: false,
         helperText: "Código identificativo"
+      },
+      {
+        id: "availableRecord",
+        type: "select",
+        label: "Registro Disponible",
+        name: "availableRecord",
+        placeholder: "Seleccione...",
+        required: true,
+        helperText: "0: Sofia y AppSofia, 1: Solo AppSofia",
+        options: [
+          { value: "0", label: "Sofia y AppSofia" },
+          { value: "1", label: "Solo AppSofia" }
+        ]
+      },
+      {
+        id: "active",
+        type: "checkbox",
+        label: "Activo",
+        name: "active",
+        required: true,
+        helperText: "Indica si el cuartel está activo"
       },
       {
         id: "observation",
@@ -139,8 +166,8 @@ const productiveFormSections: SectionConfig[] = [
         type: "text",
         label: "Zona de Clasificación",
         name: "classificationZone",
-        placeholder: "Ingrese la zona de clasificación",
-        required: true,
+        placeholder: "Ingrese la zona de clasificación (opcional)",
+        required: false,
         helperText: "Zona donde se encuentra clasificado el cuartel"
       },
       {
@@ -157,8 +184,8 @@ const productiveFormSections: SectionConfig[] = [
         type: "text",
         label: "Código",
         name: "codeOptional",
-        placeholder: "Ingrese el código",
-        required: true,
+        placeholder: "Ingrese el código (opcional)",
+        required: false,
         helperText: "Código identificativo"
       },
       {
@@ -192,8 +219,8 @@ const productiveFormSections: SectionConfig[] = [
         type: "text",
         label: "Tipo de Calidad",
         name: "qualityType",
-        placeholder: "Ingrese el tipo de calidad",
-        required: true,
+        placeholder: "Ingrese el tipo de calidad (opcional)",
+        required: false,
         helperText: "Clasificación de calidad"
       },
       {
@@ -220,17 +247,21 @@ const productiveFormSections: SectionConfig[] = [
         label: "Porcentaje a Representar",
         name: "percentToRepresent",
         placeholder: "0",
-        required: true,
+        required: false,
         helperText: "Porcentaje que representa"
       },
       {
         id: "availableRecord",
-        type: "text",
+        type: "select",
         label: "Registro Disponible",
         name: "availableRecord",
-        placeholder: "Ingrese el registro disponible",
+        placeholder: "Seleccione...",
         required: true,
-        helperText: "Registro disponible"
+        helperText: "0: Sofia y AppSofia, 1: Solo AppSofia",
+        options: [
+          { value: "0", label: "Sofia y AppSofia" },
+          { value: "1", label: "Solo AppSofia" }
+        ]
       },
       {
         id: "active",
@@ -457,13 +488,13 @@ const productiveFormSections: SectionConfig[] = [
         helperText: "Tipo de sistema de riego"
       },
       {
-        id: "itsByHa",
+        id: "ltsByHa",
         type: "number",
-        label: "ITs por Ha",
-        name: "itsByHa",
+        label: "Litros por Ha",
+        name: "ltsByHa",
         placeholder: "0",
         required: true,
-        helperText: "ITs por hectárea"
+        helperText: "Litros por hectárea"
       },
       {
         id: "irrigationZone",
@@ -551,6 +582,7 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
       ...data,
       isProductive: isProductive
     };
+    console.log("datatosendfrombarrackwizard", finalData);
     onSubmit(finalData);
   };
 
@@ -627,11 +659,15 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
           organic: false,
           irrigationZone: false,
           state: true,
+          availableRecord: "0",
           ...defaultValues
         }
       : {
           isProductive: false,
+          active: true,
+          observation: "",
           state: true,
+          availableRecord: "0",
           ...defaultValues
         };
 

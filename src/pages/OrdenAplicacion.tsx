@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+// import { useNavigate } from "react-router-dom";
 import { Grid } from "@/components/Grid/Grid";
 import { FormGrid } from "@/components/Grid/FormGrid";
 import {
@@ -18,7 +19,9 @@ import {
   Ban,
   Map,
   Eye,
-  EyeOff
+  EyeOff,
+  Zap,
+  FileText
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
 import { 
@@ -32,6 +35,8 @@ import {
   FieldRule 
 } from "@/lib/validationSchemas";
 import { Button } from "@/components/ui/button";
+import { SplitButton, SplitButtonOption } from "@/components/ui/split-button";
+import WizardOrdenAplicacion from "@/components/Wizard/WizardOrdenAplicacion";
 import {
   Dialog,
   DialogContent,
@@ -67,7 +72,7 @@ import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import workerListService from "@/_services/workerListService";
 import listaMaquinariasService from "@/_services/listaMaquinariasService";
-import { OperationalArea } from "@/types/barracksList";
+import { IOperationalArea } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import {
@@ -129,7 +134,7 @@ const renderWorkState = (value: string) => {
   } else if (value === 'void') {
     return (
       <div className="flex items-center">
-        <XCircle className="h-4 w-4 text-gray-500 mr-2" />
+        <XCircle className="h-4 w-4 text-muted-foreground mr-2" />
         <span>Nula</span>
       </div>
     );
@@ -144,93 +149,7 @@ const renderWorkState = (value: string) => {
   return value;
 };
 
-// Column configuration for the grid
-const columns: Column[] = [
-  {
-    id: "id",
-    header: "ID",
-    accessor: "_id",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "orderNumber",
-    header: "Número de Orden",
-    accessor: "orderNumber",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "executionDate",
-    header: "Fecha de Ejecución",
-    accessor: "executionDate",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "barracks",
-    header: "Cuartel",
-    accessor: "barracks",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "species",
-    header: "Especie",
-    accessor: "species",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "variety",
-    header: "Variedad",
-    accessor: "variety",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "phenologicalState",
-    header: "Estado Fenológico",
-    accessor: "phenologicalState",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "hectares",
-    header: "Hectáreas",
-    accessor: "hectares",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "appliedHectares",
-    header: "Hectáreas Aplicadas",
-    accessor: "appliedHectares",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "generalObjective",
-    header: "Objetivo General",
-    accessor: "generalObjective",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "workState",
-    header: "Estado",
-    accessor: "workState",
-    visible: true,
-    sortable: true,
-    groupable: true,
-    render: renderWorkState,
-  }
-];
+
 
 // Expandable content for each row
 const expandableContent = (row: any) => (
@@ -796,7 +715,7 @@ const formSections: SectionConfig[] = [
 ];
 
 // Form validation schema
-const formValidationSchema = z.object({
+const orderFormValidationSchema = z.object({
   workType: z.string().default("A"),
   orderNumber: z.string({ invalid_type_error: "El número de orden debe ser texto" }).min(1, { message: "El número de orden es obligatorio" }),
   executionDate: z.string({ invalid_type_error: "La fecha debe ser una fecha válida" }),
@@ -906,23 +825,58 @@ const formValidationSchema = z.object({
   }).optional()
 });
 
-// Función para modificar el tipo y añadir explícitamente el _id como propiedad
-interface WorkWithId extends IWork {
-  _id?: string;
-}
+
 
 const OrdenAplicacion = () => {
   // ====================================
   // CONFIGURACIONES
   // ====================================
   
+  // const navigate = useNavigate();
+  
+  // Opciones del SplitButton para tipos de ingreso
+  const ingresoOptions: SplitButtonOption[] = [
+    {
+      label: "Ingreso Guiado",
+      value: "wizard",
+      icon: <Zap className="h-4 w-4" />,
+    },
+    {
+      label: "Ingreso Completo",
+      value: "complete",
+      icon: <FileText className="h-4 w-4" />,
+    },
+  ];
+
+  // Función para manejar la selección del tipo de ingreso
+  const handleIngresoOptionSelect = (option: SplitButtonOption) => {
+    if (option.value === "wizard") {
+      // Abrir wizard en el dialog
+      setFormType("wizard");
+      setSelectedOrden(null);
+      setIsEditMode(false);
+      setSelectedCuartel(null);
+      setSelectedTaskType('');
+      setIsDialogOpen(true);
+    } else if (option.value === "complete") {
+      // Abrir el formulario completo actual
+      setFormType("complete");
+      setSelectedOrden(null);
+      setIsEditMode(false);
+      setSelectedCuartel(null);
+      setSelectedTaskType('');
+      setIsDialogOpen(true);
+    }
+  };
+  
   // Variable configurable para las horas por jornada
   const HOURS_PER_WORKDAY = 8; // 1 jornada = 8 horas
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [ordenesAplicacion, setOrdenesAplicacion] = useState<WorkWithId[]>([]);
+  const [formType, setFormType] = useState<"complete" | "wizard">("complete");
+  const [ordenesAplicacion, setOrdenesAplicacion] = useState<IWork[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedOrden, setSelectedOrden] = useState<WorkWithId | null>(null);
+  const [selectedOrden, setSelectedOrden] = useState<IWork | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Workers state
@@ -962,6 +916,100 @@ const OrdenAplicacion = () => {
 
   // State for Gantt chart data
   const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
+
+  // ====================================
+  // FIELD RULES FOR ORDERS GRID
+  // ====================================
+  // Column configuration for the orders  grid
+  const ordersGridcolumns: Column[] = [
+    {
+      id: "id",
+      header: "ID",
+      accessor: "_id",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "orderNumber",
+      header: "Número de Orden",
+      accessor: "orderNumber",
+      visible: true,
+      sortable: true,
+      groupable: true,
+    },
+    {
+      id: "executionDate",
+      header: "Fecha de Ejecución",
+      accessor: "executionDate",
+      visible: true,
+      sortable: true,
+      groupable: true,
+    },
+    {
+      id: "barracks",
+      header: "Cuartel",
+      accessor: "barracks",
+      visible: true,
+      sortable: true,
+      groupable: true,
+      render: (value: string) => {
+        return cuarteles.find(cuartel => cuartel._id === value)?.areaName;
+      }
+    },
+    {
+      id: "species",
+      header: "Especie",
+      accessor: "species",
+      visible: true,
+      sortable: true,
+      groupable: true,
+    },
+    {
+      id: "variety",
+      header: "Variedad",
+      accessor: "variety",
+      visible: true,
+      sortable: true,
+      groupable: true,
+    },
+    {
+      id: "phenologicalState",
+      header: "Estado Fenológico",
+      accessor: "phenologicalState",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "hectares",
+      header: "Hectáreas",
+      accessor: "hectares",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "appliedHectares",
+      header: "Hectáreas Aplicadas",
+      accessor: "appliedHectares",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "generalObjective",
+      header: "Objetivo General",
+      accessor: "generalObjective",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "workState",
+      header: "Estado",
+      accessor: "workState",
+      visible: true,
+      sortable: true,
+      groupable: true,
+      render: renderWorkState,
+    }
+  ];
 
   // ====================================
   // FIELD RULES FOR WORKERS GRID
@@ -1442,7 +1490,7 @@ const OrdenAplicacion = () => {
 
   const fetchCuarteles = async () => {
     try {
-      const data = await listaCuartelesService.findAll();
+      const data = await listaCuartelesService.findProductiveAreas();
       console.log('Fetched cuarteles:', data);
       setCuarteles(data);
     } catch (error) {
@@ -1700,6 +1748,83 @@ const OrdenAplicacion = () => {
     }
   };
 
+  // Function to generate options for wizard
+  const getWizardOptions = () => {
+    const cuartelesOptions = cuarteles.map(cuartel => ({
+      value: cuartel._id,
+      label: cuartel.areaName
+    }));
+
+    const taskTypeOptions = taskTypes.map(taskType => ({
+      value: taskType.id,
+      label: taskType.name
+    }));
+
+    const taskOptions = allTasks.map(task => ({
+      value: (task as any)._id || (task as any).id,
+      label: task.taskName
+    }));
+
+    const workerOptions = workerList.map(worker => ({
+      value: worker._id || "",
+      label: `${worker.names} ${worker.lastName} (${worker.rut})`
+    }));
+
+    return {
+      cuartelesOptions,
+      taskTypeOptions,
+      taskOptions,
+      supervisorOptions: workerOptions,
+      plannerOptions: workerOptions,
+      verifierOptions: workerOptions,
+      applicatorOptions: workerOptions,
+    };
+  };
+
+  // Function to handle wizard completion
+  const handleWizardComplete = async (data: any) => {
+    console.log("handleWizardComplete executed", data);
+    
+    // Process the task data before submission
+    let processedData = { ...data };
+    
+    // If task is a string (selected ID), convert it to the expected object format
+    if (typeof processedData.task === 'string') {
+      const selectedTaskId = processedData.task;
+      // Find the task using the ID
+      const selectedTask = allTasks.find(task => (task as any)._id === selectedTaskId || (task as any).id === selectedTaskId);
+      console.log('selectedTask', selectedTask);
+      if (selectedTask) {
+        // Convert ITask to the format expected by IWork.task
+        processedData.task = {
+          _id: (selectedTask as any)._id || (selectedTask as any).id,
+          id: (selectedTask as any)._id || (selectedTask as any).id,
+          taskTypeId: selectedTask.taskTypeId,
+          optionalCode: selectedTask.optionalCode || '',
+          taskName: selectedTask.taskName,
+          taskPrice: selectedTask.taskPrice || 0,
+          optimalYield: selectedTask.optimalYield || 0,
+          isEditableInApp: selectedTask.isEditableInApp || false,
+          usesWetCalculationPerHa: selectedTask.usesWetCalculationPerHa || false,
+          usageContext: selectedTask.usageContext || '',
+          maxHarvestYield: selectedTask.maxHarvestYield || 0,
+          showTotalEarningsInApp: selectedTask.showTotalEarningsInApp || false,
+          associatedProducts: selectedTask.associatedProducts ? 
+            selectedTask.associatedProducts.map(product => ({
+              product: { id: product.productId },
+              quantityPerHectare: String(product.quantity || 0)
+            })) : [],
+          requiresRowCount: selectedTask.requiresRowCount || false,
+          requiresHourLog: selectedTask.requiresHourLog || false
+        };
+      }
+    }
+    
+    // Always create new for wizard (no edit mode in wizard for now)
+    await handleAddOrden(processedData);
+    setIsDialogOpen(false);
+  };
+
   // Function to handle form submission
   const handleFormSubmit = (data: Partial<IWork>) => {
     console.log("handleFormSubmit executed", data);
@@ -1749,7 +1874,7 @@ const OrdenAplicacion = () => {
   };
 
   // Function to handle edit button click
-  const handleEditClick = (orden: WorkWithId) => {
+  const handleEditClick = (orden: IWork) => {
     setSelectedOrden(orden);
     setIsEditMode(true);
     
@@ -2288,7 +2413,7 @@ const OrdenAplicacion = () => {
   };
 
   // Render action buttons for each row
-  const renderActions = (row: WorkWithId) => {
+  const renderActions = (row: IWork) => {
     return (
       <div className="flex space-x-2">
         <Button
@@ -2327,7 +2452,7 @@ const OrdenAplicacion = () => {
   const stats = calculateStatistics();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       {/* Main Container */}
       <div 
         className="mx-auto"
@@ -2338,7 +2463,7 @@ const OrdenAplicacion = () => {
       >
         {/* 1. HEADER SECTION - SOFIA Title, Description & Action Buttons */}
         <div 
-          className="bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-between"
+          className="bg-background rounded-lg shadow-sm border border-border flex items-center justify-between"
           style={{ 
             minHeight: LAYOUT_CONSTANTS.header.minHeight,
             padding: LAYOUT_CONSTANTS.header.padding,
@@ -2348,14 +2473,14 @@ const OrdenAplicacion = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 
-                className="font-bold text-gray-900"
+                className="font-bold text-foreground"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize['3xl'] }}
               >
                 Ordenes de aplicación
               </h1>
             </div>
             <p 
-              className="text-gray-600"
+              className="text-muted-foreground"
               style={{ fontSize: DESIGN_TOKENS.typography.fontSize.base }}
             >
               Gestione y monitoree las órdenes de aplicación de productos
@@ -2412,19 +2537,15 @@ const OrdenAplicacion = () => {
               <FileSpreadsheet className="h-4 w-4" />
               <span className="hidden sm:inline">Exportar</span>
             </Button> */}
-            <Button
-              onClick={() => {
-                setSelectedOrden(null);
-                setIsEditMode(false);
-                setSelectedCuartel(null);
-                setSelectedTaskType('');
-                setIsDialogOpen(true);
-              }}
+            <SplitButton
+              options={ingresoOptions}
+              onOptionSelect={handleIngresoOptionSelect}
+              defaultOption={ingresoOptions[0]}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Agregar Orden</span>
-            </Button>
+            </SplitButton>
           </div>
         </div>
 
@@ -2436,25 +2557,25 @@ const OrdenAplicacion = () => {
             marginBottom: LAYOUT_CONSTANTS.indicators.marginBottom 
           }}
         >
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
-                className="text-gray-600 font-medium"
+                className="text-muted-foreground font-medium"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Total Órdenes
               </CardTitle>
-              <BarChart3 className="h-5 w-5 text-gray-400" />
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div 
-                className="font-bold text-gray-900"
+                className="font-bold text-foreground"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
               >
                 {stats.total}
               </div>
               <p 
-                className="text-gray-500 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
               >
                 Órdenes registradas
@@ -2462,10 +2583,10 @@ const OrdenAplicacion = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
-                className="text-gray-600 font-medium"
+                className="text-muted-foreground font-medium"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Confirmadas
@@ -2480,7 +2601,7 @@ const OrdenAplicacion = () => {
                 {stats.confirmed}
               </div>
               <p 
-                className="text-gray-500 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
               >
                 {stats.total > 0 ? `${((stats.confirmed / stats.total) * 100).toFixed(1)}%` : '0%'} del total
@@ -2488,10 +2609,10 @@ const OrdenAplicacion = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
-                className="text-gray-600 font-medium"
+                className="text-muted-foreground font-medium"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Pendientes
@@ -2506,7 +2627,7 @@ const OrdenAplicacion = () => {
                 {stats.pending}
               </div>
               <p 
-                className="text-gray-500 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
               >
                 {stats.total > 0 ? `${((stats.pending / stats.total) * 100).toFixed(1)}%` : '0%'} del total
@@ -2514,10 +2635,10 @@ const OrdenAplicacion = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
-                className="text-gray-600 font-medium"
+                className="text-muted-foreground font-medium"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Bloqueadas
@@ -2532,7 +2653,7 @@ const OrdenAplicacion = () => {
                 {stats.blocked}
               </div>
               <p 
-                className="text-gray-500 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
               >
                 {stats.total > 0 ? `${((stats.blocked / stats.total) * 100).toFixed(1)}%` : '0%'} del total
@@ -2540,25 +2661,25 @@ const OrdenAplicacion = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white hover:shadow-md transition-shadow">
+          <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
-                className="text-gray-600 font-medium"
+                className="text-muted-foreground font-medium"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Nulas
               </CardTitle>
-              <XCircle className="h-5 w-5 text-gray-500" />
+              <XCircle className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div 
-                className="font-bold text-gray-600"
+                className="font-bold text-muted-foreground"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize['2xl'] }}
               >
                 {stats.void}
               </div>
               <p 
-                className="text-gray-500 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
               >
                 {stats.total > 0 ? `${((stats.void / stats.total) * 100).toFixed(1)}%` : '0%'} del total
@@ -2570,7 +2691,7 @@ const OrdenAplicacion = () => {
         {/* 3. GANTT CHART SECTION - Full Width Chronogram */}
         {showGantt && (
           <div 
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-300 ease-in-out"
+            className="bg-background rounded-lg shadow-sm border border-border p-6 transition-all duration-300 ease-in-out"
             style={{ 
               minHeight: LAYOUT_CONSTANTS.gantt.minHeight,
               marginBottom: LAYOUT_CONSTANTS.gantt.marginBottom 
@@ -2578,9 +2699,9 @@ const OrdenAplicacion = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
+                <BarChart3 className="h-6 w-6 text-primary" />
                 <h2 
-                  className="font-semibold text-gray-900"
+                  className="font-semibold text-foreground"
                   style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
                 >
                   Cronograma de Órdenes
@@ -2590,7 +2711,7 @@ const OrdenAplicacion = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowGantt(false)}
-                className="text-gray-500"
+                className="text-muted-foreground"
               >
                 <EyeOff className="h-4 w-4" />
               </Button>
@@ -2629,12 +2750,12 @@ const OrdenAplicacion = () => {
           >
             {/* Map Section */}
             {showMap && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-background rounded-lg shadow-sm border border-border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <Map className="h-6 w-6 text-blue-600" />
+                    <Map className="h-6 w-6 text-primary" />
                     <h2 
-                      className="font-semibold text-gray-900"
+                      className="font-semibold text-foreground"
                       style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
                     >
                       Mapa Georeferenciado
@@ -2644,7 +2765,7 @@ const OrdenAplicacion = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowMap(false)}
-                    className="text-gray-500"
+                    className="text-muted-foreground"
                   >
                     <EyeOff className="h-4 w-4" />
                   </Button>
@@ -2663,12 +2784,12 @@ const OrdenAplicacion = () => {
 
             {/* Activity/Others Section */}
             {showActivity && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-background rounded-lg shadow-sm border border-border p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                    <TrendingUp className="h-6 w-6 text-primary" />
                     <h2 
-                      className="font-semibold text-gray-900"
+                      className="font-semibold text-foreground"
                       style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
                     >
                       Actividad Reciente
@@ -2678,7 +2799,7 @@ const OrdenAplicacion = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowActivity(false)}
-                    className="text-gray-500"
+                    className="text-muted-foreground"
                   >
                     <EyeOff className="h-4 w-4" />
                   </Button>
@@ -2686,17 +2807,17 @@ const OrdenAplicacion = () => {
                 <div style={{ minHeight: LAYOUT_CONSTANTS.map.minHeight }}>
                   <div className="space-y-4">
                     {/* Recent Activity Items */}
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                       <div className="flex-1">
                         <p 
-                          className="font-medium text-gray-900"
+                          className="font-medium text-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
                         >
                           Orden #{ordenesAplicacion[0]?.orderNumber || 'N/A'} confirmada
                         </p>
                         <p 
-                          className="text-gray-500"
+                          className="text-muted-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
                         >
                           Hace 2 horas
@@ -2704,17 +2825,17 @@ const OrdenAplicacion = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
                       <Clock className="h-5 w-5 text-amber-500 mt-0.5" />
                       <div className="flex-1">
                         <p 
-                          className="font-medium text-gray-900"
+                          className="font-medium text-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
                         >
                           {stats.pending} órdenes pendientes de revisión
                         </p>
                         <p 
-                          className="text-gray-500"
+                          className="text-muted-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
                         >
                           Requieren atención
@@ -2722,17 +2843,17 @@ const OrdenAplicacion = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <BarChart3 className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                      <BarChart3 className="h-5 w-5 text-primary mt-0.5" />
                       <div className="flex-1">
                         <p 
-                          className="font-medium text-gray-900"
+                          className="font-medium text-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
                         >
                           Eficiencia: {stats.total > 0 ? ((stats.confirmed / stats.total) * 100).toFixed(1) : 0}%
                         </p>
                         <p 
-                          className="text-gray-500"
+                          className="text-muted-foreground"
                           style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xs }}
                         >
                           Órdenes completadas
@@ -2747,20 +2868,20 @@ const OrdenAplicacion = () => {
         )}
 
         {/* 5. DATA GRID SECTION */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-background rounded-lg shadow-sm border border-border">
           <div 
-            className="flex items-center justify-between border-b border-gray-200"
+            className="flex items-center justify-between border-b border-border"
             style={{ padding: LAYOUT_CONSTANTS.header.padding }}
           >
             <div>
               <h2 
-                className="font-semibold text-gray-900"
+                className="font-semibold text-foreground"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
               >
                 Órdenes de Aplicación
               </h2>
               <p 
-                className="text-gray-600 mt-1"
+                className="text-muted-foreground mt-1"
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 Gestione y monitoree las órdenes de aplicación de productos
@@ -2774,7 +2895,7 @@ const OrdenAplicacion = () => {
             }}
           >
             <Grid
-              columns={columns}
+              columns={ordersGridcolumns}
               data={ordenesAplicacion}
               actions={renderActions}
               gridId="orden-aplicacion-grid"
@@ -2791,19 +2912,59 @@ const OrdenAplicacion = () => {
             <DialogTitle 
               style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
             >
-              {isEditMode ? "Editar Orden de Aplicación" : "Nueva Orden de Aplicación"}
+              {isEditMode 
+                ? "Editar Orden de Aplicación" 
+                : formType === "wizard" 
+                  ? "Nueva Orden de Aplicación" 
+                  : "Nueva Orden de Aplicación"}
             </DialogTitle>
             <DialogDescription 
               style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
             >
               {isEditMode
                 ? "Actualice los detalles de la orden de aplicación existente"
-                : "Complete el formulario para crear una nueva orden de aplicación"}
+                : formType === "wizard"
+                  ? "Siga los pasos para crear una nueva orden de aplicación"
+                  : "Complete el formulario para crear una nueva orden de aplicación"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="w-full max-w-full overflow-hidden">
-            <DynamicForm
+            {formType === "wizard" && !isEditMode ? (
+              <WizardOrdenAplicacion
+                onComplete={handleWizardComplete}
+                onCancel={() => setIsDialogOpen(false)}
+                defaultValues={{
+                  workType: "A", // Default to Application type
+                  ppe: {
+                    gloves: true,
+                    applicatorSuit: true,
+                    respirator: true,
+                    faceShield: true,
+                    protectiveShoes: true,
+                    other: ""
+                  },
+                  climateConditions: "",
+                  windSpeed: "",
+                  temperature: "",
+                  humidity: "",
+                  observation: "",
+                  observationApp: "",
+                  syncApp: false,
+                  appUser: "",
+                  workState: "pending",
+                  responsibles: {
+                    supervisor: { userId: "" },
+                    planner: { userId: "" },
+                    technicalVerifier: { userId: "" },
+                    applicators: [{ userId: "" }]
+                  }
+                }}
+                {...getWizardOptions()}
+              />
+            ) : (
+              <DynamicForm
+              enabledButtons={false}
               sections={formSections.map(section => {
               if (section.id === "orden-info-basic") {
                 return {
@@ -2942,7 +3103,7 @@ const OrdenAplicacion = () => {
               }
               return section;
             })}
-            validationSchema={formValidationSchema}
+            validationSchema={orderFormValidationSchema}
             onSubmit={handleFormSubmit}
             defaultValues={isEditMode && selectedOrden 
               ? { 
@@ -2991,17 +3152,17 @@ const OrdenAplicacion = () => {
                 }
             }
           />
+            )}
           </div>
           
           {/* Workers section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
             <div 
-              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
-              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+              className="mt-6 border border-border rounded-lg p-4 w-full max-w-full overflow-hidden"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 
-                  className="font-medium text-gray-900"
+                  className="font-medium text-foreground"
                   style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
                 >
                   Trabajadores
@@ -3311,12 +3472,11 @@ const OrdenAplicacion = () => {
           {/* Machinery section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
             <div 
-              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
-              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+              className="mt-6 border border-border rounded-lg p-4 w-full max-w-full overflow-hidden"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 
-                  className="font-medium text-gray-900"
+                  className="font-medium text-foreground"
                   style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
                 >
                   Maquinaria
@@ -3468,12 +3628,11 @@ const OrdenAplicacion = () => {
           {/* Products section - only visible in edit mode */}
           {isEditMode && selectedOrden && (
             <div 
-              className="mt-6 border rounded-lg p-4 w-full max-w-full overflow-hidden"
-              style={{ borderColor: DESIGN_TOKENS.colors.gray[200] }}
+              className="mt-6 border border-border rounded-lg p-4 w-full max-w-full overflow-hidden"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 
-                  className="font-medium text-gray-900"
+                  className="font-medium text-foreground"
                   style={{ fontSize: DESIGN_TOKENS.typography.fontSize.lg }}
                 >
                   Productos
@@ -3668,24 +3827,26 @@ const OrdenAplicacion = () => {
             </div>
           )}
           
-          <DialogFooter 
-            className="mt-6 px-4"
-          >
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(false)}
-              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+          {formType !== "wizard" && (
+            <DialogFooter 
+              className="mt-6 px-4"
             >
-              Cancelar
-            </Button>
-            <Button 
-              type="submit" 
-              form="dynamic-form"
-              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
-            >
-              {isEditMode ? "Actualizar" : "Crear"}
-            </Button>
-          </DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                form="dynamic-form"
+                style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+              >
+                {isEditMode ? "Actualizar" : "Crear"}
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>

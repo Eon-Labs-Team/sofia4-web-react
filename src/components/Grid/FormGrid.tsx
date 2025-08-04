@@ -575,11 +575,11 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     const visibleColumns = columns.filter((col) => col.visible);
     
     return (
-      <tr className="border-b">
+      <tr className="border-b border-border">
         {visibleColumns.map((column) => (
           <th
             key={column.id}
-            className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50"
+            className="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/50 transition-colors"
             onClick={() => column.sortable && handleSort(column.accessor)}
           >
             <div className="flex items-center space-x-1">
@@ -589,15 +589,15 @@ const FormGridComponent: React.FC<FormGridProps> = ({
                   <ChevronUp
                     className={`h-3 w-3 ${
                       sortState.column === column.accessor && sortState.direction === "asc"
-                        ? "text-blue-600"
-                        : "text-gray-400"
+                        ? "text-primary"
+                        : "text-muted-foreground"
                     }`}
                   />
                   <ChevronDown
                     className={`h-3 w-3 -mt-1 ${
                       sortState.column === column.accessor && sortState.direction === "desc"
-                        ? "text-blue-600"
-                        : "text-gray-400"
+                        ? "text-primary"
+                        : "text-muted-foreground"
                     }`}
                   />
                 </div>
@@ -606,7 +606,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           </th>
         ))}
         {(actions || enableInlineEdit) && (
-          <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th className="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
             Acciones
           </th>
         )}
@@ -618,7 +618,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     const visibleColumns = columns.filter((col) => col.visible);
     
     return visibleColumns.map((column) => (
-      <td key={column.id} className="px-2 py-3 whitespace-nowrap text-sm text-gray-900">
+      <td key={column.id} className="px-2 py-3 whitespace-nowrap text-sm text-foreground">
         {renderEditableCell(column, row)}
       </td>
     ));
@@ -710,7 +710,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     const visibleColumns = columns.filter((col) => col.visible);
     
     return (
-      <tr className="border-b bg-blue-50">
+      <tr className="border-b border-border bg-muted/30">
         {visibleColumns.map((column) => (
           <td key={column.id} className="px-2 py-3 whitespace-nowrap text-sm">
             {renderNewRowCell(column)}
@@ -729,7 +729,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
         <tr>
           <td
             colSpan={columns.filter((col) => col.visible).length + 1}
-            className="px-2 py-8 text-center text-gray-500"
+            className="px-2 py-8 text-center text-muted-foreground"
           >
             No hay datos para mostrar
           </td>
@@ -748,7 +748,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
       return (
         <React.Fragment key={rowId}>
           <tr
-            className="border-b hover:bg-gray-50 cursor-pointer"
+            className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
             onClick={() => onRowClick && onRowClick(row)}
           >
             {expandableContent && (
@@ -787,7 +787,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
                 }
                 className="p-0"
               >
-                <div className="bg-gray-50 border-l-4 border-blue-500">
+                <div className="bg-muted border-l-4 border-primary">
                   {expandableContent(row)}
                 </div>
               </td>
@@ -801,14 +801,14 @@ const FormGridComponent: React.FC<FormGridProps> = ({
   const renderGroupedRows = () => {
     return paginatedData.map((group: any) => (
       <React.Fragment key={group.groupValue}>
-        <tr className="bg-gray-100 border-b">
+        <tr className="bg-muted/80 border-b border-border">
           <td
             colSpan={
               columns.filter((col) => col.visible).length +
               (expandableContent ? 1 : 0) +
               (actions || enableInlineEdit ? 1 : 0)
             }
-            className="px-2 py-2 font-semibold text-gray-700"
+            className="px-2 py-2 font-semibold text-muted-foreground"
           >
             {group.groupValue} ({group.rows.length} elementos)
           </td>
@@ -820,7 +820,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           return (
             <React.Fragment key={rowId}>
               <tr
-                className="border-b hover:bg-gray-50 cursor-pointer"
+                className="border-b border-border hover:bg-muted/50 cursor-pointer transition-colors"
                 onClick={() => onRowClick && onRowClick(row)}
               >
                 {expandableContent && (
@@ -859,7 +859,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
                     }
                     className="p-0"
                   >
-                    <div className="bg-gray-50 border-l-4 border-blue-500">
+                    <div className="bg-muted border-l-4 border-primary">
                       {expandableContent(row)}
                     </div>
                   </td>
@@ -877,7 +877,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 mb-4">
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Buscar..."
               value={searchTerm}
@@ -919,19 +919,19 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     <div className="w-full">
       {title && (
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         </div>
       )}
 
       {renderToolbar()}
 
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+      <div className="overflow-hidden shadow-md ring-1 ring-border rounded-lg">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-300">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               {renderHeaders()}
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-background divide-y divide-border">
               {renderNewRow()}
               {renderRows()}
             </tbody>
@@ -940,9 +940,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between px-2 py-3 bg-white border-t">
+      <div className="flex items-center justify-between px-2 py-3 bg-background border-t border-border">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-muted-foreground">
             Mostrando {Math.min((currentPage - 1) * pageSize + 1, filteredAndSortedData.length)} a{" "}
             {Math.min(currentPage * pageSize, filteredAndSortedData.length)} de{" "}
             {filteredAndSortedData.length} resultados
@@ -950,7 +950,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700">Filas por página:</span>
+          <span className="text-sm text-muted-foreground">Filas por página:</span>
           <Select
             value={String(pageSize)}
             onValueChange={(value) => {
@@ -980,7 +980,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
-            <span className="text-sm text-gray-700 px-2">
+            <span className="text-sm text-muted-foreground px-2">
               Página {currentPage} de {totalPages}
             </span>
             

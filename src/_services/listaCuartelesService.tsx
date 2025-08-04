@@ -39,6 +39,38 @@ class ListaCuartelesService {
   }
 
   /**
+   * Get all productive areas
+   * @returns Promise with all productive areas
+   */
+  async findProductiveAreas(): Promise<IOperationalArea[]> {
+    try {
+      const { propertyId } = useAuthStore.getState();
+      
+      // Create a URL with query parameters
+      const url = new URL(ENDPOINTS.listaCuarteles.getProductive);
+      if (propertyId) {
+        url.searchParams.append('propertyId', propertyId.toString());
+      }
+      
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const barracksData = await response.json();
+      return barracksData.data || barracksData;
+    } catch (error) {
+      console.error('Error fetching barracks list:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new barracks list
    * @param barracksList BarracksList data
    * @returns Promise with created barracks list
@@ -54,6 +86,10 @@ class ListaCuartelesService {
         codeOptional: barracksList.codeOptional,
         observation: barracksList.observation || '',
         state: barracksList.state !== undefined ? barracksList.state : true,
+        availableRecord: barracksList.availableRecord,
+        active: barracksList.active !== undefined ? barracksList.active : true,
+
+
       };
 
       // Solo incluir campos productivos si el cuartel es productivo
@@ -89,7 +125,7 @@ class ListaCuartelesService {
           rowsTotal: barracksList.rowsTotal,
           area: barracksList.area,
           irrigationType: barracksList.irrigationType,
-          itsByHa: barracksList.itsByHa,
+          ltsByHa: barracksList.ltsByHa,
           irrigationZone: barracksList.irrigationZone !== undefined ? barracksList.irrigationZone : false,
           barracksLotObject: barracksList.barracksLotObject,
           investmentNumber: barracksList.investmentNumber,
@@ -146,6 +182,10 @@ class ListaCuartelesService {
         codeOptional: barracksList.codeOptional,
         observation: barracksList.observation || '',
         state: barracksList.state !== undefined ? barracksList.state : true,
+        availableRecord: barracksList.availableRecord,
+        active: barracksList.active !== undefined ? barracksList.active : true,
+
+
       };
 
       // Solo incluir campos productivos si el cuartel es productivo
@@ -181,7 +221,7 @@ class ListaCuartelesService {
           rowsTotal: barracksList.rowsTotal,
           area: barracksList.area,
           irrigationType: barracksList.irrigationType,
-          itsByHa: barracksList.itsByHa,
+          ltsByHa: barracksList.ltsByHa,
           irrigationZone: barracksList.irrigationZone !== undefined ? barracksList.irrigationZone : false,
           barracksLotObject: barracksList.barracksLotObject,
           investmentNumber: barracksList.investmentNumber,

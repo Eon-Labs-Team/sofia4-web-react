@@ -481,7 +481,7 @@ const ListaCuarteles = () => {
             onSubmit={handleFormSubmit}
             isEditMode={isEditMode}
             defaultValues={
-              isEditMode && selectedCuartel 
+              isEditMode && selectedCuartel
                 ? {
                     isProductive: selectedCuartel.isProductive,
                     classificationZone: selectedCuartel.classificationZone,
@@ -517,7 +517,7 @@ const ListaCuarteles = () => {
                     rowsTotal: selectedCuartel.rowsTotal,
                     area: selectedCuartel.area,
                     irrigationType: selectedCuartel.irrigationType,
-                    itsByHa: selectedCuartel.itsByHa,
+                    ltsByHa: selectedCuartel.ltsByHa,
                     irrigationZone: selectedCuartel.irrigationZone,
                     barracksLotObject: selectedCuartel.barracksLotObject,
                     investmentNumber: selectedCuartel.investmentNumber,

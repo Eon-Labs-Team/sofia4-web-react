@@ -47,6 +47,7 @@ import { useAuthStore } from "@/lib/store/authStore";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useSidebarStore, NavItem } from "@/lib/store/sidebarStore";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -422,7 +423,16 @@ const Sidebar = ({
       </div>
 
       {/* Footer del sidebar con el menú de usuario */}
-      <div className="shrink-0 p-4 border-t">
+      <div className="shrink-0 p-4 border-t space-y-2">
+        {/* Theme Toggle */}
+        <div className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
+          <ThemeToggle variant="sidebar" showLabel={!isCollapsed} />
+        </div>
+        
+        {/* Separator si no está colapsado */}
+        {!isCollapsed && <Separator />}
+        
+        {/* User Menu */}
         <div className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
           <UserMenu variant="sidebar" />
           {!isCollapsed && (

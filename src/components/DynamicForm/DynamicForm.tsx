@@ -69,6 +69,7 @@ export interface DynamicFormProps {
   onSubmit: (data: any) => void;
   defaultValues?: Record<string, any>;
   validationSchema?: z.ZodType<any>;
+  enabledButtons?: boolean;
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
@@ -76,6 +77,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onSubmit,
   defaultValues = {},
   validationSchema,
+  enabledButtons = true,
 }) => {
   const [formSections, setFormSections] = useState<SectionConfig[]>(sections);
 
@@ -128,12 +130,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               moveSection={moveSection}
             />
           ))}
-          <div className="flex justify-end space-x-2 pt-4">
+          {enabledButtons && (<div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={handleReset}>
               Reset
             </Button>
             <Button type="submit">Submit</Button>
-          </div>
+          </div>)}
         </form>
       </FormProvider>
     </DndProvider>

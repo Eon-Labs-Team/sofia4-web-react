@@ -55,6 +55,7 @@ import Variedades from "./pages/Variedades";
 import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/OrdenAplicacion";
+import WizardExample from "./components/Wizard/WizardExample";
 import FaenasAgricolas from "./pages/faenas-agricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 
@@ -703,6 +704,20 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/wizard-example"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <WizardExample />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+         
         
         <Route
           path="/faenas-agricolas"
