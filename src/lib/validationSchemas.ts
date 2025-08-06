@@ -66,15 +66,20 @@ export interface FieldRule {
   // Cuándo se ejecuta la regla
   trigger: {
     field: string; // campo que dispara la regla
+    debounce?: number; // debounce específico para esta regla (ms)
     condition?: (value: any, formData: any, parentData?: any) => boolean;
   };
   
   // Qué acción realizar
   action: {
-    type: 'preset' | 'calculate';
+    type: 'preset' | 'calculate' | 'lookup';
     targetField: string;
-    source?: 'parent' | 'selected' | 'external' | 'custom';
+    source?: 'parent' | 'selected' | 'external' | 'custom' | 'list';
     sourceField?: string;
+    // Nuevos campos para lookup en listas
+    listKey?: string; // clave de la lista en externalData
+    lookupField?: string; // campo por el cual buscar en la lista
+    mappingField?: string; // campo a extraer del objeto encontrado
     calculate?: (formData: any, parentData?: any, externalData?: any) => any;
     preset?: (formData: any, parentData?: any, externalData?: any) => any;
   };
@@ -91,50 +96,123 @@ export class FieldRulesEngine {
   private rules: FieldRule[];
   private parentData?: any;
   private externalData?: { [key: string]: any };
+  private debug: boolean;
+  
+  // Performance optimizations
+  private rulesByTrigger: Map<string, FieldRule[]> = new Map();
+  private debouncedExecutions: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor(rules: FormGridRules) {
+  constructor(rules: FormGridRules, debug: boolean = false) {
     this.rules = rules.rules || [];
     this.parentData = rules.parentData;
     this.externalData = rules.externalData;
+    this.debug = debug;
+    
+    // Pre-indexar reglas por trigger field para O(1) lookup
+    this.indexRulesByTrigger();
   }
 
-  // Ejecutar reglas cuando un campo cambia
+  // Pre-indexa las reglas por campo trigger para mejor performance
+  private indexRulesByTrigger(): void {
+    this.rulesByTrigger.clear();
+    
+    this.rules.forEach(rule => {
+      const triggerField = rule.trigger.field;
+      if (!this.rulesByTrigger.has(triggerField)) {
+        this.rulesByTrigger.set(triggerField, []);
+      }
+      this.rulesByTrigger.get(triggerField)!.push(rule);
+    });
+    
+    if (this.debug) {
+      console.log('FieldRulesEngine: Indexed rules by trigger field:', 
+        Object.fromEntries(this.rulesByTrigger.entries()));
+    }
+  }
+
+  // Ejecutar reglas cuando un campo cambia (con debouncing)
   executeRules(
     triggerField: string, 
     triggerValue: any, 
     currentFormData: any,
     setValue: (field: string, value: any) => void
   ): void {
-    const applicableRules = this.rules.filter(rule => rule.trigger.field === triggerField);
+    // Usar índice para obtener reglas aplicables - O(1) lookup
+    const applicableRules = this.rulesByTrigger.get(triggerField) || [];
 
     for (const rule of applicableRules) {
-      // Verificar condición si existe
-      if (rule.trigger.condition) {
-        const shouldExecute = rule.trigger.condition(triggerValue, currentFormData, this.parentData);
-        if (!shouldExecute) continue;
+      // Manejar debouncing si está configurado
+      if (rule.trigger.debounce) {
+        this.executeWithDebounce(rule, triggerField, triggerValue, currentFormData, setValue);
+      } else {
+        this.executeRuleImmediately(rule, triggerValue, currentFormData, setValue);
       }
+    }
+  }
 
-      // Ejecutar acción
-      let newValue: any;
+  // Ejecutar regla con debouncing
+  private executeWithDebounce(
+    rule: FieldRule,
+    triggerField: string,
+    triggerValue: any,
+    currentFormData: any,
+    setValue: (field: string, value: any) => void
+  ): void {
+    const debounceKey = `${triggerField}-${rule.action.targetField}`;
+    
+    // Cancelar ejecución anterior si existe
+    if (this.debouncedExecutions.has(debounceKey)) {
+      clearTimeout(this.debouncedExecutions.get(debounceKey)!);
+    }
 
-      if (rule.action.type === 'preset') {
-        if (rule.action.preset) {
-          // Función personalizada
-          newValue = rule.action.preset(currentFormData, this.parentData, this.externalData);
-        } else if (rule.action.source === 'parent' && rule.action.sourceField) {
-          // Valor del formulario padre
-          newValue = this.getNestedValue(this.parentData, rule.action.sourceField);
-        } else if (rule.action.source === 'external' && rule.action.sourceField) {
-          // Valor de datos externos
-          newValue = this.getNestedValue(this.externalData, rule.action.sourceField);
-        }
-      } else if (rule.action.type === 'calculate' && rule.action.calculate) {
-        // Cálculo personalizado
-        newValue = rule.action.calculate(currentFormData, this.parentData, this.externalData);
+    // Programar nueva ejecución
+    const timeout = setTimeout(() => {
+      this.executeRuleImmediately(rule, triggerValue, currentFormData, setValue);
+      this.debouncedExecutions.delete(debounceKey);
+    }, rule.trigger.debounce);
+
+    this.debouncedExecutions.set(debounceKey, timeout);
+  }
+
+  // Ejecutar regla inmediatamente
+  private executeRuleImmediately(
+    rule: FieldRule,
+    triggerValue: any,
+    currentFormData: any,
+    setValue: (field: string, value: any) => void
+  ): void {
+    // Verificar condición si existe
+    if (rule.trigger.condition) {
+      const shouldExecute = rule.trigger.condition(triggerValue, currentFormData, this.parentData);
+      if (!shouldExecute) return;
+    }
+
+    // Ejecutar acción
+    let newValue: any;
+
+    if (rule.action.type === 'preset') {
+      if (rule.action.preset) {
+        // Función personalizada
+        newValue = rule.action.preset(currentFormData, this.parentData, this.externalData);
+      } else if (rule.action.source === 'parent' && rule.action.sourceField) {
+        // Valor del formulario padre
+        newValue = this.getNestedValue(this.parentData, rule.action.sourceField);
+      } else if (rule.action.source === 'external' && rule.action.sourceField) {
+        // Valor de datos externos
+        newValue = this.getNestedValue(this.externalData, rule.action.sourceField);
       }
+    } else if (rule.action.type === 'calculate' && rule.action.calculate) {
+      // Cálculo personalizado
+      newValue = rule.action.calculate(currentFormData, this.parentData, this.externalData);
+    } else if (rule.action.type === 'lookup' && rule.action.source === 'list') {
+      // Buscar valor en una lista externa
+      newValue = this.performListLookup(rule.action, triggerValue);
+    }
 
-      // Aplicar el nuevo valor si es válido
-      if (newValue !== undefined && newValue !== null) {
+    // Aplicar el nuevo valor solo si es diferente del actual para evitar bucles
+    if (newValue !== undefined && newValue !== null) {
+      const currentValue = this.getNestedValue(currentFormData, rule.action.targetField);
+      if (!this.areValuesEqual(currentValue, newValue)) {
         setValue(rule.action.targetField, newValue);
       }
     }
@@ -156,6 +234,45 @@ export class FieldRulesEngine {
     }
   }
 
+  // Realizar lookup en una lista externa
+  private performListLookup(action: FieldRule['action'], lookupValue: any): any {
+    if (!action.listKey || !action.lookupField || !action.mappingField) {
+      if (this.debug) {
+        console.warn('performListLookup: Missing required fields (listKey, lookupField, mappingField)');
+      }
+      return undefined;
+    }
+
+    const list = this.externalData?.[action.listKey];
+    if (!Array.isArray(list)) {
+      if (this.debug) {
+        console.warn(`performListLookup: List '${action.listKey}' not found or is not an array`);
+      }
+      return undefined;
+    }
+
+    // Buscar el elemento en la lista
+    const foundItem = list.find((item: any) => {
+      const itemValue = this.getNestedValue(item, action.lookupField!);
+      return itemValue === lookupValue;
+    });
+
+    if (!foundItem) {
+      if (this.debug) {
+        console.warn(`performListLookup: No item found with ${action.lookupField} = ${lookupValue}`);
+      }
+      return undefined;
+    }
+
+    // Extraer el valor del campo de mapeo
+    const mappedValue = this.getNestedValue(foundItem, action.mappingField!);
+    if (this.debug) {
+      console.log(`performListLookup: Found ${action.mappingField} = ${mappedValue} for ${action.lookupField} = ${lookupValue}`);
+    }
+    
+    return mappedValue;
+  }
+
   // Utilidad para acceder a propiedades anidadas
   private getNestedValue(obj: any, path: string): any {
     if (!obj || !path) return undefined;
@@ -173,5 +290,32 @@ export class FieldRulesEngine {
   // Actualizar datos externos (útil cuando las listas cambian)
   updateExternalData(newExternalData: { [key: string]: any }): void {
     this.externalData = { ...this.externalData, ...newExternalData };
+  }
+
+  // Obtener lista de campos que necesitan ser observados (para watch selectivo)
+  getWatchedFields(): string[] {
+    return Array.from(this.rulesByTrigger.keys());
+  }
+
+  // Comparar valores de forma eficiente para evitar actualizaciones innecesarias
+  private areValuesEqual(value1: any, value2: any): boolean {
+    // Comparación rápida para tipos primitivos
+    if (value1 === value2) return true;
+    
+    // Si uno es null/undefined y el otro no, son diferentes
+    if ((value1 == null) !== (value2 == null)) return false;
+    
+    // Para strings vacías vs null/undefined, considerarlas iguales
+    if ((value1 === '' || value1 == null) && (value2 === '' || value2 == null)) {
+      return true;
+    }
+    
+    // Para números, convertir a string para comparar
+    if (typeof value1 === 'number' && typeof value2 === 'number') {
+      return value1 === value2;
+    }
+    
+    // Para otros casos, usar comparación estricta
+    return false;
   }
 } 

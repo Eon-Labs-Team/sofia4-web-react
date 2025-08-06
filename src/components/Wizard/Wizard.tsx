@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import FormField from "@/components/DynamicForm/FormField";
 import WizardProgress from "./WizardProgress";
 import WizardNavigation from "./WizardNavigation";
 import { WizardProps } from "./types";
+import { FieldRulesEngine } from "@/lib/validationSchemas";
 
 const Wizard: React.FC<WizardProps> = ({
   title,
@@ -25,11 +26,13 @@ const Wizard: React.FC<WizardProps> = ({
   cancelButtonText = "Cancelar",
   nextButtonText = "Siguiente",
   previousButtonText = "Anterior",
+  fieldRules,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
+  const rulesEngineRef = useRef<FieldRulesEngine | null>(null);
 
   const currentStep = steps[currentStepIndex];
   const isFirst = currentStepIndex === 0;
@@ -57,27 +60,99 @@ const Wizard: React.FC<WizardProps> = ({
     mode: "onChange",
   });
 
-  const { watch, getValues, trigger, formState } = formMethods;
+  const { getValues, trigger, formState, setValue } = formMethods;
 
-  // Watch all form values for reactivity
-  const watchedValues = watch();
-
-  // Apply field onChange handlers for reactivity
+  // Initialize rules engine
   useEffect(() => {
-    steps.forEach(step => {
-      step.sections.forEach(section => {
-        section.fields.forEach(field => {
-          if (field.onChange) {
-            field.onChange(
-              watchedValues[field.name],
-              formMethods.setValue,
-              getValues
-            );
-          }
+    if (fieldRules) {
+      rulesEngineRef.current = new FieldRulesEngine(
+        fieldRules, 
+        process.env.NODE_ENV === 'development' // debug solo en desarrollo
+      );
+    }
+  }, [fieldRules]);
+
+  // Obtener campos que necesitan watch (solo los que tienen reglas)
+  const watchedFieldNames = useMemo(() => {
+    return rulesEngineRef.current ? rulesEngineRef.current.getWatchedFields() : [];
+  }, [fieldRules]);
+
+  // Watch selectivo - solo campos con reglas activas
+  const watchedValues = useWatch({
+    control: formMethods.control,
+    name: watchedFieldNames.length > 0 ? watchedFieldNames : undefined
+  });
+
+  const prevValuesRef = useRef<Record<string, any>>({});
+
+  // Apply field rules and onChange handlers for reactivity
+  useEffect(() => {
+    // Execute field rules first (only for changed fields)
+    if (rulesEngineRef.current && watchedValues) {
+      // Convertir watchedValues a objeto si es necesario
+      const valuesObj = Array.isArray(watchedValues) 
+        ? watchedFieldNames.reduce((acc, fieldName, index) => {
+            acc[fieldName] = watchedValues[index];
+            return acc;
+          }, {} as Record<string, any>)
+        : watchedValues;
+
+      Object.keys(valuesObj).forEach(fieldName => {
+        const currentValue = valuesObj[fieldName];
+        const previousValue = prevValuesRef.current[fieldName];
+        
+        // Execute rules only if value actually changed
+        if (currentValue !== previousValue) {
+          rulesEngineRef.current!.executeRules(
+            fieldName,
+            currentValue,
+            formMethods.getValues(), // Pasar todos los valores del form
+            setValue
+          );
+        }
+      });
+    }
+
+    // Then apply custom onChange handlers (for backward compatibility, only for changed fields)
+    if (watchedValues) {
+      const valuesObj = Array.isArray(watchedValues) 
+        ? watchedFieldNames.reduce((acc, fieldName, index) => {
+            acc[fieldName] = watchedValues[index];
+            return acc;
+          }, {} as Record<string, any>)
+        : watchedValues;
+
+      steps.forEach(step => {
+        step.sections.forEach(section => {
+          section.fields.forEach(field => {
+            if (field.onChange && valuesObj.hasOwnProperty(field.name)) {
+              const currentValue = valuesObj[field.name];
+              const previousValue = prevValuesRef.current[field.name];
+              
+              // Execute onChange only if value actually changed
+              if (currentValue !== previousValue) {
+                field.onChange(
+                  currentValue,
+                  setValue,
+                  getValues
+                );
+              }
+            }
+          });
         });
       });
-    });
-  }, [watchedValues, steps, formMethods.setValue, getValues]);
+      
+      // Update previous values
+      prevValuesRef.current = { ...valuesObj };
+    }
+  }, [watchedValues, steps, setValue, getValues, watchedFieldNames]);
+
+  // Execute initialization rules on mount
+  useEffect(() => {
+    if (rulesEngineRef.current) {
+      rulesEngineRef.current.executeInitializationRules(getValues(), setValue);
+    }
+  }, [setValue, getValues]);
 
   const validateCurrentStep = useCallback(async () => {
     if (!currentStep.validationSchema) return true;

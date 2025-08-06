@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Wizard } from "./index";
 import { WizardStepConfig } from "./types";
 import { SectionConfig } from "@/components/DynamicForm/DynamicForm";
+import { createOrdenAplicacionRules } from "@/lib/fieldRules/ordenAplicacionRules";
 
 interface WizardOrdenAplicacionProps {
   onComplete: (data: any) => Promise<void> | void;
@@ -28,6 +29,41 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
   verifierOptions = [],
   applicatorOptions = [],
 }) => {
+  // Crear reglas de reactividad para el wizard
+  const wizardRules = useMemo(() => {
+    return createOrdenAplicacionRules({
+      cuartelesOptions: cuartelesOptions.map(option => ({
+        _id: option.value,
+        areaName: option.label,
+        varietySpecies: (option as any).species,
+        variety: (option as any).variety
+      })),
+      taskOptions: taskOptions.map(option => ({
+        _id: option.value,
+        taskName: option.label,
+        taskTypeId: (option as any).taskTypeId
+      })),
+      taskTypeOptions: taskTypeOptions,
+      workerOptions: [
+        ...supervisorOptions,
+        ...plannerOptions,
+        ...verifierOptions,
+        ...applicatorOptions
+      ].reduce((acc: any[], current) => {
+        // Evitar duplicados usando _id
+        if (!acc.find(item => item._id === current.value)) {
+          acc.push({
+            _id: current.value,
+            fullName: current.label,
+            names: current.label.split(' ')[0] || '',
+            lastName: current.label.split(' ').slice(1).join(' ') || ''
+          });
+        }
+        return acc;
+      }, [])
+    });
+  }, [cuartelesOptions, taskOptions, taskTypeOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
+
   // Paso 1: Información Básica y Ubicación
   const step1Sections: SectionConfig[] = [
     {
@@ -66,7 +102,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           name: "species",
           placeholder: "Se llenará automáticamente al seleccionar cuartel",
           required: true,
-          disabled: false
+          disabled: true
         },
         {
           id: "variety",
@@ -75,7 +111,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           name: "variety",
           placeholder: "Se llenará automáticamente al seleccionar cuartel",
           required: true,
-          disabled: false
+          disabled: true
         },
         {
           id: "phenologicalState",
@@ -443,6 +479,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
       onComplete={onComplete}
       onCancel={onCancel}
       defaultValues={defaultValues}
+      fieldRules={wizardRules}
       showProgress={true}
       allowSkipOptional={true}
       submitButtonText="Crear Orden"

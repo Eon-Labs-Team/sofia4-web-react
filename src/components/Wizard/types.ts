@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SectionConfig } from "@/components/DynamicForm/DynamicForm";
+import { FormGridRules } from "@/lib/validationSchemas";
 
 export interface WizardStepConfig {
   id: string;
@@ -24,6 +25,8 @@ export interface WizardProps {
   cancelButtonText?: string;
   nextButtonText?: string;
   previousButtonText?: string;
+  // Field rules support
+  fieldRules?: FormGridRules;
 }
 
 export interface WizardStepProps {

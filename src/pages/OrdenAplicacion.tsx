@@ -34,6 +34,7 @@ import {
   FormGridRules,
   FieldRule 
 } from "@/lib/validationSchemas";
+import { createOrdenAplicacionRules } from "@/lib/fieldRules/ordenAplicacionRules";
 import { Button } from "@/components/ui/button";
 import { SplitButton, SplitButtonOption } from "@/components/ui/split-button";
 import WizardOrdenAplicacion from "@/components/Wizard/WizardOrdenAplicacion";
@@ -898,8 +899,8 @@ const OrdenAplicacion = () => {
   const [selectedTaskType, setSelectedTaskType] = useState<string>("");
   
   // Cuarteles state
-  const [cuarteles, setCuarteles] = useState<OperationalArea[]>([]);
-  const [selectedCuartel, setSelectedCuartel] = useState<OperationalArea | null>(null);
+  const [cuarteles, setCuarteles] = useState<IOperationalArea[]>([]);
+  const [selectedCuartel, setSelectedCuartel] = useState<IOperationalArea | null>(null);
   
   // Products state
   const [products, setProducts] = useState<IProducts[]>([]);
@@ -1010,6 +1011,21 @@ const OrdenAplicacion = () => {
       render: renderWorkState,
     }
   ];
+
+  // ====================================
+  // FIELD RULES FOR MAIN FORM
+  // ====================================
+  const mainFormRules: FormGridRules = useMemo(() => {
+    return createOrdenAplicacionRules({
+      cuartelesOptions: cuarteles,
+      taskOptions: allTasks, // Usar allTasks para tener acceso completo a taskTypeId
+      taskTypeOptions: taskTypes,
+      workerOptions: workerList.map(worker => ({
+        ...worker,
+        fullName: `${worker.names} ${worker.lastName}`
+      }))
+    });
+  }, [cuarteles, allTasks, taskTypes, workerList]);
 
   // ====================================
   // FIELD RULES FOR WORKERS GRID
@@ -2965,6 +2981,7 @@ const OrdenAplicacion = () => {
             ) : (
               <DynamicForm
               enabledButtons={false}
+              fieldRules={mainFormRules}
               sections={formSections.map(section => {
               if (section.id === "orden-info-basic") {
                 return {
@@ -2981,25 +2998,15 @@ const OrdenAplicacion = () => {
                             value: value,
                             label: cuartel.areaName
                           };
-                        }),
-                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
-                          console.log("Barracks changed to:", value);
-                          handleCuartelChange(value, formSetValue);
-                        }
+                        })
+                        // onChange removido - ahora manejado por fieldRules
                       };
                     }
-                    if (field.id === "species") {
+                    if (field.id === "species" || field.id === "variety") {
                       return {
                         ...field,
-                        value: selectedCuartel?.varietySpecies || "",
                         disabled: true
-                      };
-                    }
-                    if (field.id === "variety") {
-                      return {
-                        ...field,
-                        value: selectedCuartel?.variety || "",
-                        disabled: true
+                        // value removido - ahora manejado por fieldRules
                       };
                     }
                     return field;
@@ -3021,11 +3028,8 @@ const OrdenAplicacion = () => {
                             value: value,
                             label: type.name
                           };
-                        }),
-                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
-                          console.log("TaskType changed to:", value);
-                          handleTaskTypeChange(value, formSetValue, formGetValues);
-                        }
+                        })
+                        // onChange removido - ahora manejado por fieldRules
                       };
                     }
                     if (field.id === "task") {
@@ -3041,11 +3045,8 @@ const OrdenAplicacion = () => {
                             value: value,
                             label: task.taskName
                           };
-                        }),
-                        onChange: (value: string, formSetValue: any, formGetValues: any) => {
-                          console.log("Task changed to:", value);
-                          handleTaskChange(value, formSetValue);
-                        }
+                        })
+                        // onChange removido - ahora manejado por fieldRules
                       };
                     }
                     return field;
@@ -3062,41 +3063,18 @@ const OrdenAplicacion = () => {
                     }));
 
                     if (field.id === "responsibles.supervisor.userId") {
-                      return {
-                        ...field,
-                        options: workerOptions,
-                        onChange: (value: string, formSetValue: any) => {
-                          handleResponsibleChange('supervisor', value, formSetValue);
-                        }
-                      };
+                      return { ...field, options: workerOptions };
                     }
                     if (field.id === "responsibles.planner.userId") {
-                      return {
-                        ...field,
-                        options: workerOptions,
-                        onChange: (value: string, formSetValue: any) => {
-                          handleResponsibleChange('planner', value, formSetValue);
-                        }
-                      };
+                      return { ...field, options: workerOptions };
                     }
                     if (field.id === "responsibles.technicalVerifier.userId") {
-                      return {
-                        ...field,
-                        options: workerOptions,
-                        onChange: (value: string, formSetValue: any) => {
-                          handleResponsibleChange('technicalVerifier', value, formSetValue);
-                        }
-                      };
+                      return { ...field, options: workerOptions };
                     }
                     if (field.id === "responsibles.applicators.0.userId") {
-                      return {
-                        ...field,
-                        options: workerOptions,
-                        onChange: (value: string, formSetValue: any) => {
-                          handleResponsibleChange('applicator', value, formSetValue);
-                        }
-                      };
+                      return { ...field, options: workerOptions };
                     }
+                    // onChange removido de todos los responsibles - ahora manejado por fieldRules
                     return field;
                   })
                 };
