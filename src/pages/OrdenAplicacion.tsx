@@ -1768,7 +1768,9 @@ const OrdenAplicacion = () => {
   const getWizardOptions = () => {
     const cuartelesOptions = cuarteles.map(cuartel => ({
       value: cuartel._id,
-      label: cuartel.areaName
+      label: cuartel.areaName,
+      varietySpecies: cuartel.varietySpecies,
+      variety: cuartel.variety
     }));
 
     const taskTypeOptions = taskTypes.map(taskType => ({
@@ -2976,6 +2978,12 @@ const OrdenAplicacion = () => {
                     applicators: [{ userId: "" }]
                   }
                 }}
+                // Pass raw data arrays (preferred for consistent rules)
+                cuarteles={cuarteles}
+                allTasks={allTasks}
+                taskTypes={taskTypes}
+                workerList={workerList}
+                // Keep legacy options for backward compatibility
                 {...getWizardOptions()}
               />
             ) : (

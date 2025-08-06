@@ -8,6 +8,12 @@ interface WizardOrdenAplicacionProps {
   onComplete: (data: any) => Promise<void> | void;
   onCancel?: () => void;
   defaultValues?: Record<string, any>;
+  // Raw data arrays like in the main form
+  cuarteles?: any[];
+  allTasks?: any[];
+  taskTypes?: any[];
+  workerList?: any[];
+  // Legacy prop support (optional)
   cuartelesOptions?: { value: string; label: string }[];
   taskTypeOptions?: { value: string; label: string }[];
   taskOptions?: { value: string; label: string }[];
@@ -21,6 +27,12 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
   onComplete,
   onCancel,
   defaultValues = {},
+  // Raw data arrays (preferred)
+  cuarteles = [],
+  allTasks = [],
+  taskTypes = [],
+  workerList = [],
+  // Legacy options (fallback)
   cuartelesOptions = [],
   taskTypeOptions = [],
   taskOptions = [],
@@ -29,40 +41,98 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
   verifierOptions = [],
   applicatorOptions = [],
 }) => {
-  // Crear reglas de reactividad para el wizard
+  // Crear reglas de reactividad para el wizard - igual que el formulario principal
   const wizardRules = useMemo(() => {
+    // Use raw data arrays if available, otherwise fall back to legacy options
+    const cuartelesData = cuarteles.length > 0 ? cuarteles : cuartelesOptions.map(option => ({
+      _id: option.value,
+      areaName: option.label,
+      varietySpecies: (option as any).varietySpecies,
+      variety: (option as any).variety
+    }));
+    
+    const tasksData = allTasks.length > 0 ? allTasks : taskOptions.map(option => ({
+      _id: option.value,
+      taskName: option.label,
+      taskTypeId: (option as any).taskTypeId
+    }));
+    
+    const taskTypesData = taskTypes.length > 0 ? taskTypes : taskTypeOptions;
+    
+    const workersData = workerList.length > 0 
+      ? workerList.map(worker => ({
+          ...worker,
+          fullName: `${worker.names} ${worker.lastName}`
+        }))
+      : [
+          ...supervisorOptions,
+          ...plannerOptions,
+          ...verifierOptions,
+          ...applicatorOptions
+        ].reduce((acc: any[], current) => {
+          // Evitar duplicados usando _id
+          if (!acc.find(item => item._id === current.value)) {
+            acc.push({
+              _id: current.value,
+              fullName: current.label,
+              names: current.label.split(' ')[0] || '',
+              lastName: current.label.split(' ').slice(1).join(' ') || ''
+            });
+          }
+          return acc;
+        }, []);
+
     return createOrdenAplicacionRules({
-      cuartelesOptions: cuartelesOptions.map(option => ({
-        _id: option.value,
-        areaName: option.label,
-        varietySpecies: (option as any).species,
-        variety: (option as any).variety
-      })),
-      taskOptions: taskOptions.map(option => ({
-        _id: option.value,
-        taskName: option.label,
-        taskTypeId: (option as any).taskTypeId
-      })),
-      taskTypeOptions: taskTypeOptions,
-      workerOptions: [
-        ...supervisorOptions,
-        ...plannerOptions,
-        ...verifierOptions,
-        ...applicatorOptions
-      ].reduce((acc: any[], current) => {
-        // Evitar duplicados usando _id
-        if (!acc.find(item => item._id === current.value)) {
-          acc.push({
-            _id: current.value,
-            fullName: current.label,
-            names: current.label.split(' ')[0] || '',
-            lastName: current.label.split(' ').slice(1).join(' ') || ''
-          });
-        }
-        return acc;
-      }, [])
+      cuartelesOptions: cuartelesData,
+      taskOptions: tasksData,
+      taskTypeOptions: taskTypesData,
+      workerOptions: workersData
     });
-  }, [cuartelesOptions, taskOptions, taskTypeOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
+  }, [cuarteles, allTasks, taskTypes, workerList, cuartelesOptions, taskOptions, taskTypeOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
+
+  // Generate options for form fields - prioritize raw data arrays
+  const getFormOptions = useMemo(() => {
+    const cuartelesFormOptions = cuarteles.length > 0 
+      ? cuarteles.map(cuartel => ({
+          value: cuartel._id,
+          label: cuartel.areaName
+        }))
+      : cuartelesOptions;
+      
+    const taskTypeFormOptions = taskTypes.length > 0
+      ? taskTypes.map(taskType => ({
+          value: taskType._id || taskType.id,
+          label: taskType.name
+        }))
+      : taskTypeOptions;
+      
+    const taskFormOptions = allTasks.length > 0
+      ? allTasks.map(task => ({
+          value: (task as any)._id || (task as any).id,
+          label: task.taskName
+        }))
+      : taskOptions;
+      
+    const workerFormOptions = workerList.length > 0
+      ? workerList.map(worker => ({
+          value: worker._id || "",
+          label: `${worker.names} ${worker.lastName} (${worker.rut})`
+        }))
+      : [...supervisorOptions, ...plannerOptions, ...verifierOptions, ...applicatorOptions]
+          .reduce((acc: any[], current) => {
+            if (!acc.find(item => item.value === current.value)) {
+              acc.push(current);
+            }
+            return acc;
+          }, []);
+    
+    return {
+      cuarteles: cuartelesFormOptions,
+      taskTypes: taskTypeFormOptions,
+      tasks: taskFormOptions,
+      workers: workerFormOptions
+    };
+  }, [cuarteles, allTasks, taskTypes, workerList, cuartelesOptions, taskTypeOptions, taskOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
 
   // Paso 1: Información Básica y Ubicación
   const step1Sections: SectionConfig[] = [
@@ -93,7 +163,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           name: "barracks",
           placeholder: "Seleccione un cuartel",
           required: true,
-          options: cuartelesOptions
+          options: getFormOptions.cuarteles
         },
         {
           id: "species",
@@ -174,7 +244,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Faena",
           name: "taskType",
           placeholder: "Seleccione una faena",
-          options: taskTypeOptions
+          options: getFormOptions.taskTypes
         },
         {
           id: "task",
@@ -182,7 +252,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Labor",
           name: "task",
           placeholder: "Seleccione una labor",
-          options: taskOptions
+          options: getFormOptions.tasks
         },
         {
           id: "customTask",
@@ -215,7 +285,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Supervisor",
           name: "responsibles.supervisor.userId",
           placeholder: "Seleccione un supervisor",
-          options: supervisorOptions
+          options: getFormOptions.workers
         },
         {
           id: "responsibles.planner.userId",
@@ -223,7 +293,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Planificador",
           name: "responsibles.planner.userId",
           placeholder: "Seleccione un planificador",
-          options: plannerOptions
+          options: getFormOptions.workers
         },
         {
           id: "responsibles.technicalVerifier.userId",
@@ -231,7 +301,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Verificador Técnico",
           name: "responsibles.technicalVerifier.userId",
           placeholder: "Seleccione un verificador técnico",
-          options: verifierOptions
+          options: getFormOptions.workers
         },
         {
           id: "responsibles.applicators.0.userId",
@@ -239,7 +309,7 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Aplicador Principal",
           name: "responsibles.applicators.0.userId",
           placeholder: "Seleccione un aplicador",
-          options: applicatorOptions
+          options: getFormOptions.workers
         }
       ]
     },
