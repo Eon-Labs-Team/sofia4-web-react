@@ -14,6 +14,7 @@ import {
   CheckCircle,
   XCircle,
   Menu,
+  Warehouse,
 } from "lucide-react";
 import { Property } from "@/types/property";
 import { toast } from "@/components/ui/use-toast";
@@ -30,6 +31,14 @@ import { useSidebarStore } from "@/lib/store/sidebarStore";
 import { useAuthStore } from "@/lib/store/authStore";
 import propertyService from "@/_services/propertyService";
 import UserMenu from "../components/layout/UserMenu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import BodegaCentral from "./BodegaCentral";
 
 interface Permission {
   canView: boolean;
@@ -177,6 +186,7 @@ const HomePage = () => {
   const { setPropertyId, clearPropertyId } = useAuthStore();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
   const { toggleSidebar } = React.useContext(SidebarContext);
 
   useEffect(() => {
@@ -237,6 +247,10 @@ const HomePage = () => {
     }
   };
 
+  const handleInventoryClick = () => {
+    setIsInventoryModalOpen(true);
+  };
+
   return (
     <div className="flex-1 h-full overflow-hidden">
       {actionMode && storeActiveAction ? (
@@ -279,8 +293,17 @@ const HomePage = () => {
                 Selecciona un predio para comenzar a trabajar.
               </p>
             </div>
-            <div className="ml-auto">
-              <UserMenu />
+            <div className="flex items-center space-x-4">
+              <Button
+                onClick={handleInventoryClick}
+                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Warehouse className="mr-2 h-4 w-4" />
+                Inventario Central
+              </Button>
+              <div className="ml-auto">
+                <UserMenu />
+              </div>
             </div>
           </div>
           <div className="mt-8">
@@ -298,6 +321,25 @@ const HomePage = () => {
           </div>
         </div>
       )}
+
+      {/* Inventory Central Modal */}
+      <Dialog open={isInventoryModalOpen} onOpenChange={setIsInventoryModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Warehouse className="mr-2 h-5 w-5" />
+              Inventario Central
+            </DialogTitle>
+            <DialogDescription>
+              Gestión centralizada del sistema de inventario - independiente de predios específicos
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden">
+            <BodegaCentral isModal={true} onClose={() => setIsInventoryModalOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
