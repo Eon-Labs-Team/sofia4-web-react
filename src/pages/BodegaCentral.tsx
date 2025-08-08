@@ -21,7 +21,12 @@ import type { IInventoryProduct } from "@eon-lib/eon-mongoose";
 import inventoryProductService from "@/_services/inventoryProductService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";
-import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
+import DynamicForm from "@/components/DynamicForm/DynamicForm";
+import { 
+  getInventoryProductFormSections,
+  getDefaultProductValues,
+  processProductFormData
+} from "@/lib/forms/inventoryForms";
 
 // Render function for structure type
 const renderStructureType = (value: 'unit' | 'series') => {
@@ -136,66 +141,6 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
   const [selectedProduct, setSelectedProduct] = useState<IInventoryProduct | null>(null);
   const { user } = useAuthStore();
 
-  // Form sections for product creation/editing
-  const formSections: SectionConfig[] = [
-    {
-      id: "product-basic",
-      title: "Información Básica del Producto",
-      description: "Datos principales del producto de inventario",
-      fields: [
-        {
-          id: "name",
-          type: "text",
-          label: "Nombre del Producto",
-          name: "name",
-          placeholder: "Ej: Fertilizante NPK 20-20-20",
-          required: true,
-        },
-        {
-          id: "description",
-          type: "textarea",
-          label: "Descripción",
-          name: "description",
-          placeholder: "Descripción detallada del producto",
-          required: false,
-        },
-        {
-          id: "category",
-          type: "text",
-          label: "Categoría",
-          name: "category",
-          placeholder: "Ej: Fertilizantes, Pesticidas, Semillas",
-          required: false,
-        },
-      ],
-    },
-    {
-      id: "product-technical",
-      title: "Información Técnica",
-      description: "Especificaciones técnicas del producto",
-      fields: [
-        {
-          id: "structureType",
-          type: "select",
-          label: "Tipo de Estructura",
-          name: "structureType",
-          required: true,
-          options: [
-            { value: "unit", label: "Unidad" },
-            { value: "series", label: "Serie" },
-          ],
-        },
-        {
-          id: "unit",
-          type: "text",
-          label: "Unidad de Medida",
-          name: "unit",
-          placeholder: "Ej: kg, L, unidades, sacos",
-          required: true,
-        },
-      ],
-    },
-  ];
 
   // Fetch products on component mount
   useEffect(() => {
@@ -251,13 +196,7 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
 
   const handleFormSubmit = async (data: any) => {
     try {
-      const productData = {
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        structureType: data.structureType,
-        unit: data.unit,
-      };
+      const productData = processProductFormData(data);
 
       if (isEditMode && selectedProduct) {
         await inventoryProductService.updateProduct(selectedProduct._id, productData);
@@ -358,18 +297,13 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
           </DialogHeader>
 
           <DynamicForm
-            sections={formSections}
+            sections={getInventoryProductFormSections()}
             onSubmit={handleFormSubmit}
-            defaultValues={selectedProduct || {
-              name: "",
-              description: "",
-              category: "",
-              structureType: "unit",
-              unit: "",
-            }}
-            submitButtonText={isEditMode ? "Actualizar Producto" : "Crear Producto"}
-            cancelButtonText="Cancelar"
-            onCancel={() => setIsDialogOpen(false)}
+            defaultValues={
+              selectedProduct 
+                ? getDefaultProductValues(selectedProduct)
+                : getDefaultProductValues()
+            }
           />
         </DialogContent>
       </Dialog>

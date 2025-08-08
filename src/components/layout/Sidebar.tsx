@@ -107,6 +107,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
         label: "Configuraciones", 
         children: [
           { icon: <Building2 size={16} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
+          { icon: <Building2 size={16} />, label: "Bodegas", path: "/bodegas" },
           { icon: <Wrench size={16} />, label: "Lista Maquinarias", path: "/lista-maquinarias" },
           { icon: <Users size={16} />, label: "Lista Trabajadores", path: "/lista-trabajadores" },
           { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },

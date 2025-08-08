@@ -261,6 +261,7 @@ export const ENDPOINTS = {
     byName: (name: string) => `${API_BASE_URL}/lot/byName/${name}`,
     findAll: `${API_BASE_URL}/lot/findAll`,
     byProductId: (productId: string) => `${API_BASE_URL}/lot/byProductId/${productId}`,
+    byWarehouseId: (warehouseId: string) => `${API_BASE_URL}/lot/byWarehouseId/${warehouseId}`,
     activeByProductId: (productId: string) => `${API_BASE_URL}/lot/activeByProductId/${productId}`,
     activeByProductIdOrderedByExpiry: (productId: string) => `${API_BASE_URL}/lot/activeByProductIdOrderedByExpiry/${productId}`,
     activeByProductIdAndPropertyId: (productId: string, propertyId: string) => `${API_BASE_URL}/lot/activeByProductIdAndPropertyId/${productId}/${propertyId}`,

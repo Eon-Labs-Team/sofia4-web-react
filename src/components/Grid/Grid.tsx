@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface GridProps {
   data: any[];
@@ -29,6 +31,7 @@ interface GridProps {
   expandableContent?: (row: any) => React.ReactNode;
   gridId: string;
   actions?: (row: any) => React.ReactNode;
+  isLoading?: boolean;
 }
 
 const GridComponent: React.FC<GridProps> = ({
@@ -40,6 +43,7 @@ const GridComponent: React.FC<GridProps> = ({
   expandableContent,
   gridId,
   actions,
+  isLoading = false,
 }) => {
   // Get grid state from Zustand
   const {
@@ -68,6 +72,40 @@ const GridComponent: React.FC<GridProps> = ({
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Helper: wrap any element with a `title` prop in a tooltip, recurse into children
+  const wrapWithTooltips = (node: React.ReactNode): React.ReactNode => {
+    if (!React.isValidElement(node)) return node;
+
+    // Recurse into children first
+    const children = node.props?.children as React.ReactNode;
+    const wrappedChildren = children
+      ? React.Children.map(children, (child) => wrapWithTooltips(child))
+      : children;
+
+    const cloned = React.cloneElement(node as React.ReactElement, {
+      ...node.props,
+      // Remove native title to avoid default browser tooltip duplicating
+      title: undefined,
+      children: wrappedChildren,
+    });
+
+    const tooltipText: string | undefined = node.props?.title;
+    if (tooltipText) {
+      return (
+        <Tooltip key={(node as any).key ?? undefined}>
+          <TooltipTrigger asChild>
+            {cloned}
+          </TooltipTrigger>
+          <TooltipContent>
+            {tooltipText}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return cloned;
+  };
 
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
@@ -213,7 +251,40 @@ const GridComponent: React.FC<GridProps> = ({
     ));
   };
 
+  const renderLoadingRows = () => {
+    const visibleColumns = columns.filter((col) => col.visible);
+    const rows = Array.from({ length: Math.min(5, Math.max(3, pageSize)) });
+
+    return rows.map((_, idx) => (
+      <tr key={`loading-row-${idx}`} className="border-b">
+        {expandableContent && (
+          <td className="px-4 py-3 w-8">
+            <Skeleton className="h-6 w-6 rounded" />
+          </td>
+        )}
+        {visibleColumns.map((col) => (
+          <td key={`loading-cell-${idx}-${col.id}`} className="px-4 py-3">
+            <Skeleton className="h-4 w-[60%]" />
+          </td>
+        ))}
+        {actions && (
+          <td className="px-4 py-3">
+            <div className="flex space-x-2">
+              <Skeleton className="h-6 w-6 rounded" />
+              <Skeleton className="h-6 w-6 rounded" />
+              <Skeleton className="h-6 w-6 rounded" />
+            </div>
+          </td>
+        )}
+      </tr>
+    ));
+  };
+
   const renderRows = () => {
+    if (isLoading) {
+      return renderLoadingRows();
+    }
+
     if (!paginatedData || paginatedData.length === 0) {
       return (
         <tr>
@@ -268,7 +339,7 @@ const GridComponent: React.FC<GridProps> = ({
             {renderCells(row)}
             {actions && (
               <td className="px-4 py-3 whitespace-nowrap text-sm">
-                {actions(row)}
+                {wrapWithTooltips(actions(row))}
               </td>
             )}
           </tr>
@@ -345,7 +416,7 @@ const GridComponent: React.FC<GridProps> = ({
                   {renderCells(row)}
                   {actions && (
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      {actions(row)}
+                      {wrapWithTooltips(actions(row))}
                     </td>
                   )}
                 </tr>
@@ -414,18 +485,26 @@ const GridComponent: React.FC<GridProps> = ({
 
       {renderToolbar()}
 
-      <div className="overflow-hidden shadow-md ring-1 ring-border rounded-lg">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              {renderHeaders()}
-            </thead>
-            <tbody className="bg-background divide-y divide-border">
-              {renderRows()}
-            </tbody>
-          </table>
+      <TooltipProvider>
+        <div className="overflow-hidden shadow-md ring-1 ring-border rounded-lg relative">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                {renderHeaders()}
+              </thead>
+              <tbody className="bg-background divide-y divide-border">
+                {renderRows()}
+              </tbody>
+            </table>
+          </div>
+
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
+              <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            </div>
+          )}
         </div>
-      </div>
+      </TooltipProvider>
 
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-background border-t border-border">

@@ -84,6 +84,32 @@ class InventoryLotService {
   }
 
   /**
+   * Get lots by warehouse ID
+   */
+  async getByWarehouseId(warehouseId: string): Promise<IInventoryLot[]> {
+    try {
+      const { propertyId } = useAuthStore.getState();
+      
+      const response = await fetch(ENDPOINTS.inventoryLot.byWarehouseId(warehouseId), {
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': propertyId?.toString() || '',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const lots = await response.json();
+      return lots.data || lots;
+    } catch (error) {
+      console.error(`Error fetching lots for warehouse ${warehouseId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get active lots by product ID
    */
   async getActiveByProductId(productId: string): Promise<IInventoryLot[]> {

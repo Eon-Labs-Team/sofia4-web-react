@@ -101,6 +101,51 @@ class InventoryMovementService {
   }
 
   /**
+   * Get movements history for all products in a warehouse
+   * @param warehouseId Warehouse ID
+   * @param productIds Array of product IDs that have lots in this warehouse
+   * @returns Promise with all movements data sorted by creation date
+   */
+  async getWarehouseHistory(warehouseId: string, productIds: string[]): Promise<IInventoryMovement[]> {
+    try {
+      const allMovements: IInventoryMovement[] = [];
+      
+      // Fetch history for each product in the warehouse
+      for (const productId of productIds) {
+        try {
+          const { propertyId } = useAuthStore.getState();
+          
+          const response = await fetch(ENDPOINTS.inventoryMovement.history(warehouseId, productId), {
+            headers: {
+              'Content-Type': 'application/json',
+              'propertyId': propertyId?.toString() || '',
+            },
+          });
+          
+          if (response.ok) {
+            const movements = await response.json();
+            const movementsData = movements.data || movements;
+            if (Array.isArray(movementsData)) {
+              allMovements.push(...movementsData);
+            }
+          }
+        } catch (productError) {
+          console.warn(`Error fetching history for product ${productId} in warehouse ${warehouseId}:`, productError);
+          // Continue with other products even if one fails
+        }
+      }
+      
+      // Sort by creation date, most recent first
+      allMovements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      return allMovements;
+    } catch (error) {
+      console.error(`Error fetching warehouse history for ${warehouseId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get movements by lot ID
    * @param lotId Lot ID
    * @returns Promise with movements data
