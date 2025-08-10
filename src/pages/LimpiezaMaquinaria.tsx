@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IMachineryCleaning } from "@/types/IMachineryCleaning";
+import { IMachineryCleaning } from "@eon-lib/eon-mongoose";
 import machineryCleaningService from "@/_services/machineryCleaningService";
 import { toast } from "@/components/ui/use-toast";
 

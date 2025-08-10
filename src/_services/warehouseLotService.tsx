@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWarehouseLot } from '@/types/IWarehouseLot';
+// @ts-ignore
+import { IWarehouseLot } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**

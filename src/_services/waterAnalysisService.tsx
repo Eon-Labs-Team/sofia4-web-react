@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWaterAnalysis } from '@/types/IWaterAnalysis';
+import { IWaterAnalysis } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing water analysis data

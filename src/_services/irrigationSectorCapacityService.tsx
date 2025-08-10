@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IIrrigationSectorCapacity } from '@/types/IIrrigationSectorCapacity';
+import { IIrrigationSectorCapacity } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing irrigation sector capacity data

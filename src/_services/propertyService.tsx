@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { Property } from '@/types/property';
+import { IProperty } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing property data
@@ -9,7 +9,7 @@ class PropertyService {
    * Get all properties
    * @returns Promise with all properties
    */
-  async findAll(): Promise<Property[]> {
+  async findAll(): Promise<IProperty[]> {
     try {
       const response = await fetch(ENDPOINTS.properties.base, {
         headers: {
@@ -34,9 +34,9 @@ class PropertyService {
    * @param property Property data
    * @returns Promise with created property
    */
-  async createProperty(property: Partial<Property>): Promise<Property> {
+  async createProperty(property: Partial<IProperty>): Promise<IProperty> {
     try {
-      const propertyData: Partial<Property> = {
+      const propertyData: Partial<IProperty> = {
         // General Property Data
         propertyType: property.propertyType,
         country: property.country,
@@ -86,6 +86,7 @@ class PropertyService {
         bpaManagerEmail: property.bpaManagerEmail,
         bpaManagerPhone: property.bpaManagerPhone,
 
+        // @ts-ignore
         enterpriseId: property.enterpriseId
       };
 
@@ -114,7 +115,7 @@ class PropertyService {
    * @param property Updated property data
    * @returns Promise with updated property
    */
-  async updateProperty(id: string | number, property: Partial<Property>): Promise<Property> {
+  async updateProperty(id: string | number, property: Partial<IProperty>): Promise<IProperty> {
     try {
       const response = await fetch(ENDPOINTS.properties.byId(id), {
         method: 'PATCH',
@@ -167,7 +168,7 @@ class PropertyService {
    * @param id Property ID
    * @returns Promise with property data
    */
-  async findById(id: string | number): Promise<Property> {
+  async findById(id: string | number): Promise<IProperty> {
     try {
       const response = await fetch(ENDPOINTS.properties.byId(id), {
         headers: {
@@ -191,7 +192,7 @@ class PropertyService {
    * @param name Property name
    * @returns Promise with property data
    */
-  async findByName(name: string): Promise<Property> {
+  async findByName(name: string): Promise<IProperty> {
     try {
       const response = await fetch(ENDPOINTS.properties.byName(name), {
         headers: {

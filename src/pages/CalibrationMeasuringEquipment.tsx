@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ICalibrationMeasuringEquipment } from '@/types/ICalibrationMeasuringEquipment';
+import { ICalibrationMeasuringEquipment } from '@eon-lib/eon-mongoose';
 import calibrationMeasuringEquipmentService from '@/_services/calibrationMeasuringEquipmentService';
 import { Button } from '@/components/ui/button';
 import { Plus, Pencil, Trash2 } from 'lucide-react';

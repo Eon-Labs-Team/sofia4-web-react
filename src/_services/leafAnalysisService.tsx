@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ILeafAnalysisRecord } from '@/types/ILeafAnalysisRecord';
+import { ILeafAnalysisRecord } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing leaf analysis data

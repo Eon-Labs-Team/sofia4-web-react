@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ITrainingTalks } from '@/types/ITrainingTalks';
+import { ITrainingTalks } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing training talks data

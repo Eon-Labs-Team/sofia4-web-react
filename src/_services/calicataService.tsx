@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ICalicata } from '@/types';
+import { ICalicata } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing calicata (soil pit) data

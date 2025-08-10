@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMachineryCleaning } from '@/types/IMachineryCleaning';
+import { IMachineryCleaning } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing machinery cleaning data

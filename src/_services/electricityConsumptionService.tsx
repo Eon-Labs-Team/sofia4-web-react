@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IElectricityConsumption } from '@/types/IElectricityConsumption';
+import { IElectricityConsumption } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing electricity consumption data

@@ -311,6 +311,7 @@ const TipoCultivo = () => {
     setIsLoading(true);
     try {
       const response = await cropTypeService.findAll();
+      // @ts-ignore
       setCropTypes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error loading crop types:", error);

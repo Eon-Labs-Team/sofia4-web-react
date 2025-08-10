@@ -51,6 +51,8 @@ import { IMachinery } from "@eon-lib/eon-mongoose";
 import { IMachineryList } from "@eon-lib/eon-mongoose";
 import { IProducts } from "@eon-lib/eon-mongoose";
 import { IProductCategory } from "@eon-lib/eon-mongoose";
+// @ts-ignore
+import { IWarehouseProduct } from "@eon-lib/eon-mongoose";
 import { ITaskType } from "@eon-lib/eon-mongoose";
 import { ITask } from "@eon-lib/eon-mongoose";
 import workService from "@/_services/workService";
@@ -1841,6 +1843,7 @@ const OrdenAplicacion = () => {
       if (selectedTask) {
         // Convert ITask to the format expected by IWork.task
         processedData.task = {
+          // @ts-ignore
           _id: (selectedTask as any)._id || (selectedTask as any).id,
           id: (selectedTask as any)._id || (selectedTask as any).id,
           taskTypeId: selectedTask.taskTypeId,

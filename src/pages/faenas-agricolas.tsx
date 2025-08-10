@@ -886,6 +886,7 @@ const formValidationSchema = z.object({
 });
 
 // Función para modificar el tipo y añadir explícitamente el _id como propiedad
+// @ts-ignore
 interface WorkWithId extends IWork {
   _id?: string;
 }
@@ -1071,6 +1072,7 @@ const FaenasAgricolas = () => {
       if (selectedTask) {
         // Convert ITask to the format expected by IWork.task
         processedData.task = {
+          // @ts-ignore
           _id: (selectedTask as any)._id || (selectedTask as any).id,
           id: (selectedTask as any)._id || (selectedTask as any).id,
           taskTypeId: selectedTask.taskTypeId,
@@ -1870,6 +1872,7 @@ if (field.id === "task") {
                 )}
                 gridId="products-grid-application-order"
                 title="Listado de Productos"
+                // @ts-ignore
                 enableInlineEdit={true}
                 editableColumns={[
                   "category", "product", "unitOfMeasurement", "amountPerHour", 

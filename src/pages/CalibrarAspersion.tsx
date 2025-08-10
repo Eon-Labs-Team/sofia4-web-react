@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICalibrateSprinkler } from "@/types/ICalibrateSprinkler";
+import { ICalibrateSprinkler } from "@eon-lib/eon-mongoose";
 import calibrateSprinklerService from "@/_services/calibrateSprinklerService";
 import { toast } from "@/components/ui/use-toast";
 

@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IAnimalAdmission } from "@/types/IAnimalAdmission";
+import { IAnimalAdmission } from "@eon-lib/eon-mongoose";
 import animalAdmissionService from "@/_services/animalAdmissionService";
 import { toast } from "@/components/ui/use-toast";
 

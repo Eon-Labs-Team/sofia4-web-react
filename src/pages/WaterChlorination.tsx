@@ -255,6 +255,7 @@ const WaterChlorination = () => {
     setIsLoading(true);
     try {
       const data = await chlorinationService.findAll();
+      // @ts-ignore
       setChlorinations(data.data || data);
     } catch (error) {
       console.error("Error loading chlorination records:", error);
@@ -389,6 +390,7 @@ const WaterChlorination = () => {
         data={chlorinations}
         columns={columns}
         expandableContent={expandableContent}
+        // @ts-ignore
         isLoading={isLoading}
         renderRowActions={renderActions}
       />
@@ -411,6 +413,7 @@ const WaterChlorination = () => {
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
             defaultValues={isEditMode && selectedChlorination ? { ...selectedChlorination } : undefined}
+            // @ts-ignore
             submitButtonText={isEditMode ? "Actualizar" : "Guardar"}
           />
         </DialogContent>

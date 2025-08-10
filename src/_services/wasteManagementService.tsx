@@ -1,5 +1,5 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
-import { IWasteManagement } from '@/types/IWasteManagement';
+import { IWasteManagement } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing waste management data

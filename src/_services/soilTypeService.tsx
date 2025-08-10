@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ISoilType } from '@/types/ISoilType';
+import { ISoilType } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing soil type data

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IBackPumpCalculation } from '@/types/IBackPumpCalculation';
+import { IBackPumpCalculation } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing back pump calculation data

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IChlorineRegistration } from '@/types/IChlorineRegistration';
+import { IChlorineRegistration } from '@eon-lib/eon-mongoose';
 
 interface APIResponse<T> {
   data: T[];

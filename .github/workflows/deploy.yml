@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docker image
+        run: docker build -t sofia-web:v1.0.0 .
+
+      - name: Deploy to Debian server
+        run: |
+          cd /home/pthgco
+          docker-compose up -d --remove-orphans
+
+      - name: Build Frontend Files
+        run: npm run build --prod
+
+      - name: Updating website
+        run: sudo rsync -av --delete --exclude '.htaccess' ./dist/ /var/www/html/

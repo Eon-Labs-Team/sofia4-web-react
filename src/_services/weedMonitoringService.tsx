@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWeedMonitoring } from '@/types/IWeedMonitoring';
+import { IWeedMonitoring } from '@eon-lib/eon-mongoose';
 
 interface ApiResponse<T> {
   data: T[];

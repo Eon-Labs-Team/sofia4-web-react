@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMonitoringOfPhenologicalState } from '@/types/IMonitoringOfPhenologicalState';
+import { IMonitoringOfPhenologicalState } from '@eon-lib/eon-mongoose';
 
 interface ApiResponse<T> {
   data: T[];

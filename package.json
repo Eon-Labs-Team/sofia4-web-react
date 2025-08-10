@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc ; vite build",
+    "build": "tsc && vite build",
     "build-no-errors": "tsc ; vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "types:supabase": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts"
   },
   "dependencies": {
-    "@eon-lib/eon-mongoose": "Eon-Labs-Team/eon-sofia-mongoose",
+    "@eon-lib/eon-mongoose": "https://apis.sofiagestionagricola.cl/eon-libreries/sofia-mongoose-lib-v1.0.0.tgz",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
