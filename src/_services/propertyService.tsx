@@ -86,6 +86,7 @@ class PropertyService {
         bpaManagerEmail: property.bpaManagerEmail,
         bpaManagerPhone: property.bpaManagerPhone,
 
+        // @ts-ignore
         enterpriseId: property.enterpriseId
       };
 

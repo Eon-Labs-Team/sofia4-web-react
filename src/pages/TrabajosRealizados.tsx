@@ -447,6 +447,7 @@ const TrabajosRealizados = () => {
         quadrille: data.quadrille,
         workingDay: data.workingDay,
         paymentMethod: data.paymentMethod,
+        // @ts-ignore
         totalHectares: data.totalHectares,
         overtime: data.overtime,
         bond: data.bond,

@@ -57,6 +57,7 @@ class WorkerService {
         totalHoursYield: worker.totalHoursYield,
         overtime: worker.overtime,
         bonus: worker.bonus,
+        // @ts-ignore
         bond: worker.bond,
         yieldValue: worker.yieldValue,
         dayValue: worker.dayValue,
