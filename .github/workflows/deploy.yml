@@ -28,4 +28,4 @@ jobs:
         run: npm run build --prod
 
       - name: Updating website
-        run: sudo rsync -av --delete --exclude '.htaccess' ./www/ /var/www/html/
+        run: sudo rsync -av --delete --exclude '.htaccess' ./dist/ /var/www/html/
