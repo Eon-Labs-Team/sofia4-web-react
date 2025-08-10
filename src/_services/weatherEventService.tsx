@@ -1,5 +1,5 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
-import { IWeatherEvent } from '@/types/IWeatherEvent';
+import { IWeatherEvent } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing weather events data

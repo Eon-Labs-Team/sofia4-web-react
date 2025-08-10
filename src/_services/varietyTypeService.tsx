@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IVarietyType } from '@/types/IVarietyType';
+import { IVarietyType } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing variety types

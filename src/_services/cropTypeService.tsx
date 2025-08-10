@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ICropType } from '@/types/ICropType';
+import { ICropType } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing crop type data

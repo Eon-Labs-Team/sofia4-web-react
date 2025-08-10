@@ -21,7 +21,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ILeafAnalysisRecord } from "@/types/ILeafAnalysisRecord";
+import { ILeafAnalysisRecord } from "@eon-lib/eon-mongoose";
 import leafAnalysisService from "@/_services/leafAnalysisService";
 import { toast } from "@/components/ui/use-toast";
 

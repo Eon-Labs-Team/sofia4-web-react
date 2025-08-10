@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ISubCategoryProduct } from '@/types/ISubCategoryProduct';
+import { ISubCategoryProduct } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing product subcategories

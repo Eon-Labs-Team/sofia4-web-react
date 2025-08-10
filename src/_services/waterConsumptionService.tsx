@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWaterConsumption } from '@/types/IWaterConsumption';
+import { IWaterConsumption } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing water consumption data

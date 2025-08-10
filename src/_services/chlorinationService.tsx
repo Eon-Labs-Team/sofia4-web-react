@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IChlorination } from '@/types/IChlorination';
+import { IChlorination } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing water chlorination data

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWork } from '@/types/IWork';
+import { IWork } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**

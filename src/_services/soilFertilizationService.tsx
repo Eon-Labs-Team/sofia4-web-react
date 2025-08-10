@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ISoilFertilization } from '@/types/ISoilFertilization';
+import { ISoilFertilization } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing soil fertilization data

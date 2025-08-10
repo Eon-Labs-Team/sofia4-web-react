@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IInventoryMovement } from '@/types/IInventoryMovement';
+import { IInventoryMovement } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**
@@ -145,11 +145,11 @@ class InventoryMovementService {
    * @param movement Movement data
    * @returns Promise with created movement
    */
-  async createMovement(movement: Partial<IInventoryMovement>): Promise<IInventoryMovement> {
+  async createMovement(movement: Partial<any>): Promise<IInventoryMovement> {
     try {
       const { propertyId } = useAuthStore.getState();
       
-      const movementData: Partial<IInventoryMovement> = {
+      const movementData: Partial<any> = {
         productId: movement.productId,
         lotId: movement.lotId,
         warehouseId: movement.warehouseId,

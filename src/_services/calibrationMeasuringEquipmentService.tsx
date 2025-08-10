@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ICalibrationMeasuringEquipment } from '@/types/ICalibrationMeasuringEquipment';
+import { ICalibrationMeasuringEquipment } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing calibration measuring equipment data

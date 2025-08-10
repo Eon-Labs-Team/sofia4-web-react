@@ -402,6 +402,7 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
               <FormLabel>{field.label}</FormLabel>
               <div className="mt-2">
                 <Grid
+                  gridId={`${field.name}-grid`}
                   data={field.gridConfig.data || []}
                   columns={field.gridConfig.columns || []}
                   title={field.gridConfig.title || field.label}

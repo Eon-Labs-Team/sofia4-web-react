@@ -15,7 +15,7 @@ import {
   XCircle,
   Menu,
 } from "lucide-react";
-import { Property } from "@/types/property";
+import { IProperty } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
 import {
   Table,
@@ -78,7 +78,7 @@ const PropertiesTable = ({
   properties, 
   onActionClick 
 }: { 
-  properties: Property[], 
+  properties: IProperty[], 
   onActionClick: (actionId: string, propertyId: string | number) => void 
 }) => {
   const { user } = useAuthStore();
@@ -175,7 +175,7 @@ const HomePage = () => {
   } = useSidebarStore();
   
   const { setPropertyId, clearPropertyId } = useAuthStore();
-  const [properties, setProperties] = useState<Property[]>([]);
+  const [properties, setProperties] = useState<IProperty[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toggleSidebar } = React.useContext(SidebarContext);
 

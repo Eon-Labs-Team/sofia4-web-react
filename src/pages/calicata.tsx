@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICalicata } from "@/types";
+import { ICalicata } from "@eon-lib/eon-mongoose";
 import calicataService from "@/_services/calicataService";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
@@ -295,6 +295,7 @@ const Calicata = () => {
     setIsLoading(true);
     try {
       const data = await calicataService.findAll();
+      // @ts-ignore
       setCalicatas(data.data || data);
     } catch (error) {
       console.error("Error loading calicatas:", error);
@@ -427,6 +428,7 @@ const Calicata = () => {
       <Grid
         data={calicatas}
         columns={columns}
+        // @ts-ignore
         renderExpandedContent={expandableContent}
         renderRowActions={renderActions}
         isLoading={isLoading}
@@ -451,6 +453,7 @@ const Calicata = () => {
             sections={formSections}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
+            // @ts-ignore
             initialValues={isEditMode && selectedCalicata ? selectedCalicata : undefined}
             submitButtonLabel={isEditMode ? "Actualizar" : "Agregar"}
           />

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMeasurementUnits } from '@/types/IMeasurementUnits';
+import { IMeasurementUnits } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing measurement units data

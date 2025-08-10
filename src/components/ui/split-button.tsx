@@ -25,6 +25,11 @@ export interface SplitButtonProps extends Omit<ButtonProps, "onClick"> {
   splitVariant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
 }
 
+interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  className?: string;
+  ref?: React.Ref<HTMLDivElement>;
+}
+
 const SplitButton = React.forwardRef<HTMLDivElement, SplitButtonProps>(
   ({
     options,
@@ -59,8 +64,13 @@ const SplitButton = React.forwardRef<HTMLDivElement, SplitButtonProps>(
 
     const buttonVariant = splitVariant || variant;
 
+    const containerProps: ContainerProps = {
+      className: cn("flex", className),
+      ref
+    };
+
     return (
-      <div ref={ref} className={cn("flex", className)} {...props}>
+      <div {...containerProps}>
         {/* Primary Button */}
         <Button
           variant={buttonVariant}

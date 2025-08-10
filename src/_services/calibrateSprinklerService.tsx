@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ICalibrateSprinkler } from '@/types/ICalibrateSprinkler';
+import { ICalibrateSprinkler } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing calibrate sprinkler data

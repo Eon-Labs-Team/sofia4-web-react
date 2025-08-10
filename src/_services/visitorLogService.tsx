@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IVisitorLog } from '@/types/IVisitorLog';
+import { IVisitorLog } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**
@@ -45,6 +45,7 @@ class VisitorLogService {
     try {
       const visitorLogData: Partial<IVisitorLog> = {
         ...visitorLog,
+        // @ts-ignore
         propertyId, // Add propertyId to the visitor log data
         state: visitorLog.state !== undefined ? visitorLog.state : true
       };

@@ -158,6 +158,7 @@ const TiposSuelo = () => {
     try {
       const data = await soilTypeService.findAll();
       // Handle different API response formats
+      // @ts-ignore
       setSoilTypes(Array.isArray(data) ? data : (data?.data || []));
     } catch (error) {
       console.error("Error loading soil types:", error);

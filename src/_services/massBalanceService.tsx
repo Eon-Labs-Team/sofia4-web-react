@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMassBalance } from '@/types/IMassBalance';
+import { IMassBalance } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing mass balance data

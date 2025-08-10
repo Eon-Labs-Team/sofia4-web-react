@@ -589,6 +589,7 @@ const SoilAnalysis = () => {
     setIsLoading(true);
     try {
       const data = await soilAnalysisService.findAll();
+      // @ts-ignore
       setSoilAnalyses(data.data);
     } catch (error) {
       console.error("Error loading soil analyses:", error);

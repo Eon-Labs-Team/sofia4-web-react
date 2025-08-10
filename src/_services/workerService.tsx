@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWorkers } from '@/types/IWorkers';
+import { IWorkers } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**
@@ -42,11 +42,12 @@ class WorkerService {
    * @param worker Worker data
    * @returns Promise with created worker
    */
-  async createWorker(worker: Partial<IWorkers>): Promise<IWorkers> {
+  async createWorker(worker: Partial<any>): Promise<IWorkers> {
     try {
       const { propertyId, user } = useAuthStore.getState();
       
       const workerData: Partial<IWorkers> = {
+        // @ts-ignore
         classification: worker.classification,
         worker: worker.worker,
         quadrille: worker.quadrille,
@@ -113,6 +114,7 @@ class WorkerService {
     try {
       const { propertyId } = useAuthStore.getState();
       const workerData = { ...worker};
+      // @ts-ignore
       delete workerData.__v;
       
       // Add propertyId if available

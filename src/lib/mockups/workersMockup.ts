@@ -1,6 +1,7 @@
-import { IWorkerList } from '@/types/IWorkerList';
+import { IWorkerList } from '@eon-lib/eon-mongoose';
 
 export const workersMockup: IWorkerList[] = [
+  // @ts-ignore
   {
     // Document base properties
     _id: "worker_001",
@@ -124,6 +125,7 @@ export const workersMockup: IWorkerList[] = [
     amountInputCompany: 427500,
     state: true,
   },
+  // @ts-ignore
   {
     // Document base properties
     _id: "worker_002",
@@ -247,6 +249,7 @@ export const workersMockup: IWorkerList[] = [
     amountInputCompany: 368600,
     state: true,
   },
+  // @ts-ignore
   {
     // Document base properties
     _id: "worker_003",

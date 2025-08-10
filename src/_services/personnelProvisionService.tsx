@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IPersonnelProvision } from '@/types/IPersonnelProvision';
+import { IPersonnelProvision } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing personnel provision data

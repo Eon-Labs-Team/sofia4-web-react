@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { useAuthStore } from '@/lib/store/authStore';
-import { IProductCategory } from '@/types/IProductCategory';
+import { IProductCategory } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing product categories

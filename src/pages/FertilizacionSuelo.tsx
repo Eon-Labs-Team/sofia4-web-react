@@ -11,7 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import Grid from "@/components/Grid/Grid";
 import { Column } from "@/lib/store/gridStore";
 import DynamicForm, { FieldType, SectionConfig } from "@/components/DynamicForm/DynamicForm";
-import { ISoilFertilization } from "@/types/ISoilFertilization";
+import { ISoilFertilization } from "@eon-lib/eon-mongoose";
 import soilFertilizationService from "@/_services/soilFertilizationService";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import * as z from "zod";

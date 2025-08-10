@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWorkers } from "@/types/IWorkers";
+import { IWorkers } from "@eon-lib/eon-mongoose";
 import workerService from "@/_services/workerService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -439,6 +439,7 @@ const TrabajosRealizados = () => {
   const handleUpdateTrabajo = async (id: string | number, data: any) => {
     try {
       await workerService.updateWorker(id, {
+        // @ts-ignore
         classification: data.classification,
         worker: {
           id: data.worker.id

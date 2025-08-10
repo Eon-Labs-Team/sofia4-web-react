@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { CrewList } from '@/types/crewList';
+import { ICrewList } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing crew list data
@@ -9,7 +9,7 @@ class CrewListService {
    * Get all crew lists
    * @returns Promise with all crew lists
    */
-  async findAll(): Promise<CrewList[]> {
+  async findAll(): Promise<ICrewList[]> {
     try {
       const response = await fetch(ENDPOINTS.crewList.base, {
         headers: {
@@ -33,9 +33,9 @@ class CrewListService {
    * @param crewList CrewList data
    * @returns Promise with created crew list
    */
-  async createCrew(crewList: Partial<CrewList>): Promise<CrewList> {
+  async createCrew(crewList: Partial<ICrewList>): Promise<ICrewList> {
     try {
-      const crewListData: Partial<CrewList> = {
+      const crewListData: Partial<ICrewList> = {
         endDate: crewList.endDate,
         groupNumber: crewList.groupNumber,
         searchBy: crewList.searchBy,
@@ -69,7 +69,7 @@ class CrewListService {
    * @param crewList Updated crew list data
    * @returns Promise with updated crew list
    */
-  async updateCrew(id: string | number, crewList: Partial<CrewList>): Promise<CrewList> {
+  async updateCrew(id: string | number, crewList: Partial<ICrewList>): Promise<ICrewList> {
     try {
       const response = await fetch(ENDPOINTS.crewList.byId(id), {
         method: 'PATCH',
@@ -122,7 +122,7 @@ class CrewListService {
    * @param id CrewList ID
    * @returns Promise with crew list data
    */
-  async findById(id: string | number): Promise<CrewList> {
+  async findById(id: string | number): Promise<ICrewList> {
     try {
       const response = await fetch(ENDPOINTS.crewList.byId(id), {
         headers: {

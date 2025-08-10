@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWasteRemoval } from '@/types/IWasteRemoval';
+import { IWasteRemoval } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing waste removal data

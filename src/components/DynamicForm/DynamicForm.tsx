@@ -26,7 +26,8 @@ export type FieldType =
   | "search"
   | "autocomplete"
   | "grid"
-  | "selectableGrid";
+  | "selectableGrid"
+  | "signature";
 
 export interface FieldOption {
   label: string;

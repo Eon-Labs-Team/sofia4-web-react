@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IProduct } from '@/types/IProducts';
+import { IProducts } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
 
 /**
@@ -10,7 +10,7 @@ class ProductService {
    * Get all products
    * @returns Promise with all products
    */
-  async findAll(): Promise<IProduct[]> {
+  async findAll(): Promise<IProducts[]> {
     try {
       const { propertyId } = useAuthStore.getState();
       
@@ -42,11 +42,11 @@ class ProductService {
    * @param product Product data
    * @returns Promise with created product
    */
-  async createProduct(product: Partial<IProduct>): Promise<IProduct> {
+  async createProduct(product: Partial<IProducts>): Promise<IProducts> {
     try {
       const { propertyId, user } = useAuthStore.getState();
       
-      const productData: Partial<IProduct> = {
+      const productData: Partial<IProducts> = {
         workId: product.workId,
         category: product.category,
         product: product.product,
@@ -96,7 +96,7 @@ class ProductService {
    * @param product Updated product data
    * @returns Promise with updated product
    */
-  async updateProduct(id: string | number, product: Partial<IProduct>): Promise<IProduct> {
+  async updateProduct(id: string | number, product: Partial<IProducts>): Promise<IProducts> {
     try {
       const { propertyId, user } = useAuthStore.getState();
       const productData = { 
@@ -168,7 +168,7 @@ class ProductService {
    * @param id Product ID
    * @returns Promise with product data
    */
-  async findById(id: string | number): Promise<IProduct> {
+  async findById(id: string | number): Promise<IProducts> {
     try {
       const { propertyId } = useAuthStore.getState();
       

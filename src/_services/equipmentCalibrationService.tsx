@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IEquipmentCalibration } from '@/types/IEquipmentCalibration';
+import { IEquipmentCalibration } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing equipment calibration data

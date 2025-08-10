@@ -21,7 +21,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWaterConsumption } from "@/types/IWaterConsumption";
+import { IWaterConsumption } from "@eon-lib/eon-mongoose";
 import waterConsumptionService from "@/_services/waterConsumptionService";
 import { toast } from "@/components/ui/use-toast";
 

@@ -28,7 +28,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ITrainingTalks } from "@/types/ITrainingTalks";
+import { ITrainingTalks } from "@eon-lib/eon-mongoose";
 import trainingTalksService from "@/_services/trainingTalksService";
 import { toast } from "@/components/ui/use-toast";
 

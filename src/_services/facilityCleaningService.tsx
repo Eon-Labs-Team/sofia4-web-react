@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IFacilityCleaningRecord } from '@/types/IFacilityCleaningRecord';
+import { IFacilityCleaningRecord } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing facility cleaning records

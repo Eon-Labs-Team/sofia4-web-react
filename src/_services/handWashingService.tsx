@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IHandWashingRecord } from '@/types/IHandWashingRecord';
+import { IHandWashingRecord } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing hand washing records

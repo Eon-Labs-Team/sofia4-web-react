@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IIrrigationRecord } from '@/types/IIrrigationRecord';
+import { IIrrigationRecord } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing irrigation record data

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IHygieneSanitation } from '@/types/IHygieneSanitation';
+import { IHygieneSanitation } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing hygiene and sanitation data

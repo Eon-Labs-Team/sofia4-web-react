@@ -24,6 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   // Check for required permission
   if (requiredPermission && user) {
+    // @ts-ignore
     const hasPermission = user.permissions.includes(requiredPermission);
     if (!hasPermission) {
       return <Navigate to="/unauthorized" replace />;

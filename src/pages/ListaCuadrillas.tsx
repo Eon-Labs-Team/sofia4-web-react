@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { CrewList } from "@/types/crewList";
+import { ICrewList } from "@eon-lib/eon-mongoose";
 import crewListService from "@/_services/crewListService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -207,9 +207,9 @@ const formValidationSchema = z.object({
 
 const ListaCuadrillas = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [crewLists, setCrewLists] = useState<CrewList[]>([]);
+  const [crewLists, setCrewLists] = useState<ICrewList[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCrewList, setSelectedCrewList] = useState<CrewList | null>(null);
+  const [selectedCrewList, setSelectedCrewList] = useState<ICrewList | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Fetch crewLists on component mount
@@ -224,10 +224,10 @@ const ListaCuadrillas = () => {
       const result = await crewListService.findAll();
       // Comprobar si la respuesta tiene un formato diferente
       if (result && typeof result === 'object' && 'data' in result) {
-        setCrewLists(result.data as CrewList[]);
+        setCrewLists(result.data as ICrewList[]);
       } else {
         // Si la respuesta es un array directo
-        setCrewLists(result as CrewList[]);
+        setCrewLists(result as ICrewList[]);
       }
     } catch (error) {
       console.error("Error loading crew lists:", error);
@@ -242,10 +242,10 @@ const ListaCuadrillas = () => {
   };
   
   // Function to handle adding a new crew list
-  const handleAddCrewList = async (data: Partial<CrewList>) => {
+  const handleAddCrewList = async (data: Partial<ICrewList>) => {
     try {
       // Preparar datos según la estructura exacta del modelo
-      const crewListData: Partial<CrewList> = {
+      const crewListData: Partial<ICrewList> = {
         endDate: data.endDate ? String(data.endDate) : "",
         groupNumber: data.groupNumber,
         searchBy: data.searchBy,
@@ -276,10 +276,10 @@ const ListaCuadrillas = () => {
   };
   
   // Function to handle updating a crew list
-  const handleUpdateCrewList = async (id: string | number, data: Partial<CrewList>) => {
+  const handleUpdateCrewList = async (id: string | number, data: Partial<ICrewList>) => {
     try {
       // Preparar datos según la estructura exacta del modelo
-      const crewListData: Partial<CrewList> = {
+      const crewListData: Partial<ICrewList> = {
         endDate: data.endDate ? String(data.endDate) : "",
         groupNumber: data.groupNumber,
         searchBy: data.searchBy,
@@ -317,6 +317,7 @@ const ListaCuadrillas = () => {
       await crewListService.softDeleteCrew(id);
       
       // Update the list - either remove or mark as inactive
+      // @ts-ignore
       setCrewLists(prev => 
         prev.map(item => item._id === id ? { ...item, state: false } : item)
       );
@@ -336,7 +337,7 @@ const ListaCuadrillas = () => {
   };
   
   // Function to handle form submission (create or update)
-  const handleFormSubmit = (data: Partial<CrewList>) => {
+  const handleFormSubmit = (data: Partial<ICrewList>) => {
     if (isEditMode && selectedCrewList?._id) {
       handleUpdateCrewList(selectedCrewList._id, data);
     } else {
@@ -345,19 +346,20 @@ const ListaCuadrillas = () => {
   };
   
   // Function to handle edit button click
-  const handleEditClick = (crewList: CrewList) => {
+  const handleEditClick = (crewList: ICrewList) => {
     // Asegurarse de que la fecha sea un string en el formato correcto
     const formattedCrewList = {
       ...crewList,
       endDate: crewList.endDate ? String(crewList.endDate).split('T')[0] : ""
     };
+    // @ts-ignore
     setSelectedCrewList(formattedCrewList);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
   
   // Render actions column with edit and delete buttons
-  const renderActions = (row: CrewList) => {
+  const renderActions = (row: ICrewList) => {
     return (
       <div className="flex space-x-2">
         <Button

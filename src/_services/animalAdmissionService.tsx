@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IAnimalAdmission } from '@/types/IAnimalAdmission';
+import { IAnimalAdmission } from '@eon-lib/eon-mongoose';
 
 /**
  * Service for managing animal admission data
