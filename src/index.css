@@ -6,6 +6,7 @@
 @tailwind utilities;
 
 @layer base {
+
   :root {
     --background: 37.5000 36.3636% 95.6863%;
     --foreground: 8.8889 27.8351% 19.0196%;
@@ -101,6 +102,7 @@
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
+ 
 }
 
 @layer base {
