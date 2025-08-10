@@ -16,7 +16,7 @@ class WarehouseProductService {
       const { propertyId } = useAuthStore.getState();
       
       // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.warehouseProducts.findAll);
+      const url = new URL(ENDPOINTS.inventoryProduct.findAll);
       if (propertyId) {
         url.searchParams.append('propertyId', propertyId.toString());
       }
@@ -50,7 +50,7 @@ class WarehouseProductService {
       const { propertyId } = useAuthStore.getState();
       
       // Create URL with query parameters
-      const url = new URL(ENDPOINTS.warehouseProducts.byId(id));
+      const url = new URL(ENDPOINTS.inventoryProduct.byId(id));
       if (propertyId) {
         url.searchParams.append('propertyId', propertyId.toString());
       }
@@ -83,7 +83,7 @@ class WarehouseProductService {
       const { propertyId } = useAuthStore.getState();
       
       // Create URL with query parameters
-      const url = new URL(ENDPOINTS.warehouseProducts.byName(name));
+      const url = new URL(ENDPOINTS.inventoryProduct.byName(name));
       if (propertyId) {
         url.searchParams.append('propertyId', propertyId.toString());
       }
@@ -134,7 +134,7 @@ class WarehouseProductService {
         productData.propertyId = propertyId;
       }
 
-      const response = await fetch(ENDPOINTS.warehouseProducts.base, {
+      const response = await fetch(ENDPOINTS.inventoryProduct.base, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ class WarehouseProductService {
         productData.propertyId = propertyId;
       }
       
-      const response = await fetch(ENDPOINTS.warehouseProducts.byId(id), {
+      const response = await fetch(ENDPOINTS.inventoryProduct.byId(id), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -215,7 +215,7 @@ class WarehouseProductService {
         stateData.propertyId = propertyId;
       }
       
-      const response = await fetch(ENDPOINTS.warehouseProducts.byId(id), {
+      const response = await fetch(ENDPOINTS.inventoryProduct.byId(id), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

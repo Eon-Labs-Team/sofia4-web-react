@@ -1,24 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
-// import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
 import { Grid } from "@/components/Grid/Grid";
 import { FormGrid } from "@/components/Grid/FormGrid";
 import {
-  Building2,
   CheckCircle,
   XCircle,
   AlertTriangle,
   Plus,
   Edit,
   Trash2,
-  FileSpreadsheet,
-  Save,
-  X,
   BarChart3,
   TrendingUp,
   Clock,
   Ban,
   Map,
-  Eye,
   EyeOff,
   Zap,
   FileText
@@ -31,8 +25,7 @@ import {
   WorkerFormData,
   MachineryFormData,
   ProductFormData,
-  FormGridRules,
-  FieldRule 
+  FormGridRules
 } from "@/lib/validationSchemas";
 import { createOrdenAplicacionRules } from "@/lib/fieldRules/ordenAplicacionRules";
 import { Button } from "@/components/ui/button";
@@ -49,7 +42,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DynamicForm, {
   SectionConfig,
-  FieldType,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { IWork } from "@eon-lib/eon-mongoose";
@@ -76,15 +68,6 @@ import workerListService from "@/_services/workerListService";
 import listaMaquinariasService from "@/_services/listaMaquinariasService";
 import { IOperationalArea } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { workersMockup } from "@/lib/mockups/workersMockup";
 import MapView from "@/components/MapView/MapView";
 import { mapLocations } from "@/lib/mockups/mapMockup";
 import GanttChart from "@/components/GanttChart/GanttChart";
@@ -908,8 +891,8 @@ const OrdenAplicacion = () => {
   
   // Product categories and warehouse products state
   const [productCategories, setProductCategories] = useState<IProductCategory[]>([]);
-  const [warehouseProducts, setWarehouseProducts] = useState<IWarehouseProduct[]>([]);
-  const [filteredWarehouseProducts, setFilteredWarehouseProducts] = useState<IWarehouseProduct[]>([]);
+  const [warehouseProducts, setWarehouseProducts] = useState<any[]>([]);
+  const [filteredWarehouseProducts, setFilteredWarehouseProducts] = useState<any[]>([]);
   
   // State for visibility controls
   const [showMap, setShowMap] = useState(false);
@@ -2472,44 +2455,18 @@ const OrdenAplicacion = () => {
   const stats = calculateStatistics();
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Main Container */}
-      <div 
-        className="mx-auto"
-        style={{ 
-          maxWidth: LAYOUT_CONSTANTS.container.maxWidth,
-          padding: LAYOUT_CONSTANTS.container.padding 
-        }}
-      >
-        {/* 1. HEADER SECTION - SOFIA Title, Description & Action Buttons */}
-        <div 
-          className="bg-background rounded-lg shadow-sm border border-border flex items-center justify-between"
-          style={{ 
-            minHeight: LAYOUT_CONSTANTS.header.minHeight,
-            padding: LAYOUT_CONSTANTS.header.padding,
-            marginBottom: LAYOUT_CONSTANTS.header.marginBottom 
-          }}
-        >
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 
-                className="font-bold text-foreground"
-                style={{ fontSize: DESIGN_TOKENS.typography.fontSize['3xl'] }}
-              >
-                Ordenes de aplicación
-              </h1>
-            </div>
-            <p 
-              className="text-muted-foreground"
-              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.base }}
-            >
-              Gestione y monitoree las órdenes de aplicación de productos
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* View Toggle Buttons */}
-            <div className="flex items-center gap-2 mr-4">
+    <div className="space-y-6 w-full max-w-full overflow-hidden">
+      {/* Content Container - Removido padding extra ya que App.tsx maneja el spacing */}
+      {/* Header Section - Simplificado para trabajar con el breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-shrink-0">
+          <p className="text-muted-foreground">
+            Gestione y monitoree las órdenes de aplicación de productos
+          </p>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* View Toggle Buttons */}
+          <div className="flex items-center gap-2 mr-4">
               <Button
                 variant={showMap ? "default" : "outline"}
                 size="sm"
@@ -2546,37 +2503,33 @@ const OrdenAplicacion = () => {
                   {showActivity ? "Ocultar" : "Mostrar"} Actividad
                 </span>
               </Button>
-            </div>
-            
-            {/* Action Buttons */}
-            {/* <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              <span className="hidden sm:inline">Exportar</span>
-            </Button> */}
-            <SplitButton
-              options={ingresoOptions}
-              onOptionSelect={handleIngresoOptionSelect}
-              defaultOption={ingresoOptions[0]}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Agregar Orden</span>
-            </SplitButton>
+          </div>
+          <div>
+              {/* Action Buttons */}
+              {/* <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                <span className="hidden sm:inline">Exportar</span>
+              </Button> */}
+              <SplitButton
+                options={ingresoOptions}
+                onOptionSelect={handleIngresoOptionSelect}
+                defaultOption={ingresoOptions[0]}
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Agregar Orden</span>
+              </SplitButton>
           </div>
         </div>
+      </div>
 
-        {/* 2. INDICATORS SECTION - Key Performance Indicators */}
-        <div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5"
-          style={{ 
-            gap: LAYOUT_CONSTANTS.indicators.gap,
-            marginBottom: LAYOUT_CONSTANTS.indicators.marginBottom 
-          }}
-        >
+      {/* Indicadores */}
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
           <Card className="bg-background hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle 
@@ -2706,12 +2659,12 @@ const OrdenAplicacion = () => {
               </p>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
         {/* 3. GANTT CHART SECTION - Full Width Chronogram */}
         {showGantt && (
           <div 
-            className="bg-background rounded-lg shadow-sm border border-border p-6 transition-all duration-300 ease-in-out"
+            className="bg-background rounded-lg shadow-sm border border-border p-6 transition-all duration-300 ease-in-out w-full max-w-full overflow-hidden"
             style={{ 
               minHeight: LAYOUT_CONSTANTS.gantt.minHeight,
               marginBottom: LAYOUT_CONSTANTS.gantt.marginBottom 
@@ -2758,7 +2711,7 @@ const OrdenAplicacion = () => {
         {/* 4. BOTTOM SECTION - Map & Activity Side by Side */}
         {(showMap || showActivity) && (
           <div 
-            className={`grid ${
+            className={`grid w-full max-w-full ${
               showMap && showActivity 
                 ? "grid-cols-1 lg:grid-cols-2" 
                 : "grid-cols-1"
@@ -2770,7 +2723,7 @@ const OrdenAplicacion = () => {
           >
             {/* Map Section */}
             {showMap && (
-              <div className="bg-background rounded-lg shadow-sm border border-border p-6">
+              <div className="bg-background rounded-lg shadow-sm border border-border p-6 w-full max-w-full overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <Map className="h-6 w-6 text-primary" />
@@ -2804,7 +2757,7 @@ const OrdenAplicacion = () => {
 
             {/* Activity/Others Section */}
             {showActivity && (
-              <div className="bg-background rounded-lg shadow-sm border border-border p-6">
+              <div className="bg-background rounded-lg shadow-sm border border-border p-6 w-full max-w-full overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="h-6 w-6 text-primary" />
@@ -2888,7 +2841,7 @@ const OrdenAplicacion = () => {
         )}
 
         {/* 5. DATA GRID SECTION */}
-        <div className="bg-background rounded-lg shadow-sm border border-border">
+        <div className="bg-background rounded-lg shadow-sm border border-border w-full max-w-full overflow-hidden">
           <div 
             className="flex items-center justify-between border-b border-border"
             style={{ padding: LAYOUT_CONSTANTS.header.padding }}
@@ -2923,11 +2876,11 @@ const OrdenAplicacion = () => {
             />
           </div>
         </div>
-      </div>
+     
 
       {/* DIALOG - Form Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
           <DialogHeader>
             <DialogTitle 
               style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}

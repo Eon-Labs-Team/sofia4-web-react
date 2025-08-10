@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm run dev` - Start development server (Vite)
 - `npm run build` - Build for production (runs TypeScript compilation then Vite build)
+- `npm run build-no-errors` - Build without TypeScript errors (alternative build command)
 - `npm run lint` - Run ESLint for code quality
 - `npm run types:supabase` - Generate Supabase types (requires SUPABASE_PROJECT_ID env var)
 
@@ -15,73 +16,163 @@ This is a React 18 + TypeScript agricultural management system built with Vite, 
 
 ### Core Technologies
 - **Frontend**: React 18.2.0 with TypeScript, Vite 6.2.3 build system
-- **UI Library**: Shadcn/ui components built on Radix UI primitives
-- **Styling**: Tailwind CSS 3.4.1 with custom design tokens
-- **Forms**: React Hook Form 7.51.5 + Zod validation
-- **State Management**: Zustand 5.0.3 for global state
-- **Routing**: React Router v6
-- **Backend Integration**: Supabase client + custom API services
+- **UI Library**: Shadcn/ui components built on Radix UI primitives (30+ components)
+- **Styling**: Tailwind CSS 3.4.1 with custom design tokens, dark/light theme support
+- **Forms**: React Hook Form 7.51.5 + Zod validation schemas
+- **State Management**: Zustand 5.0.3 for global state (auth, sidebar, grid configs)
+- **Routing**: React Router v6 with protected routes
+- **Animation**: Framer Motion 11.18.0 for UI animations
+- **Drag & Drop**: React DND for interactive components
+- **Backend Integration**: Dual API setup with custom services layer
 
 ### Key Architectural Patterns
 
-**Service Layer**: All API interactions centralized in `src/_services/` directory. Each domain has its own service file following consistent patterns for CRUD operations and error handling.
+**Service Layer**: All API interactions centralized in `src/_services/` directory with 40+ domain-specific services. Each service follows consistent patterns for CRUD operations, error handling, and API endpoint management.
 
-**Component Structure**:
-- `src/components/ui/` - Shadcn/ui component library (30+ components)
-- `src/components/layout/` - Layout components (Sidebar, navigation)
-- `src/components/Grid/` - Advanced data grid system with inline editing
-- `src/components/DynamicForm/` - Runtime form generation system
-- `src/components/Wizard/` - Multi-step form component with validation
+**Component Architecture**:
+- `src/components/ui/` - Complete Shadcn/ui component library (30+ components) built on Radix UI
+- `src/components/layout/` - Layout system (Sidebar, navigation, content areas)
+- `src/components/Grid/` - Advanced data grid system with inline editing, export, grouping
+- `src/components/DynamicForm/` - Runtime form generation with field rules support
+- `src/components/Wizard/` - Multi-step form wizard with validation and progress tracking
+- `src/components/auth/` - Authentication guards (ProtectedRoute, PropertyRoute)
+- `src/pages/` - 50+ page components for agricultural management domains
 
-**FormGrid System**: Advanced data grid with inline editing, field rules engine for automatic calculations, export functionality, and real-time validation. Key files: `FormGrid.tsx`, `useFieldRules.ts`.
+**Advanced Form System**: 
+- **FormGrid**: Data grid with inline editing, field rules engine, export functionality
+- **DynamicForm**: Runtime form generation with type-safe field configurations
+- **Wizard**: Multi-step forms with validation, progress tracking, and field rules
+- **Field Rules Engine**: Declarative system for form field reactivity and calculations
 
-**State Management**: 
-- Zustand stores in `src/lib/store/` for global state (auth, sidebar, grid configs)
-- React Hook Form for form-specific state management
-- Local component state for UI interactions
+**State Management Architecture**: 
+- **Zustand Stores**: `authStore` (authentication + property selection), `sidebarStore` (navigation), `gridStore` (grid configurations)
+- **React Hook Form**: Form-specific state with Zod validation schemas
+- **Local State**: Component-level UI interactions and temporary data
 
 ### API Integration
 
-**Dual API Setup**:
-- Primary API: `VITE_API_URL` (default: localhost:4900) for main application data
-- CRUD API: `VITE_API_CRUD_URL` (default: localhost:4500) for warehouse operations
+**Dual API Architecture**:
+- **Primary API** (`VITE_API_URL`, default: localhost:4900): Main agricultural management operations
+- **CRUD API** (`VITE_API_CRUD_URL`, default: localhost:4500): Warehouse/inventory operations
 
-**Endpoints**: Centralized in `src/lib/constants.ts` with consistent patterns for CRUD operations, state changes, and enterprise-scoped data access.
+**Endpoint Management**: All API endpoints centralized in `src/lib/constants.ts` with:
+- Consistent CRUD patterns (base, byId, changeState, setState)
+- Enterprise-scoped data access
+- Property-level data filtering
+- 25+ domain endpoints covering all agricultural operations
 
-**External Dependencies**: 
-- `@eon-lib/eon-mongoose` package provides centralized type definitions
-- Types are imported as `import type { TypeName } from '@eon-lib/eon-mongoose'`
+**Authentication & Authorization**:
+- JWT-based authentication with localStorage persistence
+- Multi-tenant architecture (enterprise → properties → data)
+- Role-based access control with permission checks
+- Property selection system for data scoping
+
+**Type System**:
+- External types from `@eon-lib/eon-mongoose` package
+- Import pattern: `import type { TypeName } from '@eon-lib/eon-mongoose'`
+- Supabase types generation available via npm script
 
 ### Business Domain
 
-Agricultural management system covering:
-- **Field Records**: Soil analysis, irrigation, weather events, leaf analysis
-- **Worker Management**: Crew lists, training records, personnel provision
-- **Machinery**: Equipment tracking, calibration, maintenance records
-- **Compliance**: Waste management, facility cleaning, visitor logs
-- **Production**: Crop monitoring, phenological state tracking
-- **Inventory**: Warehouse management via secondary API
+Comprehensive agricultural management system covering 6 main areas:
+
+**1. Field Records Management**:
+- Soil analysis, fertilization, irrigation records
+- Weather events, leaf analysis, water analysis
+- Phenological state monitoring, weed tracking
+- Animal admission, mass balance calculations
+
+**2. Worker & Labor Management**:
+- Worker lists, crew management, personnel provision
+- Training records, hand washing logs, hygiene tracking
+- Labor classification, contractor management
+
+**3. Machinery & Equipment**:
+- Equipment calibration, machinery cleaning
+- Backpack sprayer calculations, technical irrigation maintenance
+- Calibration of measuring equipment
+
+**4. Compliance & Safety**:
+- Waste management and removal, facility cleaning
+- Visitor logs, chlorine registration, water chlorination
+- Equipment calibration records
+
+**5. Production & Operations**:
+- Crop monitoring, task planning, work execution
+- Order applications (OrdenAplicacion), operational area management
+- Crop types, varieties, soil types configuration
+
+**6. Inventory Management**:
+- Multi-warehouse system (central + property bodegas)
+- Product management, lot tracking, inventory movements
+- Invoice processing, stock level monitoring
 
 ### Development Patterns
 
-**Form Handling**: Use React Hook Form + Zod schemas. For complex forms with multiple fields and calculations, use the FormGrid component with field rules.
+**Form Development**:
+- **Simple Forms**: React Hook Form + Zod validation schemas
+- **Complex Forms**: Use FormGrid with field rules engine for automatic calculations and validation
+- **Multi-Step Forms**: Use Wizard component with step validation and progress tracking
+- **Field Rules**: Declarative system in `src/lib/fieldRules/` for form reactivity (see `ordenAplicacionRules.ts` example)
 
-**Component Creation**: Follow Shadcn/ui patterns. Check existing components in `components/ui/` for consistent styling and behavior patterns.
+**Component Development**:
+- Follow Shadcn/ui patterns for consistency
+- Use existing UI components from `src/components/ui/` (30+ available)
+- Check component stories in `src/stories/` for usage examples
+- Implement responsive design with Tailwind breakpoints
 
-**Authentication**: JWT-based with role-based access control. Properties (multi-tenant) and enterprise-level permissions. Use `authStore` for global auth state.
+**State Management**:
+- **Global State**: Use Zustand stores (`authStore`, `sidebarStore`, `gridStore`)
+- **Form State**: React Hook Form for form-specific state
+- **Authentication**: Use `useAuthStore` hook for auth state and property selection
+- **UI State**: Local component state for temporary interactions
 
-**Navigation**: Sidebar configuration managed in `sidebarStore.ts`. Role-based menu items with property-scoped access.
+**API Integration**:
+- Use service layer from `src/_services/` for all API calls
+- Follow existing service patterns for consistency
+- Handle enterprise/property scoping in service calls
+- Use centralized endpoints from `src/lib/constants.ts`
 
-**Styling**: Use Tailwind CSS with design tokens from `src/lib/constants.ts`. Dark/light theme support implemented.
+**Styling & Theming**:
+- Use Tailwind CSS with custom design tokens from `src/lib/constants.ts`
+- Dark/light theme support via theme toggle component
+- Follow existing spacing, color, and typography patterns
+- Use CSS variables for theme-aware styling
 
 ### TypeScript Configuration
 
-**Important**: TypeScript strict mode is disabled (`"strict": false`). When adding type annotations, be thorough as the compiler won't catch all type errors automatically.
+**Critical Configuration Notes**:
+- TypeScript strict mode is **disabled** (`"strict": false`)
+- Be thorough with type annotations as compiler won't catch all errors
+- `noEmitOnError: false` allows builds despite TypeScript errors
+- Path mapping configured: `@/*` imports for src directory
 
-**Path Mapping**: Use `@/*` imports for src directory (`import { Component } from '@/components/Component'`)
+**Type Imports**:
+- External types: `import type { TypeName } from '@eon-lib/eon-mongoose'`
+- Internal types: `import type { TypeName } from '@/types/fileName'`
+- Component imports: `import { Component } from '@/components/ui/component'`
+
+### Build & Development Tools
+
+**Vite Configuration**:
+- React SWC plugin for fast refresh
+- Tempo devtools integration for development
+- Path aliases configured for `@/` → `src/`
+- Base path configuration for deployment flexibility
+
+**Additional Tools**:
+- **Tempo**: Development tools integrated in Vite config
+- **Storybook**: Component stories available in `src/stories/`
+- **ESLint**: TypeScript/React linting configured
+- **PostCSS**: Tailwind CSS processing
 
 ### Testing & Quality
 
-No explicit test framework configured. When adding tests, check with the development team for preferred framework.
+**Current State**: No explicit test framework configured
+- When adding tests, consult with development team for framework choice
+- Consider adding tests for field rules engine and complex form logic
 
-**Linting**: ESLint configured for TypeScript/React. Run `npm run lint` before committing changes.
+**Code Quality**:
+- Run `npm run lint` before committing changes
+- ESLint configured for TypeScript/React best practices
+- Use TypeScript for type safety despite strict mode being disabled

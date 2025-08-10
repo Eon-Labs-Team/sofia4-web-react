@@ -81,13 +81,7 @@ class InventoryMovementService {
     try {
       const { propertyId } = useAuthStore.getState();
       
-      // Create URL with query parameters
-      const url = new URL(`${ENDPOINTS.inventoryMovement.base}/byProductId/${productId}`);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(ENDPOINTS.inventoryMovement.byProductId(productId), {
         headers: {
           'Content-Type': 'application/json',
           'propertyId': propertyId?.toString() || '',
@@ -107,6 +101,51 @@ class InventoryMovementService {
   }
 
   /**
+   * Get movements history for all products in a warehouse
+   * @param warehouseId Warehouse ID
+   * @param productIds Array of product IDs that have lots in this warehouse
+   * @returns Promise with all movements data sorted by creation date
+   */
+  async getWarehouseHistory(warehouseId: string, productIds: string[]): Promise<IInventoryMovement[]> {
+    try {
+      const allMovements: IInventoryMovement[] = [];
+      
+      // Fetch history for each product in the warehouse
+      for (const productId of productIds) {
+        try {
+          const { propertyId } = useAuthStore.getState();
+          
+          const response = await fetch(ENDPOINTS.inventoryMovement.history(warehouseId, productId), {
+            headers: {
+              'Content-Type': 'application/json',
+              'propertyId': propertyId?.toString() || '',
+            },
+          });
+          
+          if (response.ok) {
+            const movements = await response.json();
+            const movementsData = movements.data || movements;
+            if (Array.isArray(movementsData)) {
+              allMovements.push(...movementsData);
+            }
+          }
+        } catch (productError) {
+          console.warn(`Error fetching history for product ${productId} in warehouse ${warehouseId}:`, productError);
+          // Continue with other products even if one fails
+        }
+      }
+      
+      // Sort by creation date, most recent first
+      allMovements.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      return allMovements;
+    } catch (error) {
+      console.error(`Error fetching warehouse history for ${warehouseId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get movements by lot ID
    * @param lotId Lot ID
    * @returns Promise with movements data
@@ -115,13 +154,7 @@ class InventoryMovementService {
     try {
       const { propertyId } = useAuthStore.getState();
       
-      // Create URL with query parameters
-      const url = new URL(`${ENDPOINTS.inventoryMovement.base}/byLotId/${lotId}`);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(ENDPOINTS.inventoryMovement.byLotId(lotId), {
         headers: {
           'Content-Type': 'application/json',
           'propertyId': propertyId?.toString() || '',
@@ -264,6 +297,254 @@ class InventoryMovementService {
       return await response.json();
     } catch (error) {
       console.error(`Error deleting inventory movement ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // ==================== SPECIALIZED OPERATIONS ====================
+
+  /**
+   * Get movement history by warehouse and product
+   */
+  async getHistory(warehouseId: string, productId: string): Promise<IInventoryMovement[]> {
+    try {
+      const { propertyId } = useAuthStore.getState();
+      
+      const response = await fetch(ENDPOINTS.inventoryMovement.history(warehouseId, productId), {
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': propertyId?.toString() || '',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const movements = await response.json();
+      return movements.data || movements;
+    } catch (error) {
+      console.error(`Error fetching history for warehouse ${warehouseId} and product ${productId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get complete history by product
+   */
+  async getCompleteHistory(productId: string): Promise<IInventoryMovement[]> {
+    try {
+      const { propertyId } = useAuthStore.getState();
+      
+      const response = await fetch(ENDPOINTS.inventoryMovement.completeHistory(productId), {
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': propertyId?.toString() || '',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const movements = await response.json();
+      return movements.data || movements;
+    } catch (error) {
+      console.error(`Error fetching complete history for product ${productId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Assign stock from central warehouse to property warehouse
+   */
+  async assignStock(assignData: {
+    productId: string;
+    quantity: number;
+    sourceWarehouseId: string;
+    destinationWarehouseId: string;
+    propertyId: string;
+    comments?: string;
+  }): Promise<any> {
+    try {
+      const { propertyId: userPropertyId } = useAuthStore.getState();
+
+      const response = await fetch(ENDPOINTS.inventoryMovement.assign, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': userPropertyId?.toString() || '',
+        },
+        body: JSON.stringify(assignData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error assigning stock:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Consume product with FIFO logic
+   */
+  async consumeProduct(consumeData: {
+    productId: string;
+    quantity: number;
+    warehouseId: string;
+    propertyId: string;
+    allowNegativeStock?: boolean;
+    negativeStockLimit?: number;
+    comments?: string;
+  }): Promise<any> {
+    try {
+      const { propertyId: userPropertyId } = useAuthStore.getState();
+
+      const response = await fetch(ENDPOINTS.inventoryMovement.consume, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': userPropertyId?.toString() || '',
+        },
+        body: JSON.stringify(consumeData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error consuming product:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Move product between warehouses
+   */
+  async moveProduct(moveData: {
+    productId: string;
+    quantity: number;
+    sourceWarehouseId: string;
+    destinationWarehouseId: string;
+    propertyId: string;
+    comments?: string;
+  }): Promise<any> {
+    try {
+      const { propertyId: userPropertyId } = useAuthStore.getState();
+
+      const response = await fetch(ENDPOINTS.inventoryMovement.move, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': userPropertyId?.toString() || '',
+        },
+        body: JSON.stringify(moveData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error moving product:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Manual stock change
+   */
+  async manualStockChange(changeData: {
+    productId: string;
+    warehouseId: string;
+    newQuantity: number;
+    reason: string;
+    propertyId: string;
+  }): Promise<any> {
+    try {
+      const { propertyId: userPropertyId } = useAuthStore.getState();
+
+      const response = await fetch(ENDPOINTS.inventoryMovement.manualChange, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': userPropertyId?.toString() || '',
+        },
+        body: JSON.stringify(changeData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error making manual stock change:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Restore stock
+   */
+  async restoreStock(restoreData: {
+    productId: string;
+    quantity: number;
+    warehouseId: string;
+    propertyId: string;
+    comments?: string;
+  }): Promise<any> {
+    try {
+      const { propertyId: userPropertyId } = useAuthStore.getState();
+
+      const response = await fetch(ENDPOINTS.inventoryMovement.restore, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': userPropertyId?.toString() || '',
+        },
+        body: JSON.stringify(restoreData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error restoring stock:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Export movements report
+   */
+  async exportReport(productId: string): Promise<Blob> {
+    try {
+      const { propertyId } = useAuthStore.getState();
+      
+      const response = await fetch(ENDPOINTS.inventoryMovement.exportReport(productId), {
+        headers: {
+          'Content-Type': 'application/json',
+          'propertyId': propertyId?.toString() || '',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      return await response.blob();
+    } catch (error) {
+      console.error(`Error exporting report for product ${productId}:`, error);
       throw error;
     }
   }

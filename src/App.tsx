@@ -4,6 +4,7 @@ import Home, { SidebarContext } from "./pages/home";
 import Faenas from "./pages/Faenas";
 import Labores from "./pages/Labores";
 import ListaCuarteles from "./pages/ListaCuarteles";
+import BodegasList from "./pages/BodegasList";
 import ListaMaquinarias from "./pages/ListaMaquinarias";
 import ListaCuadrillas from "./pages/ListaCuadrillas";
 import ListaTrabajadores from "./pages/ListaTrabajadores";
@@ -22,7 +23,17 @@ import FormBuilderExample from "./pages/FormBuilderExample";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import routes from "tempo-routes";
-import Sidebar from "./components/layout/Sidebar";
+import { AppSidebar } from "./components/app-sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from "@/components/ui/breadcrumb";
 import { Toaster } from "./components/ui/toaster";
 import { useAuthStore } from "./lib/store/authStore";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -60,14 +71,9 @@ import FaenasAgricolas from "./pages/faenas-agricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 
 function App() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isAuthenticated } = useAuthStore();
   const location = useLocation();
   const { actionMode } = useSidebarStore();
-
-  const handleSidebarToggle = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
 
   // Determine if sidebar should be shown based on current route and action mode
   const shouldShowSidebar = () => {
@@ -76,27 +82,71 @@ function App() {
 
   // Contexto para proporcionar la función de toggle a los componentes hijos
   const sidebarContextValue = {
-    toggleSidebar: () => setSidebarCollapsed(prev => !prev)
+    toggleSidebar: () => {} // Mantenemos la compatibilidad pero ya no es necesario
+  };
+
+  // Mapeo de títulos para cada ruta
+  const getPageTitle = (path: string) => {
+    const segments = path.split('/').filter(Boolean);
+    const titleMap: Record<string, string> = {
+      'lista-cuarteles': 'Lista Cuarteles',
+      'faenas': 'Faenas',
+      'labores': 'Labores',
+      'orden-aplicacion': 'Orden de Aplicación',
+      'bodegas': 'Bodegas',
+      'monitoreo-estado-fenologico': 'Monitoreo Estado Fenológico',
+      'analisis-suelo': 'Análisis de Suelo',
+      'fertilizacion-suelo': 'Fertilización de Suelo',
+      'registro-riego': 'Registro de Riego',
+      'analisis-foliar': 'Análisis Foliar',
+      'eventos-climaticos': 'Eventos Climáticos',
+      // Agregar más mapeos según sea necesario
+    };
+
+    if (segments.length === 0) return 'Inicio';
+
+    const lastSegment = segments[segments.length - 1];
+    return titleMap[lastSegment] || lastSegment.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   // Layout with sidebar for authenticated users
   const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
     const showSidebar = shouldShowSidebar();
-    
-    return (
-      <div className="flex h-screen overflow-hidden">
-        {showSidebar && (
-          <Sidebar 
-            collapsed={sidebarCollapsed} 
-            onToggle={handleSidebarToggle}
-          />
-        )}
-        <main className="flex-1 overflow-auto">
-          <Suspense fallback={<p>Cargando...</p>}>
+
+    if (!showSidebar) {
+      // Para la página de inicio sin sidebar
+      return (
+        <main className="min-h-screen bg-background">
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Cargando...</div>}>
             {children}
           </Suspense>
         </main>
-      </div>
+      );
+    }
+
+    return (
+      <SidebarProvider className="bg-sidebar flex w-full min-h-screen">
+        {/* Ocultamos el borde lateral del menú y aplicamos efecto de card al área inset */}
+        <AppSidebar className="border-transparent flex-shrink-0" />
+        <SidebarInset className="m-2 rounded-xl border text-foreground shadow flex flex-col min-w-0 w-full">
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4 min-w-0 w-full">
+              <SidebarTrigger className="-ml-1 flex-shrink-0" />
+              <Separator orientation="vertical" className="mr-2 h-4 flex-shrink-0" />
+              {/* Título de la página (reemplaza breadcrumb) */}
+              <h1 className="text-lg font-semibold tracking-tight truncate">{getPageTitle(location.pathname)}</h1>
+            </div>
+          </header>
+          {/* Contenido dentro del inset (sin card adicional) */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden min-w-0">
+            <div className="flex-1 overflow-auto p-4 pt-0 min-w-0">
+              <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]">Cargando...</div>}>
+                {children}
+              </Suspense>
+            </div>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     );
   };
 
@@ -152,6 +202,19 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <ListaCuarteles />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/bodegas"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <BodegasList />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>
@@ -308,19 +371,6 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <LimpiezaMaquinaria />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/limpieza-instalaciones"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <FacilityCleaning />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>
