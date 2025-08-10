@@ -291,6 +291,7 @@ export const ENDPOINTS = {
     central: `${API_BASE_URL}/invoice/central`,
     property: `${API_BASE_URL}/invoice/property`,
   },
+
 }; 
 
 // UI/UX Design Constants

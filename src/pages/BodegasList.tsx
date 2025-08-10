@@ -231,7 +231,7 @@ const BodegasList = () => {
       
       // Sort by creation date, most recent first
       const sortedMovements = movements.sort((a, b) => 
-        new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       
       setMovementsHistory(sortedMovements);

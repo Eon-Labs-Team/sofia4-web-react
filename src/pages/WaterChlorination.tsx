@@ -390,9 +390,9 @@ const WaterChlorination = () => {
         data={chlorinations}
         columns={columns}
         expandableContent={expandableContent}
-        // @ts-ignore
         isLoading={isLoading}
-        renderRowActions={renderActions}
+        actions={renderActions}
+        gridId="water-chlorination-grid"
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

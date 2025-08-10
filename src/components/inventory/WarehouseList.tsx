@@ -258,19 +258,24 @@ const WarehouseList: React.FC<WarehouseListProps> = ({ isModal = false, onClose 
     }
   };
 
-  const gridActions = [
-    {
-      icon: Edit,
-      label: "Editar",
-      onClick: (row: IInventoryWarehouse) => handleEdit(row),
-    },
-    {
-      icon: Trash2,
-      label: "Eliminar",
-      onClick: (row: IInventoryWarehouse) => handleDelete(row._id),
-      variant: "destructive" as const,
-    },
-  ];
+  const gridActions = (row: IInventoryWarehouse) => (
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => handleEdit(row)}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => handleDelete(row._id)}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   return (
     <div className={isModal ? "w-full h-full flex flex-col" : "container mx-auto py-6"}>
@@ -308,12 +313,9 @@ const WarehouseList: React.FC<WarehouseListProps> = ({ isModal = false, onClose 
         <Grid
           data={warehouses}
           columns={columns}
-          loading={loading}
-          onRefresh={fetchCentralWarehouses}
+          isLoading={loading}
           actions={gridActions}
-          searchable={true}
-          exportable={true}
-          pageSize={isModal ? 8 : 10}
+          gridId="warehouse-list-grid"
         />
       </div>
 
@@ -343,10 +345,15 @@ const WarehouseList: React.FC<WarehouseListProps> = ({ isModal = false, onClose 
                 capacity: undefined,
               }
             }}
-            submitButtonText={isEditMode ? "Actualizar Bodega" : "Crear Bodega"}
-            cancelButtonText="Cancelar"
-            onCancel={() => setIsDialogOpen(false)}
           />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="dynamic-form">
+              {isEditMode ? "Actualizar Bodega" : "Crear Bodega"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

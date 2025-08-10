@@ -60,7 +60,7 @@ import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
 import productService from "@/_services/productService";
 import productCategoryService from "@/_services/productCategoryService";
-import warehouseProductService from "@/_services/warehouseProductService";
+import inventoryProductService from "@/_services/inventoryProductService";
 import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
@@ -1524,7 +1524,7 @@ const OrdenAplicacion = () => {
   
   const fetchWarehouseProducts = async () => {
     try {
-      const data = await warehouseProductService.findAll();
+      const data = await inventoryProductService.findAll();
       console.log('Fetched warehouse products:', data);
       // Ensure we always have an array
       const productsArray = Array.isArray(data) ? data : [];
