@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm cache clean --force && npm ci --prefer-online
+RUN npm ci --prefer-online --no-audit --no-fund
 
 COPY . .
 
