@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMonitoringOfPhenologicalState } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 interface ApiResponse<T> {
   data: T[];
@@ -18,9 +19,7 @@ class MonitoringOfPhenologicalStateService {
   async findAll(): Promise<IMonitoringOfPhenologicalState[] | ApiResponse<IMonitoringOfPhenologicalState>> {
     try {
       const response = await fetch(ENDPOINTS.monitoringOfPhenologicalState.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -57,9 +56,7 @@ class MonitoringOfPhenologicalStateService {
 
       const response = await fetch(ENDPOINTS.monitoringOfPhenologicalState.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(monitoringData),
       });
 
@@ -84,9 +81,7 @@ class MonitoringOfPhenologicalStateService {
     try {
       const response = await fetch(ENDPOINTS.monitoringOfPhenologicalState.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(monitoring),
       });
 
@@ -134,9 +129,7 @@ class MonitoringOfPhenologicalStateService {
   async findById(id: string | number): Promise<IMonitoringOfPhenologicalState> {
     try {
       const response = await fetch(ENDPOINTS.monitoringOfPhenologicalState.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

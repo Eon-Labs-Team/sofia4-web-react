@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IWorkerList } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing worker list data
@@ -10,20 +10,15 @@ class WorkerListService {
    * Get all worker list
    * @returns Promise with all worker list
    */
-  async findAll(): Promise<IWorkerList[]> {
+  async findAll(propertyId?: string | number | null): Promise<IWorkerList[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.workerList.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.workerList.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.workerList.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,131 +38,13 @@ class WorkerListService {
    * @param workerList IWorkerList data
    * @returns Promise with created worker list
    */
-  async createWorkerList(workerList: Partial<IWorkerList>): Promise<IWorkerList> {
+  async createWorkerList(workerList: Partial<IWorkerList>, propertyId?: string | number | null): Promise<IWorkerList> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       const workerListData: Partial<IWorkerList> = {
-        // Campos obligatorios según el schema con fallbacks
-        rutDniNationality: workerList.rutDniNationality || 'CL', // Default nationality Chile
-        rut: workerList.rut || '00000000-0', // Placeholder RUT format
-        names: workerList.names || 'No especificado',
-        lastName: workerList.lastName || 'No especificado',
-        secondLastName: workerList.secondLastName || 'No especificado',
-        sex: workerList.sex || 'No especificado', // Could be 'M', 'F', or 'No especificado'
-        property: workerList.property || propertyId?.toString() || '1', // Use current propertyId or default
-        provisionalRegime: workerList.provisionalRegime !== undefined ? workerList.provisionalRegime : true,
-        startDate: workerList.startDate || new Date().toISOString().split('T')[0], // Current date as YYYY-MM-DD
-        provision: workerList.provision || 'No especificado',
-        socialSecurity: workerList.socialSecurity || 'No especificado',
-        
-        // Campos opcionales con valores por defecto vacíos
-        workerNationality: workerList.workerNationality || '',
-        identificationDocumentType: workerList.identificationDocumentType || '',
-        internalCod: workerList.internalCod || '',
-        birthDate: workerList.birthDate || '',
-        civilState: workerList.civilState || '',
-        address: workerList.address || '',
-        city: workerList.city || '',
-        region: workerList.region || '',
-        country: workerList.country || '',
-        phone: workerList.phone || '',
-        email: workerList.email || '',
-        recordType: workerList.recordType || '',
-        workerListId: workerList.workerListId || '',
-        
-        // Campos de certificación con valores por defecto
-        administrative: workerList.administrative || false,
-        dispenser: workerList.dispenser || false,
-        dispenserResponsible: workerList.dispenserResponsible || false,
-        dispenserChecker: workerList.dispenserChecker || '',
-        certificationNumber: workerList.certificationNumber || '',
-        applicator: workerList.applicator || '',
-        applicatorResponsible: workerList.applicatorResponsible || false,
-        applicatorChecker: workerList.applicatorChecker || false,
-        institution: workerList.institution || '',
-        expirationDate: workerList.expirationDate || '',
-        
-        // Campos de contrato con valores por defecto
-        classify: workerList.classify || '',
-        contractType: workerList.contractType || '',
-        contractDocument: workerList.contractDocument || '',
-        contractAnnexed: workerList.contractAnnexed || '',
-        baseSalary: workerList.baseSalary || 0,
-        calculationType: workerList.calculationType || '',
-        endDate: workerList.endDate || '',
-        contractFunction: workerList.contractFunction || '',
-        workerListState: workerList.workerListState || '',
-        stateCDate: workerList.stateCDate || '',
-        stateCUser: workerList.stateCUser || '',
-        observation: workerList.observation || '',
-        
-        // Campos de asistencia con valores por defecto
-        controlClockAttendance: workerList.controlClockAttendance || '',
-        assignsAttendanceClassify: workerList.assignsAttendanceClassify || '',
-        operativeAreaAttendance: workerList.operativeAreaAttendance || '',
-        laborWorkAttendance: workerList.laborWorkAttendance || '',
-        hitchContractorDepend: workerList.hitchContractorDepend || '',
-        laborUpdate: workerList.laborUpdate || false,
-        laborUpdateDateSince: workerList.laborUpdateDateSince || '',
-        laborUpdateDateTill: workerList.laborUpdateDateTill || '',
-        
-        // Campos de salario con valores por defecto
-        rankDay: workerList.rankDay || '',
-        priceDayExtraHour: workerList.priceDayExtraHour || '',
-        
-        // Campos de beneficios con valores por defecto
-        youngWorkerBonus: workerList.youngWorkerBonus || false,
-        workType: workerList.workType || '',
-        
-        // Campos de previsión con valores por defecto
-        quote: workerList.quote || '',
-        savingVoluntary: workerList.savingVoluntary || '',
-        sis: workerList.sis || '',
-        sn: workerList.sn || '',
-        valueQuote: workerList.valueQuote || '',
-        valueVolumeSaving: workerList.valueVolumeSaving || 0,
-        valueSis: workerList.valueSis || 0,
-        valueSn: workerList.valueSn || 0,
-        
-        // Campos de salud con valores por defecto
-        health: workerList.health || '',
-        additional: workerList.additional || '',
-        firstValue: workerList.firstValue || '',
-        secondValue: workerList.secondValue || '',
-        ccaf: workerList.ccaf || '',
-        funNumberOptional: workerList.funNumberOptional || '',
-        funNumber: workerList.funNumber || '',
-        valueHealth: workerList.valueHealth || 0,
-        valueAdditional: workerList.valueAdditional || 0,
-        thirdValue: workerList.thirdValue || '',
-        fourthValue: workerList.fourthValue || '',
-        
-        // Campos de pago con valores por defecto
-        paymentType: workerList.paymentType || '',
-        bank: workerList.bank || '',
-        workerEmail: workerList.workerEmail || '',
-        accountNumber: workerList.accountNumber || 0,
-        accountType: workerList.accountType || '',
-        
-        // Campos de seguros particulares con valores por defecto
-        particularInstitution: workerList.particularInstitution || '',
-        particularContractNumber: workerList.particularContractNumber || '',
-        particularPaymentMethod: workerList.particularPaymentMethod || '',
-        savingTo: workerList.savingTo || '',
-        quoteAmount: workerList.quoteAmount || 0,
-        
-        // Campos de seguros colectivos con valores por defecto
-        collectiveInstitution: workerList.collectiveInstitution || '',
-        collectiveContractNumber: workerList.collectiveContractNumber || '',
-        collectivePaymentMethod: workerList.collectivePaymentMethod || '',
-        savingWorker: workerList.savingWorker || '',
-        workerAmount: workerList.workerAmount || '',
-        inputCompany: workerList.inputCompany || '',
-        amountInputCompany: workerList.amountInputCompany || 0,
-        
-        // Estado por defecto
-        state: workerList.state !== undefined ? workerList.state : true,
+        ...workerList,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: workerList.state !== undefined ? workerList.state : true
       };
       
       // Add propertyId if available
@@ -188,9 +65,7 @@ class WorkerListService {
 
       const response = await fetch(ENDPOINTS.workerList.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerListData),
       });
 
@@ -213,8 +88,6 @@ class WorkerListService {
    */
   async updateWorkerList(id: string | number, workerList: Partial<IWorkerList>): Promise<IWorkerList> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       // Apply fallbacks for required fields if they are being updated
       const updateData: Partial<IWorkerList> = {
         ...workerList,
@@ -247,9 +120,7 @@ class WorkerListService {
       
       const response = await fetch(ENDPOINTS.workerList.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(updateData),
       });
 
@@ -273,9 +144,7 @@ class WorkerListService {
     try {
       const response = await fetch(ENDPOINTS.workerList.changeState(id, false), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -297,9 +166,7 @@ class WorkerListService {
   async findById(id: string | number): Promise<IWorkerList> {
     try {
       const response = await fetch(ENDPOINTS.workerList.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IProperty } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing property data
@@ -12,9 +13,7 @@ class PropertyService {
   async findAll(): Promise<IProperty[]> {
     try {
       const response = await fetch(ENDPOINTS.properties.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -92,9 +91,7 @@ class PropertyService {
 
       const response = await fetch(ENDPOINTS.properties.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(propertyData),
       });
 
@@ -119,9 +116,7 @@ class PropertyService {
     try {
       const response = await fetch(ENDPOINTS.properties.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(property),
       });
 
@@ -146,9 +141,7 @@ class PropertyService {
       // Update only the status field to false
       const response = await fetch(ENDPOINTS.properties.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({ status: false }),
       });
 
@@ -171,9 +164,7 @@ class PropertyService {
   async findById(id: string | number): Promise<IProperty> {
     try {
       const response = await fetch(ENDPOINTS.properties.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -195,9 +186,7 @@ class PropertyService {
   async findByName(name: string): Promise<IProperty> {
     try {
       const response = await fetch(ENDPOINTS.properties.byName(name), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -211,16 +212,32 @@ const LavadoManos = () => {
   const [selectedRecord, setSelectedRecord] = useState<IHandWashingRecord | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchHandWashingRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchHandWashingRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch records data
   const fetchHandWashingRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await handWashingService.findAll();
+      const response = await handWashingService.findAll(propertyId);
 
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IHandWashingRecord[]
@@ -248,7 +265,7 @@ const LavadoManos = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await handWashingService.createHandWashingRecord(recordData);
+      await handWashingService.createHandWashingRecord(recordData, propertyId);
       await fetchHandWashingRecords();
       
       toast({

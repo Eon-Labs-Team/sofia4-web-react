@@ -1,20 +1,25 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IAnimalAdmission } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing animal admission data
  */
 class AnimalAdmissionService {
   /**
-   * Get all animal admissions
-   * @returns Promise with all animal admissions
+   * Get all animal admissions for a specific property
+   * @param propertyId The ID of the property to get animal admissions for
+   * @returns Promise with animal admissions for the property
    */
-  async findAll(): Promise<IAnimalAdmission[]> {
+  async findAll(propertyId?: string | number | null): Promise<IAnimalAdmission[]> {
     try {
-      const response = await fetch(`${ENDPOINTS.animalAdmission.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.animalAdmission.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.animalAdmission.base}`;
+      
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -31,30 +36,21 @@ class AnimalAdmissionService {
   /**
    * Create a new animal admission
    * @param animalAdmission Animal admission data
+   * @param propertyId The ID of the property this animal admission belongs to
    * @returns Promise with created animal admission
    */
-  async createAnimalAdmission(animalAdmission: Partial<IAnimalAdmission>): Promise<IAnimalAdmission> {
+  async createAnimalAdmission(animalAdmission: Partial<IAnimalAdmission>, propertyId?: string | number | null): Promise<IAnimalAdmission> {
     try {
       const animalAdmissionData: Partial<IAnimalAdmission> = {
-        date: animalAdmission.date,
-        quarterLot: animalAdmission.quarterLot,
-        code: animalAdmission.code,
-        area: animalAdmission.area,
-        reviser: animalAdmission.reviser,
-        supervisor: animalAdmission.supervisor,
-        observation: animalAdmission.observation,
-        supervisorSing: animalAdmission.supervisorSing,
-        image1: animalAdmission.image1,
-        image2: animalAdmission.image2,
-        image3: animalAdmission.image3,
+        ...animalAdmission,
+        // @ts-ignore
+        propertyId, // Add propertyId to the animal admission data
         state: animalAdmission.state !== undefined ? animalAdmission.state : true
       };
 
       const response = await fetch(`${ENDPOINTS.animalAdmission.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(animalAdmissionData),
       });
 
@@ -79,9 +75,7 @@ class AnimalAdmissionService {
     try {
       const response = await fetch(`${ENDPOINTS.animalAdmission.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(animalAdmission),
       });
 
@@ -105,9 +99,8 @@ class AnimalAdmissionService {
     try {
       const response = await fetch(`${ENDPOINTS.animalAdmission.changeState(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {

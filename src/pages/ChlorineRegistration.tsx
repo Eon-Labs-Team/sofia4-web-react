@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -251,16 +252,32 @@ const ChlorineRegistration = () => {
   const [selectedChlorineRegistration, setSelectedChlorineRegistration] = useState<IChlorineRegistration | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch chlorine registrations on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchChlorineRegistrations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch chlorine registrations on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchChlorineRegistrations();
+    }
+  }, [propertyId]);
   
   // Function to fetch chlorine registration data
   const fetchChlorineRegistrations = async () => {
     setIsLoading(true);
     try {
-      const response = await chlorineRegistrationService.findAll();
+      const response = await chlorineRegistrationService.findAll(propertyId);
       // Manejar caso donde la respuesta puede ser un objeto con propiedad data o directamente un array
       if (Array.isArray(response)) {
         setChlorineRegistrations(response);
@@ -285,7 +302,7 @@ const ChlorineRegistration = () => {
   // Function to handle adding a new chlorine registration
   const handleAddChlorineRegistration = async (data: Partial<IChlorineRegistration>) => {
     try {
-      await chlorineRegistrationService.createChlorineRegistration(data);
+      await chlorineRegistrationService.createChlorineRegistration(data, propertyId);
       
       toast({
         title: "Éxito",

@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IEquipmentCalibration } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing equipment calibration data
@@ -9,12 +10,10 @@ class EquipmentCalibrationService {
    * Get all equipment calibrations
    * @returns Promise with all equipment calibrations
    */
-  async findAll(): Promise<IEquipmentCalibration[]> {
+  async findAll(propertyId?: string | number | null): Promise<IEquipmentCalibration[]> {
     try {
       const response = await fetch(ENDPOINTS.equipmentCalibration.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -33,7 +32,7 @@ class EquipmentCalibrationService {
    * @param equipmentCalibration Equipment calibration data
    * @returns Promise with created equipment calibration
    */
-  async createEquipmentCalibration(equipmentCalibration: Partial<IEquipmentCalibration>): Promise<IEquipmentCalibration> {
+  async createEquipmentCalibration(equipmentCalibration: Partial<IEquipmentCalibration>, propertyId?: string | number | null): Promise<IEquipmentCalibration> {
     try {
       const equipmentCalibrationData: Partial<IEquipmentCalibration> = {
         date: equipmentCalibration.date,
@@ -56,9 +55,7 @@ class EquipmentCalibrationService {
 
       const response = await fetch(ENDPOINTS.equipmentCalibration.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(equipmentCalibrationData),
       });
 
@@ -83,9 +80,7 @@ class EquipmentCalibrationService {
     try {
       const response = await fetch(ENDPOINTS.equipmentCalibration.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(equipmentCalibration),
       });
 
@@ -109,9 +104,7 @@ class EquipmentCalibrationService {
     try {
       const response = await fetch(ENDPOINTS.equipmentCalibration.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -133,9 +126,7 @@ class EquipmentCalibrationService {
   async findById(id: string | number): Promise<IEquipmentCalibration> {
     try {
       const response = await fetch(ENDPOINTS.equipmentCalibration.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

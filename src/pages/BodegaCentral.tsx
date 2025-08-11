@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Package,
   Plus,
@@ -20,7 +21,6 @@ import {
 import type { IInventoryProduct } from "@eon-lib/eon-mongoose";
 import inventoryProductService from "@/_services/inventoryProductService";
 import { toast } from "@/components/ui/use-toast";
-import { useAuthStore } from "@/lib/store/authStore";
 import DynamicForm from "@/components/DynamicForm/DynamicForm";
 import { 
   getInventoryProductFormSections,
@@ -139,13 +139,26 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<IInventoryProduct | null>(null);
-  const { user } = useAuthStore();
+  const { user, propertyId } = useAuthStore();
 
 
-  // Fetch products on component mount
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+
+  // Fetch products on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchProducts();
+    }
+  }, [propertyId]);
 
   const fetchProducts = async () => {
     try {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Droplets,
   CheckCircle,
@@ -285,16 +286,32 @@ const WaterConsumption = () => {
   const [selectedRecord, setSelectedRecord] = useState<IWaterConsumption | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch water consumption data on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWaterConsumptionData();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch water consumption data on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWaterConsumptionData();
+    }
+  }, [propertyId]);
   
   // Function to fetch water consumption data
   const fetchWaterConsumptionData = async () => {
     setIsLoading(true);
     try {
-      const response = await waterConsumptionService.findAll();
+      const response = await waterConsumptionService.findAll(propertyId);
       // Handle the response which may come as { data: [...] } or directly as an array
       const data = Array.isArray(response) ? response : (response as unknown as ApiResponse<IWaterConsumption[]>).data;
       setWaterConsumptionData(data || []);
@@ -313,7 +330,7 @@ const WaterConsumption = () => {
   // Function to handle adding a new water consumption record
   const handleAddWaterConsumption = async (data: Partial<IWaterConsumption>) => {
     try {
-      await waterConsumptionService.createWaterConsumption(data);
+      await waterConsumptionService.createWaterConsumption(data, propertyId);
       await fetchWaterConsumptionData();
       toast({
         title: "Éxito",

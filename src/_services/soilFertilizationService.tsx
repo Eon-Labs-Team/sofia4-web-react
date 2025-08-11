@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ISoilFertilization } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing soil fertilization data
@@ -12,9 +13,7 @@ class SoilFertilizationService {
   async findAll(): Promise<ISoilFertilization[]> {
     try {
       const response = await fetch(`${ENDPOINTS.soilFertilization.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -60,9 +59,7 @@ class SoilFertilizationService {
 
       const response = await fetch(`${ENDPOINTS.soilFertilization.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilFertilizationData),
       });
 
@@ -87,9 +84,7 @@ class SoilFertilizationService {
     try {
       const response = await fetch(`${ENDPOINTS.soilFertilization.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilFertilization),
       });
 
@@ -137,9 +132,7 @@ class SoilFertilizationService {
   async findById(id: string | number): Promise<ISoilFertilization> {
     try {
       const response = await fetch(`${ENDPOINTS.soilFertilization.byId(id)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -389,16 +390,32 @@ const MonitoreoMaleza = () => {
   const [selectedWeedMonitoring, setSelectedWeedMonitoring] = useState<IWeedMonitoring | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch weed monitoring records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWeedMonitoringRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch weed monitoring records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWeedMonitoringRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch weed monitoring records data
   const fetchWeedMonitoringRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await weedMonitoringService.findAll();
+      const response = await weedMonitoringService.findAll(propertyId);
       // Handle different response structures
       if (Array.isArray(response)) {
         setWeedMonitoringRecords(response);
@@ -424,7 +441,7 @@ const MonitoreoMaleza = () => {
   // Function to handle adding a new weed monitoring record
   const handleAddWeedMonitoring = async (data: Partial<IWeedMonitoring>) => {
     try {
-      await weedMonitoringService.createWeedMonitoring(data);
+      await weedMonitoringService.createWeedMonitoring(data, propertyId);
       toast({
         title: "Éxito",
         description: "Monitoreo de maleza creado correctamente",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Beaker,
   CheckCircle,
@@ -561,16 +562,32 @@ const AnalisisAgua = () => {
   const [selectedWaterAnalysis, setSelectedWaterAnalysis] = useState<IWaterAnalysis | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch water analysis data on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWaterAnalysisData();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch water analysis data on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWaterAnalysisData();
+    }
+  }, [propertyId]);
   
   // Function to fetch water analysis data
   const fetchWaterAnalysisData = async () => {
     setIsLoading(true);
     try {
-      const response = await waterAnalysisService.findAll();
+      const response = await waterAnalysisService.findAll(propertyId);
       // Manejar diferentes posibles estructuras de respuesta
       if (Array.isArray(response)) {
         setWaterAnalysisData(response);
@@ -601,7 +618,7 @@ const AnalisisAgua = () => {
   // Function to handle adding a new water analysis
   const handleAddWaterAnalysis = async (data: Partial<IWaterAnalysis>) => {
     try {
-      await waterAnalysisService.createWaterAnalysis(data);
+      await waterAnalysisService.createWaterAnalysis(data, propertyId);
       setIsDialogOpen(false);
       toast({
         title: "Éxito",

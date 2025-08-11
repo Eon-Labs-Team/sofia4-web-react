@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -323,16 +324,32 @@ const FacilityCleaning = () => {
   const [selectedRecord, setSelectedRecord] = useState<IFacilityCleaningRecord | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch facility cleaning records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchFacilityCleaningRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch facility cleaning records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchFacilityCleaningRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch facility cleaning records data
   const fetchFacilityCleaningRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await facilityCleaningService.findAll();
+      const data = await facilityCleaningService.findAll(propertyId);
       setFacilityCleaningRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading facility cleaning records:", error);
@@ -345,7 +362,7 @@ const FacilityCleaning = () => {
   // Function to handle adding a new facility cleaning record
   const handleAddFacilityCleaningRecord = async (data: Partial<IFacilityCleaningRecord>) => {
     try {
-      const newRecord = await facilityCleaningService.createFacilityCleaningRecord(data);
+      const newRecord = await facilityCleaningService.createFacilityCleaningRecord(data, propertyId);
       setFacilityCleaningRecords((prevRecords) => [...prevRecords, newRecord]);
       setIsDialogOpen(false);
       toast({

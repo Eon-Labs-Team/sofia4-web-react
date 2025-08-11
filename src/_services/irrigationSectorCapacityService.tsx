@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IIrrigationSectorCapacity } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing irrigation sector capacity data
@@ -12,9 +13,7 @@ class IrrigationSectorCapacityService {
   async findAll(): Promise<IIrrigationSectorCapacity[]> {
     try {
       const response = await fetch(ENDPOINTS.irrigationSectorCapacity.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -50,9 +49,7 @@ class IrrigationSectorCapacityService {
 
       const response = await fetch(ENDPOINTS.irrigationSectorCapacity.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(irrigationSectorCapacityData),
       });
 
@@ -77,9 +74,7 @@ class IrrigationSectorCapacityService {
     try {
       const response = await fetch(ENDPOINTS.irrigationSectorCapacity.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(irrigationSectorCapacity),
       });
 
@@ -103,9 +98,7 @@ class IrrigationSectorCapacityService {
     try {
       const response = await fetch(ENDPOINTS.irrigationSectorCapacity.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -127,9 +120,7 @@ class IrrigationSectorCapacityService {
   async findById(id: string | number): Promise<IIrrigationSectorCapacity> {
     try {
       const response = await fetch(ENDPOINTS.irrigationSectorCapacity.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

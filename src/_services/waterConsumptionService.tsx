@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IWaterConsumption } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing water consumption data
@@ -12,9 +13,7 @@ class WaterConsumptionService {
   async findAll(): Promise<IWaterConsumption[]> {
     try {
       const response = await fetch(ENDPOINTS.waterConsumption.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -51,9 +50,7 @@ class WaterConsumptionService {
 
       const response = await fetch(ENDPOINTS.waterConsumption.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(waterConsumptionData),
       });
 
@@ -78,9 +75,7 @@ class WaterConsumptionService {
     try {
       const response = await fetch(ENDPOINTS.waterConsumption.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(waterConsumption),
       });
 
@@ -104,9 +99,7 @@ class WaterConsumptionService {
     try {
       const response = await fetch(ENDPOINTS.waterConsumption.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -128,9 +121,7 @@ class WaterConsumptionService {
   async findById(id: string | number): Promise<IWaterConsumption> {
     try {
       const response = await fetch(ENDPOINTS.waterConsumption.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,30 +1,26 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IInventoryMovement } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing inventory movement data
  */
 class InventoryMovementService {
   /**
-   * Get all inventory movements
-   * @returns Promise with all inventory movements
+   * Get all inventory movements for a specific property
+   * @param propertyId The ID of the property to get inventory movements for
+   * @returns Promise with inventory movements for the property
    */
-  async findAll(): Promise<IInventoryMovement[]> {
+  async findAll(propertyId?: string | number | null): Promise<IInventoryMovement[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.inventoryMovement.findAll}?propertyId=${propertyId}`
+        : `${ENDPOINTS.inventoryMovement.findAll}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.inventoryMovement.findAll);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -46,19 +42,8 @@ class InventoryMovementService {
    */
   async findById(id: string | number): Promise<IInventoryMovement> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.inventoryMovement.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+      const response = await fetch(ENDPOINTS.inventoryMovement.byId(id), {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -75,17 +60,18 @@ class InventoryMovementService {
   /**
    * Get movements by product ID
    * @param productId Product ID
+   * @param propertyId The ID of the property to filter by
    * @returns Promise with movements data
    */
-  async findByProductId(productId: string): Promise<IInventoryMovement[]> {
+  async findByProductId(productId: string, propertyId?: string | number | null): Promise<IInventoryMovement[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.inventoryMovement.byProductId(productId)}?propertyId=${propertyId}`
+        : ENDPOINTS.inventoryMovement.byProductId(productId);
       
-      const response = await fetch(ENDPOINTS.inventoryMovement.byProductId(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -155,10 +141,7 @@ class InventoryMovementService {
       const { propertyId } = useAuthStore.getState();
       
       const response = await fetch(ENDPOINTS.inventoryMovement.byLotId(lotId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -176,38 +159,21 @@ class InventoryMovementService {
   /**
    * Create a new inventory movement
    * @param movement Movement data
+   * @param propertyId The ID of the property this movement belongs to
    * @returns Promise with created movement
    */
-  async createMovement(movement: Partial<any>): Promise<IInventoryMovement> {
+  async createMovement(movement: Partial<any>, propertyId?: string | number | null): Promise<IInventoryMovement> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const movementData: Partial<any> = {
-        productId: movement.productId,
-        lotId: movement.lotId,
-        warehouseId: movement.warehouseId,
-        movementType: movement.movementType,
-        quantity: movement.quantity,
-        date: movement.date,
-        reference: movement.reference,
-        notes: movement.notes,
-        unitCost: movement.unitCost,
-        movementDate: movement.movementDate,
-        state: movement.state !== undefined ? movement.state : true,
+        ...movement,
+        // @ts-ignore
+        propertyId, // Add propertyId to the movement data
+        state: movement.state !== undefined ? movement.state : true
       };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        movementData.propertyId = propertyId;
-      }
 
       const response = await fetch(ENDPOINTS.inventoryMovement.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(movementData),
       });
 
@@ -230,7 +196,6 @@ class InventoryMovementService {
    */
   async updateMovement(id: string | number, movement: Partial<IInventoryMovement>): Promise<IInventoryMovement> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const movementData = { ...movement };
       
       // Remove version field if it exists
@@ -238,18 +203,9 @@ class InventoryMovementService {
         delete (movementData as any).__v;
       }
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        movementData.propertyId = propertyId;
-      }
-      
       const response = await fetch(ENDPOINTS.inventoryMovement.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(movementData),
       });
 
@@ -271,23 +227,9 @@ class InventoryMovementService {
    */
   async deleteMovement(id: string | number): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
-      const stateData: any = { 
-        state: false
-      };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        stateData.propertyId = propertyId;
-      }
-      
       const response = await fetch(ENDPOINTS.inventoryMovement.byId(id), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -311,10 +253,7 @@ class InventoryMovementService {
       const { propertyId } = useAuthStore.getState();
       
       const response = await fetch(ENDPOINTS.inventoryMovement.history(warehouseId, productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -337,10 +276,7 @@ class InventoryMovementService {
       const { propertyId } = useAuthStore.getState();
       
       const response = await fetch(ENDPOINTS.inventoryMovement.completeHistory(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -532,10 +468,7 @@ class InventoryMovementService {
       const { propertyId } = useAuthStore.getState();
       
       const response = await fetch(ENDPOINTS.inventoryMovement.exportReport(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

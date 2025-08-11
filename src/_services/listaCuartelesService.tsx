@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IOperationalArea } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing lista cuarteles (barracks list) data
@@ -10,20 +10,15 @@ class ListaCuartelesService {
    * Get all barracks list
    * @returns Promise with all barracks list
    */
-  async findAll(): Promise<IOperationalArea[]> {
+  async findAll(propertyId?: string | number | null): Promise<IOperationalArea[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.listaCuarteles.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.listaCuarteles.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.listaCuarteles.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -44,18 +39,9 @@ class ListaCuartelesService {
    */
   async findProductiveAreas(): Promise<IOperationalArea[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.listaCuarteles.getProductive);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(ENDPOINTS.listaCuarteles.getProductive, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -75,21 +61,13 @@ class ListaCuartelesService {
    * @param barracksList BarracksList data
    * @returns Promise with created barracks list
    */
-  async createBarracksList(barracksList: Partial<IOperationalArea>): Promise<IOperationalArea> {
+  async createBarracksList(barracksList: Partial<IOperationalArea>, propertyId?: string | number | null): Promise<IOperationalArea> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       const barracksListData: Partial<IOperationalArea> = {
-        isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
-        classificationZone: barracksList.classificationZone,
-        areaName: barracksList.areaName,
-        codeOptional: barracksList.codeOptional,
-        observation: barracksList.observation || '',
-        state: barracksList.state !== undefined ? barracksList.state : true,
-        availableRecord: barracksList.availableRecord,
-        active: barracksList.active !== undefined ? barracksList.active : true,
-
-
+        ...barracksList,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: barracksList.state !== undefined ? barracksList.state : true
       };
 
       // Solo incluir campos productivos si el cuartel es productivo
@@ -148,9 +126,7 @@ class ListaCuartelesService {
 
       const response = await fetch(ENDPOINTS.listaCuarteles.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(barracksListData),
       });
 
@@ -173,8 +149,6 @@ class ListaCuartelesService {
    */
   async updateBarracksList(id: string | number, barracksList: Partial<IOperationalArea>): Promise<IOperationalArea> {
     try {
-      const { user } = useAuthStore.getState();
-      
       const barracksListData: Partial<IOperationalArea> = {
         isProductive: barracksList.isProductive !== undefined ? barracksList.isProductive : false,
         classificationZone: barracksList.classificationZone,
@@ -237,9 +211,7 @@ class ListaCuartelesService {
 
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(barracksListData),
       });
 
@@ -263,9 +235,7 @@ class ListaCuartelesService {
     try {
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -285,9 +255,7 @@ class ListaCuartelesService {
   async findById(id: string | number): Promise<IOperationalArea> {
     try {
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

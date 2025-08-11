@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ICropType } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing crop type data
@@ -12,9 +13,7 @@ class CropTypeService {
   async findAll(): Promise<ICropType[]> {
     try {
       const response = await fetch(ENDPOINTS.cropType.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -52,9 +51,7 @@ class CropTypeService {
 
       const response = await fetch(ENDPOINTS.cropType.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(cropTypeData),
       });
 
@@ -79,9 +76,7 @@ class CropTypeService {
     try {
       const response = await fetch(ENDPOINTS.cropType.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(cropType),
       });
 
@@ -105,9 +100,7 @@ class CropTypeService {
     try {
       const response = await fetch(ENDPOINTS.cropType.changeState(id, false), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -129,9 +122,7 @@ class CropTypeService {
   async findById(id: string | number): Promise<ICropType> {
     try {
       const response = await fetch(ENDPOINTS.cropType.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

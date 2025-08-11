@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IIrrigationRecord } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing irrigation record data
@@ -12,9 +13,7 @@ class IrrigationRecordService {
   async findAll(): Promise<IIrrigationRecord[]> {
     try {
       const response = await fetch(`${ENDPOINTS.irrigationRecord.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -54,9 +53,7 @@ class IrrigationRecordService {
 
       const response = await fetch(ENDPOINTS.irrigationRecord.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(irrigationRecordData),
       });
 
@@ -81,9 +78,7 @@ class IrrigationRecordService {
     try {
       const response = await fetch(ENDPOINTS.irrigationRecord.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(irrigationRecord),
       });
 
@@ -107,9 +102,7 @@ class IrrigationRecordService {
     try {
       const response = await fetch(ENDPOINTS.irrigationRecord.setState(id, false), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({}),
       });
 
@@ -132,9 +125,7 @@ class IrrigationRecordService {
   async findById(id: string | number): Promise<IIrrigationRecord> {
     try {
       const response = await fetch(ENDPOINTS.irrigationRecord.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IChlorination } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing water chlorination data
@@ -12,9 +13,7 @@ class ChlorinationService {
   async findAll(): Promise<IChlorination[]> {
     try {
       const response = await fetch(`${ENDPOINTS.chlorination.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -48,9 +47,7 @@ class ChlorinationService {
 
       const response = await fetch(`${ENDPOINTS.chlorination.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(chlorinationData),
       });
 
@@ -75,9 +72,7 @@ class ChlorinationService {
     try {
       const response = await fetch(`${ENDPOINTS.chlorination.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(chlorination),
       });
 
@@ -101,9 +96,7 @@ class ChlorinationService {
     try {
       const response = await fetch(`${ENDPOINTS.chlorination.changeState(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -125,9 +118,7 @@ class ChlorinationService {
   async findById(id: string | number): Promise<IChlorination> {
     try {
       const response = await fetch(`${ENDPOINTS.chlorination.byId(id)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

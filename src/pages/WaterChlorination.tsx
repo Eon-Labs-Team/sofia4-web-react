@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Droplets,
   CheckCircle,
@@ -245,16 +246,32 @@ const WaterChlorination = () => {
   const [selectedChlorination, setSelectedChlorination] = useState<IChlorination | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch chlorination records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchChlorinations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch chlorination records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchChlorinations();
+    }
+  }, [propertyId]);
   
   // Function to fetch chlorination data
   const fetchChlorinations = async () => {
     setIsLoading(true);
     try {
-      const data = await chlorinationService.findAll();
+      const data = await chlorinationService.findAll(propertyId);
       // @ts-ignore
       setChlorinations(data.data || data);
     } catch (error) {
@@ -272,7 +289,7 @@ const WaterChlorination = () => {
   // Function to handle adding a new chlorination record
   const handleAddChlorination = async (data: Partial<IChlorination>) => {
     try {
-      await chlorinationService.createChlorination(data);
+      await chlorinationService.createChlorination(data, propertyId);
       await fetchChlorinations();
       setIsDialogOpen(false);
       toast({

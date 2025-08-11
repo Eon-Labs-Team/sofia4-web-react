@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMachineryList } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing lista maquinarias (machinery list) data
@@ -10,20 +10,15 @@ class ListaMaquinariasService {
    * Get all machinery list
    * @returns Promise with all machinery list
    */
-  async findAll(): Promise<IMachineryList[]> {
+  async findAll(propertyId?: string | number | null): Promise<IMachineryList[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.listaMaquinarias.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.listaMaquinarias.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.listaMaquinarias.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,47 +38,13 @@ class ListaMaquinariasService {
    * @param machineryList IMachineryList data
    * @returns Promise with created machinery list
    */
-  async createMachineryList(machineryList: Partial<IMachineryList>): Promise<IMachineryList> {
+  async createMachineryList(machineryList: Partial<IMachineryList>, propertyId?: string | number | null): Promise<IMachineryList> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       const machineryListData: Partial<IMachineryList> = {
-        equipment: machineryList.equipment,
-        classifyZone: machineryList.classifyZone,
-        machineryCode: machineryList.machineryCode,
-        oldMachineryCode: machineryList.oldMachineryCode,
-        licensePlate: machineryList.licensePlate,
-        machineType: machineryList.machineType,
-        brand: machineryList.brand,
-        machineryModel: machineryList.machineryModel,
-        madeYear: machineryList.madeYear,
-        priceHour: machineryList.priceHour,
-        onCharge: machineryList.onCharge,
-        machineryState: machineryList.machineryState !== undefined ? machineryList.machineryState : true,
-        objective: machineryList.objective,
-        litersCapacity: machineryList.litersCapacity,
-        improvementLiterHa: machineryList.improvementLiterHa,
-        pressureBar: machineryList.pressureBar,
-        revolution: machineryList.revolution,
-        change: machineryList.change,
-        kmByHour: machineryList.kmByHour,
-        cleaningRecord: machineryList.cleaningRecord !== undefined ? machineryList.cleaningRecord : false,
-        temperature: machineryList.temperature !== undefined ? machineryList.temperature : false,
-        maintenanceRecord: machineryList.maintenanceRecord !== undefined ? machineryList.maintenanceRecord : false,
-        temperatureEquipment: machineryList.temperatureEquipment !== undefined ? machineryList.temperatureEquipment : false,
-        classifyCost: machineryList.classifyCost,
-        subClassifyCost: machineryList.subClassifyCost,
-        invoicePurchaseGuide: machineryList.invoicePurchaseGuide,
-        purchaseDate: machineryList.purchaseDate,
-        supplier: machineryList.supplier,
-        observation: machineryList.observation,
-        gpsCode: machineryList.gpsCode,
-        gpsSupplier: machineryList.gpsSupplier,
-        propertyLoans: machineryList.propertyLoans || [],
-        loansDate: machineryList.loansDate,
-        loansObservation: machineryList.loansObservation,
-        image: machineryList.image,
-        state: machineryList.state !== undefined ? machineryList.state : true,
+        ...machineryList,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: machineryList.state !== undefined ? machineryList.state : true
       };
       
       // Add propertyId if available
@@ -102,9 +63,7 @@ class ListaMaquinariasService {
 
       const response = await fetch(ENDPOINTS.listaMaquinarias.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryListData),
       });
 
@@ -127,8 +86,6 @@ class ListaMaquinariasService {
    */
   async updateMachineryList(id: string | number, machineryList: Partial<IMachineryList>): Promise<IMachineryList> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       const updateData = { ...machineryList };
       
       // Add propertyId if available
@@ -145,9 +102,7 @@ class ListaMaquinariasService {
       
       const response = await fetch(ENDPOINTS.listaMaquinarias.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(updateData),
       });
 
@@ -171,9 +126,7 @@ class ListaMaquinariasService {
     try {
       const response = await fetch(ENDPOINTS.listaMaquinarias.changeState(id, false), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -195,9 +148,7 @@ class ListaMaquinariasService {
   async findById(id: string | number): Promise<IMachineryList> {
     try {
       const response = await fetch(ENDPOINTS.listaMaquinarias.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

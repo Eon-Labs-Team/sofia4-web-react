@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 import { IProductCategory } from '@eon-lib/eon-mongoose';
 
 /**
@@ -13,8 +13,6 @@ class ProductCategoryService {
   async findByEnterpriseId(): Promise<IProductCategory[]> {
     try {
       const enterpriseId = "1234"; // todo: manejar session
-      const { propertyId } = useAuthStore.getState();
-      
       // Create a URL with query parameters
       const url = new URL(ENDPOINTS.productCategory.byEnterpriseId);
       if (propertyId) {

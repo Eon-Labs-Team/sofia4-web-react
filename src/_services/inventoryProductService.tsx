@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import type { IInventoryProduct } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing inventory product data (new inventory system)
@@ -12,9 +12,7 @@ class InventoryProductService {
   async findAll(): Promise<IInventoryProduct[]> {
     try {
       const response = await fetch(ENDPOINTS.inventoryProduct.findAll, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -35,9 +33,7 @@ class InventoryProductService {
   async findById(id: string): Promise<IInventoryProduct> {
     try {
       const response = await fetch(ENDPOINTS.inventoryProduct.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -57,9 +53,7 @@ class InventoryProductService {
   async findByName(name: string): Promise<IInventoryProduct> {
     try {
       const response = await fetch(ENDPOINTS.inventoryProduct.byName(name), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -95,9 +89,7 @@ class InventoryProductService {
 
       const response = await fetch(ENDPOINTS.inventoryProduct.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(requestData),
       });
 
@@ -126,9 +118,7 @@ class InventoryProductService {
       
       const response = await fetch(ENDPOINTS.inventoryProduct.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(cleanData),
       });
 
@@ -150,9 +140,7 @@ class InventoryProductService {
     try {
       const response = await fetch(ENDPOINTS.inventoryProduct.byId(id), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -172,9 +160,7 @@ class InventoryProductService {
   async getProductWithLots(id: string): Promise<any> {
     try {
       const response = await fetch(`${ENDPOINTS.inventoryProduct.byId(id)}/withLots`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -194,9 +180,7 @@ class InventoryProductService {
   async getStockLevels(id: string): Promise<any> {
     try {
       const response = await fetch(`${ENDPOINTS.inventoryProduct.byId(id)}/stockLevels`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

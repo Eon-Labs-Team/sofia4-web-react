@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ITrainingTalks } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing training talks data
@@ -9,12 +10,10 @@ class TrainingTalksService {
    * Get all training talks
    * @returns Promise with all training talks
    */
-  async findAll(): Promise<ITrainingTalks[]> {
+  async findAll(propertyId?: string | number | null): Promise<ITrainingTalks[]> {
     try {
-      const response = await fetch(ENDPOINTS.trainingTalks.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(ENDPOINTS.trainingTalks.base + `?propertyId=${propertyId}`, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -33,7 +32,7 @@ class TrainingTalksService {
    * @param trainingTalk Training talk data
    * @returns Promise with created training talk
    */
-  async createTrainingTalk(trainingTalk: Partial<ITrainingTalks>): Promise<ITrainingTalks> {
+  async createTrainingTalk(trainingTalk: Partial<ITrainingTalks>, propertyId?: string | number | null): Promise<ITrainingTalks> {
     try {
       const trainingTalkData: Partial<ITrainingTalks> = {
         talkType: trainingTalk.talkType,
@@ -46,14 +45,13 @@ class TrainingTalksService {
         observations: trainingTalk.observations,
         sessionDuration: trainingTalk.sessionDuration,
         participants: trainingTalk.participants,
+        propertyId: (trainingTalk.propertyId || propertyId)?.toString(),
         state: trainingTalk.state !== undefined ? trainingTalk.state : true
       };
 
       const response = await fetch(ENDPOINTS.trainingTalks.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(trainingTalkData),
       });
 
@@ -78,9 +76,7 @@ class TrainingTalksService {
     try {
       const response = await fetch(ENDPOINTS.trainingTalks.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(trainingTalk),
       });
 
@@ -104,9 +100,7 @@ class TrainingTalksService {
     try {
       const response = await fetch(ENDPOINTS.trainingTalks.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({ state: false }),
       });
 
@@ -129,9 +123,7 @@ class TrainingTalksService {
   async findById(id: string | number): Promise<ITrainingTalks> {
     try {
       const response = await fetch(ENDPOINTS.trainingTalks.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

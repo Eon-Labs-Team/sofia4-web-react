@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -245,16 +246,32 @@ const HygieneSanitation = () => {
   const [selectedRecord, setSelectedRecord] = useState<IHygieneSanitation | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch records data
   const fetchRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await hygieneSanitationService.findAll();
+      const data = await hygieneSanitationService.findAll(propertyId);
       setRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading hygiene and sanitation records:", error);
@@ -271,7 +288,7 @@ const HygieneSanitation = () => {
   // Function to handle adding a new record
   const handleAddRecord = async (data: Partial<IHygieneSanitation>) => {
     try {
-      await hygieneSanitationService.createHygieneSanitation(data);
+      await hygieneSanitationService.createHygieneSanitation(data, propertyId);
       
       toast({
         title: "Éxito",

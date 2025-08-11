@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -258,16 +259,32 @@ const TechnicalIrrigationMaintenance = () => {
   const [selectedMaintenance, setSelectedMaintenance] = useState<ITechnicalIrrigationMaintenance | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch maintenances on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchMaintenances();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch maintenances on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchMaintenances();
+    }
+  }, [propertyId]);
   
   // Function to fetch maintenances data
   const fetchMaintenances = async () => {
     setIsLoading(true);
     try {
-      const response = await technicalIrrigationMaintenanceService.findAll();
+      const response = await technicalIrrigationMaintenanceService.findAll(propertyId);
       // Handle the case where the response might be wrapped in a data property
       const data = Array.isArray(response) ? response : 
         (response as any).data || [];
@@ -287,7 +304,7 @@ const TechnicalIrrigationMaintenance = () => {
   // Function to handle adding a new maintenance
   const handleAddMaintenance = async (data: Partial<ITechnicalIrrigationMaintenance>) => {
     try {
-      const newMaintenance = await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data);
+      const newMaintenance = await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data, propertyId);
       await fetchMaintenances();
       setIsDialogOpen(false);
       toast({

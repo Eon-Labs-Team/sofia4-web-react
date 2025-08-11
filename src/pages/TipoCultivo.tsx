@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Leaf,
   CheckCircle,
@@ -301,16 +302,32 @@ const TipoCultivo = () => {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
   
-  // Fetch crop types on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchCropTypes();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch crop types on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchCropTypes();
+    }
+  }, [propertyId]);
   
   // Function to fetch crop types data
   const fetchCropTypes = async () => {
     setIsLoading(true);
     try {
-      const response = await cropTypeService.findAll();
+      const response = await cropTypeService.findAll(propertyId);
       // @ts-ignore
       setCropTypes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
@@ -339,7 +356,7 @@ const TipoCultivo = () => {
         data.barracksNumber = data.barracks.length;
       }
       
-      await cropTypeService.createCropType(data);
+      await cropTypeService.createCropType(data, propertyId);
       
       toast({
         title: "Éxito",

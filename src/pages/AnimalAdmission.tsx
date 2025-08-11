@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -286,16 +287,32 @@ const AnimalAdmission = () => {
   const [selectedAnimalAdmission, setSelectedAnimalAdmission] = useState<IAnimalAdmission | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch animal admissions on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchAnimalAdmissions();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch animal admissions on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchAnimalAdmissions();
+    }
+  }, [propertyId]);
   
   // Function to fetch animal admissions data
   const fetchAnimalAdmissions = async () => {
     setIsLoading(true);
     try {
-      const data = await animalAdmissionService.findAll();
+      const data = await animalAdmissionService.findAll(propertyId);
       // Handle both array format and any potential data property
       setAnimalAdmissions(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
@@ -313,7 +330,7 @@ const AnimalAdmission = () => {
   // Function to handle adding a new animal admission
   const handleAddAnimalAdmission = async (data: Partial<IAnimalAdmission>) => {
     try {
-      await animalAdmissionService.createAnimalAdmission(data);
+      await animalAdmissionService.createAnimalAdmission(data, propertyId);
       
       toast({
         title: "Éxito",

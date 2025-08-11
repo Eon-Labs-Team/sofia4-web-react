@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ISoilType } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing soil type data
@@ -12,9 +13,7 @@ class SoilTypeService {
   async findAll(): Promise<ISoilType[]> {
     try {
       const response = await fetch(`${ENDPOINTS.soilType.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,9 +42,7 @@ class SoilTypeService {
 
       const response = await fetch(`${ENDPOINTS.soilType.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilTypeData),
       });
 
@@ -70,9 +67,7 @@ class SoilTypeService {
     try {
       const response = await fetch(`${ENDPOINTS.soilType.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilType),
       });
 
@@ -96,9 +91,7 @@ class SoilTypeService {
     try {
       const response = await fetch(`${ENDPOINTS.soilType.setState(id, false)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -120,9 +113,7 @@ class SoilTypeService {
   async findById(id: string | number): Promise<ISoilType> {
     try {
       const response = await fetch(`${ENDPOINTS.soilType.byId(id)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

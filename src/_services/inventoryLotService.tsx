@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import type { IInventoryLot } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing inventory lot data (new inventory system)
@@ -11,13 +11,8 @@ class InventoryLotService {
    */
   async findAll(): Promise<IInventoryLot[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.findAll, {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -37,13 +32,8 @@ class InventoryLotService {
    */
   async findById(id: string): Promise<IInventoryLot> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -62,13 +52,8 @@ class InventoryLotService {
    */
   async getByProductId(productId: string): Promise<IInventoryLot[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.byProductId(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -88,13 +73,8 @@ class InventoryLotService {
    */
   async getByWarehouseId(warehouseId: string): Promise<IInventoryLot[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.byWarehouseId(warehouseId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -114,13 +94,8 @@ class InventoryLotService {
    */
   async getActiveByProductId(productId: string): Promise<IInventoryLot[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.activeByProductId(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -140,13 +115,8 @@ class InventoryLotService {
    */
   async getActiveByProductIdOrderedByExpiry(productId: string): Promise<IInventoryLot[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.activeByProductIdOrderedByExpiry(productId), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -198,21 +168,23 @@ class InventoryLotService {
     lotName?: string;
     manufactureDate?: Date;
     expiryDate?: Date;
-  }): Promise<IInventoryLot> {
+  }, propertyId?: string | number | null): Promise<IInventoryLot> {
     try {
-      const { propertyId: userPropertyId } = useAuthStore.getState();
-      
-      const requestData = {
-        productId: lotData.productId,
-        warehouseId: lotData.warehouseId,
-        lotNumber: lotData.lotNumber,
-        quantity: lotData.quantity,
-        status: lotData.status || 'active',
-        propertyId: lotData.propertyId,
-        lotName: lotData.lotName,
-        manufactureDate: lotData.manufactureDate,
-        expiryDate: lotData.expiryDate,
-        isDeleted: false,
+      const lotDataData: {
+    productId: string;
+    warehouseId: string;
+    lotNumber: string;
+    quantity: number;
+    status?: string;
+    propertyId: string;
+    lotName?: string;
+    manufactureDate?: Date;
+    expiryDate?: Date;
+  } = {
+        ...lotData,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: lotData.state !== undefined ? lotData.state : true
       };
 
       const response = await fetch(ENDPOINTS.inventoryLot.base, {
@@ -240,7 +212,6 @@ class InventoryLotService {
    */
   async updateLot(id: string, lotData: Partial<IInventoryLot>): Promise<IInventoryLot> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const cleanData = { ...lotData };
       
       // Remove version field if it exists
@@ -250,10 +221,7 @@ class InventoryLotService {
       
       const response = await fetch(ENDPOINTS.inventoryLot.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(cleanData),
       });
 
@@ -273,14 +241,9 @@ class InventoryLotService {
    */
   async deleteLot(id: string): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryLot.byId(id), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {

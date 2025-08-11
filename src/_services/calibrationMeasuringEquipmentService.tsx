@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ICalibrationMeasuringEquipment } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing calibration measuring equipment data
@@ -12,9 +13,7 @@ class CalibrationMeasuringEquipmentService {
   async findAll(): Promise<ICalibrationMeasuringEquipment[]> {
     try {
       const response = await fetch(ENDPOINTS.calibrationMeasuringEquipment.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -55,9 +54,7 @@ class CalibrationMeasuringEquipmentService {
 
       const response = await fetch(ENDPOINTS.calibrationMeasuringEquipment.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calibrationData),
       });
 
@@ -82,9 +79,7 @@ class CalibrationMeasuringEquipmentService {
     try {
       const response = await fetch(ENDPOINTS.calibrationMeasuringEquipment.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calibration),
       });
 
@@ -132,9 +127,7 @@ class CalibrationMeasuringEquipmentService {
   async findById(id: string | number): Promise<ICalibrationMeasuringEquipment> {
     try {
       const response = await fetch(ENDPOINTS.calibrationMeasuringEquipment.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

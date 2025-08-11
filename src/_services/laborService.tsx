@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ITask } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing labor (tasks) data
@@ -10,20 +10,15 @@ class LaborService {
    * Get all labores
    * @returns Promise with all labores
    */
-  async findAll(): Promise<ITask[]> {
+  async findAll(propertyId?: string | number | null): Promise<ITask[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.labores.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.labores.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.labores.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,24 +38,13 @@ class LaborService {
    * @param labor Labor data
    * @returns Promise with created labor
    */
-  async createLabor(labor: Partial<ITask>): Promise<ITask> {
+  async createLabor(labor: Partial<ITask>, propertyId?: string | number | null): Promise<ITask> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const laborData: Partial<ITask> = {
-        taskTypeId: labor.taskTypeId,
-        optionalCode: labor.optionalCode,
-        taskName: labor.taskName,
-        taskPrice: labor.taskPrice,
-        optimalYield: labor.optimalYield,
-        isEditableInApp: labor.isEditableInApp !== undefined ? labor.isEditableInApp : true,
-        usesWetCalculationPerHa: labor.usesWetCalculationPerHa !== undefined ? labor.usesWetCalculationPerHa : false,
-        usageContext: labor.usageContext || "2", // Por defecto, web y app
-        maxHarvestYield: labor.maxHarvestYield,
-        showTotalEarningsInApp: labor.showTotalEarningsInApp !== undefined ? labor.showTotalEarningsInApp : true,
-        associatedProducts: labor.associatedProducts || [],
-        requiresRowCount: labor.requiresRowCount !== undefined ? labor.requiresRowCount : false,
-        requiresHourLog: labor.requiresHourLog !== undefined ? labor.requiresHourLog : false,
+        ...labor,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: labor.state !== undefined ? labor.state : true
       };
       
       // Add propertyId if available
@@ -71,9 +55,7 @@ class LaborService {
 
       const response = await fetch(ENDPOINTS.labores.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
       });
 
@@ -96,7 +78,6 @@ class LaborService {
    */
   async updateLabor(id: string | number, labor: Partial<ITask>): Promise<ITask> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const laborData = { ...labor };
       
       // Add propertyId if available
@@ -107,9 +88,7 @@ class LaborService {
       
       const response = await fetch(ENDPOINTS.labores.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
       });
 
@@ -131,8 +110,6 @@ class LaborService {
    */
   async softDeleteLabor(id: string | number): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.labores.changeState(id, false));
       if (propertyId) {
@@ -141,9 +118,7 @@ class LaborService {
       
       const response = await fetch(url.toString(), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -164,8 +139,6 @@ class LaborService {
    */
   async findById(id: string | number): Promise<ITask> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.labores.byId(id));
       if (propertyId) {
@@ -173,9 +146,7 @@ class LaborService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

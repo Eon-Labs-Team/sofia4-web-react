@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IWork } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing Work (Orden de aplicación) data
@@ -10,20 +10,15 @@ class WorkService {
    * Get all works with type A (Orden de aplicación)
    * @returns Promise with all orden de aplicación
    */
-  async findAll(): Promise<IWork[]> {
+  async findAll(propertyId?: string | number | null): Promise<IWork[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${`${ENDPOINTS.work?.base}`}?propertyId=${propertyId}`
+        : `${`${ENDPOINTS.work?.base}`}`;
       
-      // Create a URL with query parameters
-      const url = new URL(`${ENDPOINTS.work?.base}`);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -42,16 +37,13 @@ class WorkService {
    * @param work Work data
    * @returns Promise with created work
    */
-  async createApplication(work: Partial<IWork>): Promise<IWork> {
+  async createApplication(work: Partial<IWork>, propertyId?: string | number | null): Promise<IWork> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
-      // Always set workType to 'A' for orden de aplicación
-      const workData = {
+      const workData: Partial<IWork> = {
         ...work,
-        workType: 'A' as const,
-        createdBy: user?.id || null, // Add createdBy field with current user ID
-        updatedBy: user?.id || null, // Add updatedBy field with current user ID
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: work.state !== undefined ? work.state : true
       };
       
       // Add propertyId if available
@@ -64,9 +56,7 @@ class WorkService {
 
       const response = await fetch(ENDPOINTS.work?.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workData),
       });
 
@@ -88,16 +78,13 @@ class WorkService {
    * @param work Work data
    * @returns Promise with created work
    */
-  async createAgriculturalWork(work: Partial<IWork>): Promise<IWork> {
+  async createAgriculturalWork(work: Partial<IWork>, propertyId?: string | number | null): Promise<IWork> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
-      // Always set workType to 'T' for orden de aplicación
-      const workData = {
+      const workData: Partial<IWork> = {
         ...work,
-        workType: 'T' as const,
-        createdBy: user?.id || null, // Add createdBy field with current user ID
-        updatedBy: user?.id || null, // Add updatedBy field with current user ID
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: work.state !== undefined ? work.state : true
       };
       
       // Add propertyId if available
@@ -110,9 +97,7 @@ class WorkService {
 
       const response = await fetch(ENDPOINTS.work?.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workData),
       });
 
@@ -135,26 +120,18 @@ class WorkService {
    */
   async updateWork(id: string | number, work: Partial<IWork>): Promise<IWork> {
     try {
-
-      const { propertyId, user } = useAuthStore.getState();
+      const user = authService.getCurrentUser();
+      
       const workData = { 
         ...work,
         updatedBy: user?.id || null, // Add updatedBy field with current user ID
       };
-
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workData.propertyId = propertyId;
-      }
       
       console.log('Updating with data:', JSON.stringify(workData));
 
       const response = await fetch(ENDPOINTS.work?.byId(id), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workData),
       });
 
@@ -177,24 +154,16 @@ class WorkService {
    */
   async changeWorkState(id: string | number, state: string): Promise<any> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
+      const user = authService.getCurrentUser();
       
       const stateData = { 
         workState: state,
         updatedBy: user?.id || null, // Add updatedBy field with current user ID
       };
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        stateData.propertyId = propertyId;
-      }
-      
       const response = await fetch(ENDPOINTS.work?.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(stateData),
       });
 
@@ -216,18 +185,8 @@ class WorkService {
    */
   async findById(id: string | number): Promise<IWork> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.work?.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(ENDPOINTS.work?.byId(id), {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,20 +1,25 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IPersonnelProvision } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing personnel provision data
  */
 class PersonnelProvisionService {
   /**
-   * Get all personnel provisions
-   * @returns Promise with all personnel provisions
+   * Get all personnel provisions for a specific property
+   * @param propertyId The ID of the property to get personnel provisions for
+   * @returns Promise with personnel provisions for the property
    */
-  async findAll(): Promise<IPersonnelProvision[]> {
+  async findAll(propertyId?: string | number | null): Promise<IPersonnelProvision[]> {
     try {
-      const response = await fetch(ENDPOINTS.personnelProvision.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.personnelProvision.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.personnelProvision.base}`;
+      
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -31,27 +36,21 @@ class PersonnelProvisionService {
   /**
    * Create a new personnel provision
    * @param personnelProvision Personnel provision data
+   * @param propertyId The ID of the property this personnel provision belongs to
    * @returns Promise with created personnel provision
    */
-  async createPersonnelProvision(personnelProvision: Partial<IPersonnelProvision>): Promise<IPersonnelProvision> {
+  async createPersonnelProvision(personnelProvision: Partial<IPersonnelProvision>, propertyId?: string | number | null): Promise<IPersonnelProvision> {
     try {
       const personnelProvisionData: Partial<IPersonnelProvision> = {
-        deliveryDate: personnelProvision.deliveryDate,
-        dniRut: personnelProvision.dniRut,
-        workerName: personnelProvision.workerName,
-        category: personnelProvision.category,
-        product: personnelProvision.product,
-        quantity: personnelProvision.quantity,
-        observation: personnelProvision.observation,
-        user: personnelProvision.user,
+        ...personnelProvision,
+        // @ts-ignore
+        propertyId, // Add propertyId to the personnel provision data
         state: personnelProvision.state !== undefined ? personnelProvision.state : true
       };
 
       const response = await fetch(ENDPOINTS.personnelProvision.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(personnelProvisionData),
       });
 
@@ -76,9 +75,7 @@ class PersonnelProvisionService {
     try {
       const response = await fetch(ENDPOINTS.personnelProvision.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(personnelProvision),
       });
 
@@ -102,9 +99,8 @@ class PersonnelProvisionService {
     try {
       const response = await fetch(ENDPOINTS.personnelProvision.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {
@@ -126,9 +122,7 @@ class PersonnelProvisionService {
   async findById(id: string | number): Promise<IPersonnelProvision> {
     try {
       const response = await fetch(ENDPOINTS.personnelProvision.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

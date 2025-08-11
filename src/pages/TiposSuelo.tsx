@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -147,16 +148,32 @@ const TiposSuelo = () => {
   const [selectedSoilType, setSelectedSoilType] = useState<ISoilType | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch soil types on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchSoilTypes();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch soil types on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchSoilTypes();
+    }
+  }, [propertyId]);
   
   // Function to fetch soil types data
   const fetchSoilTypes = async () => {
     setIsLoading(true);
     try {
-      const data = await soilTypeService.findAll();
+      const data = await soilTypeService.findAll(propertyId);
       // Handle different API response formats
       // @ts-ignore
       setSoilTypes(Array.isArray(data) ? data : (data?.data || []));
@@ -181,7 +198,7 @@ const TiposSuelo = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await soilTypeService.createSoilType(soilTypeData);
+      await soilTypeService.createSoilType(soilTypeData, propertyId);
       
       toast({
         title: "Éxito",

@@ -275,7 +275,7 @@ const ListaCuarteles = () => {
     console.log('🚀 Starting fetchListaCuarteles with propertyId:', propertyId);
     
     try {
-      const rawData = await listaCuartelesService.findAll();
+      const rawData = await listaCuartelesService.findAll(propertyId);
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
@@ -330,7 +330,7 @@ const ListaCuarteles = () => {
   // Function to handle adding a new lista cuarteles
   const handleAddListaCuarteles = async (data: Partial<IOperationalArea>) => {
     try {
-      const newListaCuarteles = await listaCuartelesService.createBarracksList(data);
+      const newListaCuarteles = await listaCuartelesService.createBarracksList(data, propertyId);
       await fetchListaCuarteles();
       setIsDialogOpen(false);
       toast({

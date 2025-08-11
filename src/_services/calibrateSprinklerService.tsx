@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ICalibrateSprinkler } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing calibrate sprinkler data
@@ -12,9 +13,7 @@ class CalibrateSprinklerService {
   async findAll(): Promise<ICalibrateSprinkler[] | { data: ICalibrateSprinkler[] }> {
     try {
       const response = await fetch(ENDPOINTS.calibrateSprinkler.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -54,9 +53,7 @@ class CalibrateSprinklerService {
 
       const response = await fetch(ENDPOINTS.calibrateSprinkler.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calibrateSprinklerData),
       });
 
@@ -81,9 +78,7 @@ class CalibrateSprinklerService {
     try {
       const response = await fetch(ENDPOINTS.calibrateSprinkler.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calibrateSprinkler),
       });
 
@@ -107,9 +102,7 @@ class CalibrateSprinklerService {
     try {
       const response = await fetch(ENDPOINTS.calibrateSprinkler.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -131,9 +124,7 @@ class CalibrateSprinklerService {
   async findById(id: string | number): Promise<ICalibrateSprinkler> {
     try {
       const response = await fetch(ENDPOINTS.calibrateSprinkler.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

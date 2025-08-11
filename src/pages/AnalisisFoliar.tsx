@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Leaf,
   CheckCircle,
@@ -391,16 +392,32 @@ const AnalisisFoliar = () => {
   const [selectedLeafAnalysis, setSelectedLeafAnalysis] = useState<ILeafAnalysisRecord | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch leaf analysis records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchLeafAnalysisRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch leaf analysis records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchLeafAnalysisRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch leaf analysis data
   const fetchLeafAnalysisRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await leafAnalysisService.findAll();
+      const response = await leafAnalysisService.findAll(propertyId);
       // Handle both direct array response and wrapped object with data property
       const records = Array.isArray(response) 
         ? response 
@@ -418,7 +435,7 @@ const AnalisisFoliar = () => {
   // Function to handle adding a new leaf analysis
   const handleAddLeafAnalysis = async (data: Partial<ILeafAnalysisRecord>) => {
     try {
-      const newLeafAnalysis = await leafAnalysisService.createLeafAnalysis(data);
+      const newLeafAnalysis = await leafAnalysisService.createLeafAnalysis(data, propertyId);
       setLeafAnalysisRecords((prevRecords) => [...prevRecords, newLeafAnalysis]);
       setIsDialogOpen(false);
       toast({

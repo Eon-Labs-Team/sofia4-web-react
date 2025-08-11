@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Leaf,
   CheckCircle,
@@ -148,16 +149,32 @@ const Variedades = () => {
   const [selectedVariety, setSelectedVariety] = useState<IVarietyType | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch varieties on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchVarieties();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch varieties on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchVarieties();
+    }
+  }, [propertyId]);
   
   // Function to fetch varieties data
   const fetchVarieties = async () => {
     setIsLoading(true);
     try {
-      const response = await varietyTypeService.findAll();
+      const response = await varietyTypeService.findAll(propertyId);
       // Verificar si la respuesta es un array o un objeto con propiedad data
       const data = Array.isArray(response) ? response : (response as any).data || [];
       setVarieties(data);
@@ -172,7 +189,7 @@ const Variedades = () => {
   // Function to handle adding a new variety
   const handleAddVariety = async (data: Partial<IVarietyType>) => {
     try {
-      await varietyTypeService.createVariety(data);
+      await varietyTypeService.createVariety(data, propertyId);
       toast({
         title: "Variedad agregada",
         description: "La variedad ha sido agregada exitosamente.",

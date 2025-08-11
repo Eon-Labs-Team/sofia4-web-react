@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Calendar,
   CheckCircle,
@@ -260,16 +261,32 @@ const EventosClimaticos = () => {
   const [selectedWeatherEvent, setSelectedWeatherEvent] = useState<IWeatherEvent | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch weather events on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWeatherEvents();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch weather events on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWeatherEvents();
+    }
+  }, [propertyId]);
   
   // Function to fetch weather events data
   const fetchWeatherEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await weatherEventService.findAll();
+      const response = await weatherEventService.findAll(propertyId);
       // Verificar si la respuesta es un objeto con una propiedad data o directamente un array
       setWeatherEvents(Array.isArray(response) ? response : (response as any).data || []);
     } catch (error) {
@@ -300,7 +317,7 @@ const EventosClimaticos = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newWeatherEvent = await weatherEventService.createWeatherEvent(weatherEventData);
+      const newWeatherEvent = await weatherEventService.createWeatherEvent(weatherEventData, propertyId);
       setWeatherEvents((prevEvents) => [...prevEvents, newWeatherEvent]);
       setIsDialogOpen(false);
       toast({

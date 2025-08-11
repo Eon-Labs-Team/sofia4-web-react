@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import type { IInventoryWarehouse } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing inventory warehouse data (new inventory system)
@@ -11,13 +11,8 @@ class InventoryWarehouseService {
    */
   async findAll(): Promise<IInventoryWarehouse[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryWarehouse.findAll, {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -61,13 +56,8 @@ class InventoryWarehouseService {
    */
   async getPropertyWarehouses(): Promise<IInventoryWarehouse[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryWarehouse.property, {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -87,13 +77,8 @@ class InventoryWarehouseService {
    */
   async findById(id: string): Promise<IInventoryWarehouse> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryWarehouse.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -118,15 +103,21 @@ class InventoryWarehouseService {
       capacity?: number;
     };
     status?: boolean;
-  }): Promise<IInventoryWarehouse> {
+  }, propertyId?: string | number | null): Promise<IInventoryWarehouse> {
     try {
-      const { propertyId: userPropertyId } = useAuthStore.getState();
-      
-      const requestData = {
-        name: warehouseData.name,
-        propertyId: warehouseData.propertyId,
-        location: warehouseData.location,
-        status: warehouseData.status !== undefined ? warehouseData.status : true,
+      const warehouseDataData: {
+    name: string;
+    propertyId: string;
+    location: {
+      name: string;
+      capacity?: number;
+    };
+    status?: boolean;
+  } = {
+        ...warehouseData,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: warehouseData.state !== undefined ? warehouseData.state : true
       };
 
       const response = await fetch(ENDPOINTS.inventoryWarehouse.base, {
@@ -154,7 +145,6 @@ class InventoryWarehouseService {
    */
   async updateWarehouse(id: string, warehouseData: Partial<IInventoryWarehouse>): Promise<IInventoryWarehouse> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const cleanData = { ...warehouseData };
       
       // Remove version field if it exists
@@ -164,10 +154,7 @@ class InventoryWarehouseService {
       
       const response = await fetch(ENDPOINTS.inventoryWarehouse.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(cleanData),
       });
 
@@ -187,14 +174,9 @@ class InventoryWarehouseService {
    */
   async deleteWarehouse(id: string): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const response = await fetch(ENDPOINTS.inventoryWarehouse.byId(id), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': propertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {

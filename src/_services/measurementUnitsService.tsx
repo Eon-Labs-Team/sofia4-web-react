@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMeasurementUnits } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing measurement units data
@@ -12,9 +13,7 @@ class MeasurementUnitsService {
   async findAll(): Promise<IMeasurementUnits[]> {
     try {
       const response = await fetch(ENDPOINTS.measurementUnits.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,9 +42,7 @@ class MeasurementUnitsService {
 
       const response = await fetch(ENDPOINTS.measurementUnits.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(measurementUnitData),
       });
 
@@ -70,9 +67,7 @@ class MeasurementUnitsService {
     try {
       const response = await fetch(ENDPOINTS.measurementUnits.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(measurementUnit),
       });
 
@@ -120,9 +115,7 @@ class MeasurementUnitsService {
   async findById(id: string | number): Promise<IMeasurementUnits> {
     try {
       const response = await fetch(ENDPOINTS.measurementUnits.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

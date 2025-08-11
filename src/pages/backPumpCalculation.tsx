@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -317,16 +318,32 @@ const BackPumpCalculation = () => {
   const [selectedBackPumpCalculation, setSelectedBackPumpCalculation] = useState<IBackPumpCalculation | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch back pump calculations on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchBackPumpCalculations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch back pump calculations on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchBackPumpCalculations();
+    }
+  }, [propertyId]);
   
   // Function to fetch back pump calculations data
   const fetchBackPumpCalculations = async () => {
     setIsLoading(true);
     try {
-      const response = await backPumpCalculationService.findAll();
+      const response = await backPumpCalculationService.findAll(propertyId);
       // Manejar tanto la respuesta como array directo o como objeto con propiedad data
       let calculationsData: IBackPumpCalculation[] = [];
       
@@ -352,7 +369,7 @@ const BackPumpCalculation = () => {
   // Function to handle adding a new back pump calculation
   const handleAddBackPumpCalculation = async (data: Partial<IBackPumpCalculation>) => {
     try {
-      await backPumpCalculationService.createBackPumpCalculation(data);
+      await backPumpCalculationService.createBackPumpCalculation(data, propertyId);
       toast({
         title: "Éxito",
         description: "Cálculo de bomba de espalda agregado correctamente",

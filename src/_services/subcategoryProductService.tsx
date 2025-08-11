@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ISubCategoryProduct } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing product subcategories
@@ -12,9 +13,7 @@ class SubcategoryProductService {
   async findAll(): Promise<ISubCategoryProduct[]> {
     try {
       const response = await fetch(ENDPOINTS.subcategoryProduct.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,9 +42,7 @@ class SubcategoryProductService {
 
       const response = await fetch(ENDPOINTS.subcategoryProduct.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(subcategoryData),
       });
 
@@ -70,9 +67,7 @@ class SubcategoryProductService {
     try {
       const response = await fetch(ENDPOINTS.subcategoryProduct.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(subcategory),
       });
 
@@ -97,9 +92,7 @@ class SubcategoryProductService {
       // Update only the state field to false
       const response = await fetch(ENDPOINTS.subcategoryProduct.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({ state: false }),
       });
 
@@ -122,9 +115,7 @@ class SubcategoryProductService {
   async findById(id: string | number): Promise<ISubCategoryProduct> {
     try {
       const response = await fetch(ENDPOINTS.subcategoryProduct.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

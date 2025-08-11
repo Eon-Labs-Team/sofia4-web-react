@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Trash,
   CheckCircle,
@@ -352,16 +353,32 @@ const LimpiezaMaquinaria = () => {
   const [selectedMachineryCleaning, setSelectedMachineryCleaning] = useState<IMachineryCleaning | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch machinery cleaning records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchMachineryCleanings();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch machinery cleaning records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchMachineryCleanings();
+    }
+  }, [propertyId]);
   
   // Function to fetch machinery cleaning data
   const fetchMachineryCleanings = async () => {
     setIsLoading(true);
     try {
-      const response = await machineryCleaningService.findAll();
+      const response = await machineryCleaningService.findAll(propertyId);
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IMachineryCleaning[]
       : Array.isArray(response) ? response as IMachineryCleaning[] : [] as IMachineryCleaning[];
@@ -377,7 +394,7 @@ const LimpiezaMaquinaria = () => {
   // Function to handle adding a new machinery cleaning record
   const handleAddMachineryCleaning = async (data: Partial<IMachineryCleaning>) => {
     try {
-      await machineryCleaningService.createMachineryCleaning(data);
+      await machineryCleaningService.createMachineryCleaning(data, propertyId);
       toast({
         title: "Limpieza de maquinaria agregada",
         description: "Se ha agregado correctamente la limpieza de maquinaria.",

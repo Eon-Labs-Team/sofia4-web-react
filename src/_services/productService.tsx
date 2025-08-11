@@ -1,6 +1,7 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IProducts } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing products data
@@ -21,9 +22,7 @@ class ProductService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -73,9 +72,7 @@ class ProductService {
 
       const response = await fetch(ENDPOINTS.products.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(productData),
       });
 
@@ -113,9 +110,7 @@ class ProductService {
       
       const response = await fetch(ENDPOINTS.products.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(productData),
       });
 
@@ -147,9 +142,7 @@ class ProductService {
       
       const response = await fetch(url.toString(), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -179,9 +172,7 @@ class ProductService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

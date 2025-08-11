@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IFacilityCleaningRecord } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing facility cleaning records
@@ -12,9 +13,7 @@ class FacilityCleaningService {
   async findAll(): Promise<IFacilityCleaningRecord[]> {
     try {
       const response = await fetch(ENDPOINTS.facilityCleaning.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -55,9 +54,7 @@ class FacilityCleaningService {
 
       const response = await fetch(ENDPOINTS.facilityCleaning.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(facilityCleaningRecordData),
       });
 
@@ -82,9 +79,7 @@ class FacilityCleaningService {
     try {
       const response = await fetch(ENDPOINTS.facilityCleaning.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(facilityCleaningRecord),
       });
 
@@ -109,9 +104,7 @@ class FacilityCleaningService {
       // Update only the state field to false
       const response = await fetch(ENDPOINTS.facilityCleaning.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -133,9 +126,7 @@ class FacilityCleaningService {
   async findById(id: string | number): Promise<IFacilityCleaningRecord> {
     try {
       const response = await fetch(ENDPOINTS.facilityCleaning.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

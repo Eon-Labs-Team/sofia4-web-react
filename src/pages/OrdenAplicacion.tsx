@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Grid } from "@/components/Grid/Grid";
 import { FormGrid } from "@/components/Grid/FormGrid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -902,6 +903,9 @@ const OrdenAplicacion = () => {
   // State for Gantt chart data
   const [ganttTasks, setGanttTasks] = useState<GanttTask[]>([]);
 
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+
   // ====================================
   // FIELD RULES FOR ORDERS GRID
   // ====================================
@@ -1405,17 +1409,30 @@ const OrdenAplicacion = () => {
     localStorage.setItem('ordenAplicacion_showGantt', JSON.stringify(showGantt));
   }, [showGantt]);
 
-  // Fetch ordenes on component mount
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchOrdenesAplicacion();
-    fetchTaskTypes();
-    fetchTasks();
-    fetchCuarteles();
-    fetchProductCategories();
-    fetchWarehouseProducts();
-    fetchWorkerList();
-    fetchMachineryList();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+
+  // Fetch ordenes on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchOrdenesAplicacion();
+      fetchTaskTypes();
+      fetchTasks();
+      fetchCuarteles();
+      fetchProductCategories();
+      fetchWarehouseProducts();
+      fetchWorkerList();
+      fetchMachineryList();
+    }
+  }, [propertyId]);
 
   // Set selected cuartel when editing a work order
   useEffect(() => {
@@ -1460,7 +1477,7 @@ const OrdenAplicacion = () => {
   // Fetch task types and tasks from services
   const fetchTaskTypes = async () => {
     try {
-      const data = await faenaService.findAll();
+      const data = await faenaService.findAll(propertyId);
       console.log('Fetched task types:', data);
       setTaskTypes(data);
     } catch (error) {
@@ -1475,7 +1492,7 @@ const OrdenAplicacion = () => {
   
   const fetchTasks = async () => {
     try {
-      const data = await laborService.findAll();
+      const data = await laborService.findAll(propertyId);
       console.log('Fetched tasks:', data);
       setAllTasks(data);
     } catch (error) {
@@ -1524,7 +1541,7 @@ const OrdenAplicacion = () => {
   
   const fetchWarehouseProducts = async () => {
     try {
-      const data = await inventoryProductService.findAll();
+      const data = await inventoryProductService.findAll(propertyId);
       console.log('Fetched warehouse products:', data);
       // Ensure we always have an array
       const productsArray = Array.isArray(data) ? data : [];
@@ -1668,7 +1685,7 @@ const OrdenAplicacion = () => {
   const fetchOrdenesAplicacion = async () => {
     setIsLoading(true);
     try {
-      const data = await workService.findAll();
+      const data = await workService.findAll(propertyId);
       // Handle both array responses and paginated responses
       const allWorksData = Array.isArray(data) ? data : (data as any)?.data || [];
       
@@ -1694,7 +1711,7 @@ const OrdenAplicacion = () => {
     console.log("orden de aplicacion", data);
 
     try {
-      await workService.createApplication(data);
+      await workService.createApplication(data, propertyId);
       toast({
         title: "Éxito",
         description: "Orden de aplicación creada correctamente",
@@ -2241,7 +2258,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching workers for order:', selectedOrden?.id || selectedOrden?._id);
-      const data = await workerService.findAll();
+      const data = await workerService.findAll(propertyId);
       console.log('All workers fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2279,7 +2296,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await machineryService.findAll();
+      const data = await machineryService.findAll(propertyId);
       console.log('All machinery fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2317,7 +2334,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching products for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await productService.findAll();
+      const data = await productService.findAll(propertyId);
       console.log('All products fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2381,7 +2398,7 @@ const OrdenAplicacion = () => {
       console.log('Fetching worker list for selectable dropdown...');
       
       // Using real service to fetch worker data
-      const data = await workerListService.findAll();
+      const data = await workerListService.findAll(propertyId);
       console.log('Fetched worker list:', data);
       
       setWorkerList(data);
@@ -2401,7 +2418,7 @@ const OrdenAplicacion = () => {
       console.log('Fetching machinery list for selectable dropdown...');
       
       // Using real service to fetch machinery data
-      const data = await listaMaquinariasService.findAll();
+      const data = await listaMaquinariasService.findAll(propertyId);
       console.log('Fetched machinery list:', data);
       
       setMachineryList(data);
@@ -3399,7 +3416,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new worker:', workerData);
-                    await workerService.createWorker(workerData as any);
+                    await workerService.createWorker(workerData as any, propertyId);
                     await fetchWorkers();
                   } catch (error) {
                     console.error('Error adding worker:', error);
@@ -3555,7 +3572,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new machinery:', machineryData);
-                    await machineryService.createMachinery(machineryData);
+                    await machineryService.createMachinery(machineryData, propertyId);
                     await fetchMachinery();
                   } catch (error) {
                     console.error('Error adding machinery:', error);
@@ -3757,7 +3774,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new product:', productData);
-                    await productService.createProduct(productData);
+                    await productService.createProduct(productData, propertyId);
                     await fetchProducts();
                   } catch (error) {
                     console.error('Error adding product:', error);

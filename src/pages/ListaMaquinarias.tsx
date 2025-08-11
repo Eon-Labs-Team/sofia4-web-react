@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
 import {
   Wrench,
@@ -622,7 +622,7 @@ const ListaMaquinarias = () => {
     console.log('🚀 Starting fetchListaMaquinarias with propertyId:', propertyId);
     
     try {
-      const rawData = await listaMaquinariasService.findAll();
+      const rawData = await listaMaquinariasService.findAll(propertyId);
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
@@ -677,7 +677,7 @@ const ListaMaquinarias = () => {
   const handleAddListaMaquinarias = async (data: Partial<IMachineryList>) => {
     try {
       console.log('📝 Adding new maquinaria:', data);
-      await listaMaquinariasService.createMachineryList(data);
+      await listaMaquinariasService.createMachineryList(data, propertyId);
       
       toast({
         title: "Éxito",
