@@ -10,6 +10,8 @@ class AnimalAdmissionService {
    * @returns Promise with all animal admissions
    */
   async findAll(): Promise<IAnimalAdmission[]> {
+
+    console.log("findall")
     try {
       const response = await fetch(`${ENDPOINTS.animalAdmission.base}`, {
         headers: {
