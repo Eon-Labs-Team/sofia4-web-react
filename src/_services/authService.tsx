@@ -4,6 +4,7 @@ import { API_BASE_SOFIA } from '@/lib/constants';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 const ENTERPRISE_ID_KEY = 'enterprise_id';
+export const PROPERTY_ID_KEY = 'property_id';
 
 const saveToken = (token: string): void => {
   localStorage.setItem(TOKEN_KEY, token);
@@ -19,6 +20,14 @@ const saveEnterpriseId = (enterpriseId: string): void => {
 
 const getEnterpriseId = (): string | null => {
   return localStorage.getItem(ENTERPRISE_ID_KEY);
+};
+
+const savePropertyId = (propertyId: string): void => {
+  localStorage.setItem(PROPERTY_ID_KEY, propertyId);
+};
+
+const getPropertyId = (): string | null => {
+  return localStorage.getItem(PROPERTY_ID_KEY);
 };
 
 const saveUser = (user: User): void => {
@@ -86,6 +95,7 @@ class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(ENTERPRISE_ID_KEY);
+    localStorage.removeItem(PROPERTY_ID_KEY);
   }
   
   /**
@@ -117,11 +127,25 @@ class AuthService {
   }
 
   /**
+   * Set the current property ID
+   */
+  setPropertyId(propertyId: string): void {
+    savePropertyId(propertyId);
+  }
+
+  /**
+   * Get the current property ID
+   */
+  getPropertyId(): string | null {
+    return getPropertyId();
+  }
+
+  /**
    * Get authentication headers for API requests
    */
   getAuthHeaders(): Record<string, string> {
     const token = this.getAuthToken();
-    const enterpriseId = this.getEnterpriseId();    
+    const enterpriseId = this.getEnterpriseId();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -135,6 +159,43 @@ class AuthService {
     }
 
     return headers;
+  }
+
+  /**
+   * Get query parameters for API requests
+   */
+  getQueryParams(): URLSearchParams {
+    const params = new URLSearchParams();
+    const propertyId = this.getPropertyId();
+    console.log('propertyId', propertyId);
+
+    if (propertyId) {
+      params.append('propertyId', propertyId);
+    }
+
+    return params;
+  }
+
+  /**
+   * Build URL with query parameters
+   */
+  buildUrlWithParams(baseUrl: string, additionalParams?: Record<string, string>): string {
+    const url = new URL(baseUrl);
+    const authParams = this.getQueryParams();
+    
+    // Add auth query params
+    authParams.forEach((value, key) => {
+      url.searchParams.append(key, value);
+    });
+    
+    // Add additional params if provided
+    if (additionalParams) {
+      Object.entries(additionalParams).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+    }
+    
+    return url.toString();
   }
   
   /**

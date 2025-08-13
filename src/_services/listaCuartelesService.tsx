@@ -10,12 +10,9 @@ class ListaCuartelesService {
    * Get all barracks list
    * @returns Promise with all barracks list
    */
-  async findAll(propertyId?: string | number | null): Promise<IOperationalArea[]> {
+  async findAll(): Promise<IOperationalArea[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.listaCuarteles.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.listaCuarteles.base}`;
+      const url = authService.buildUrlWithParams(ENDPOINTS.listaCuarteles.base);
       
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
@@ -40,7 +37,8 @@ class ListaCuartelesService {
   async findProductiveAreas(): Promise<IOperationalArea[]> {
     try {
       // Create a URL with query parameters
-      const response = await fetch(ENDPOINTS.listaCuarteles.getProductive, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.listaCuarteles.getProductive);
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -61,12 +59,10 @@ class ListaCuartelesService {
    * @param barracksList BarracksList data
    * @returns Promise with created barracks list
    */
-  async createBarracksList(barracksList: Partial<IOperationalArea>, propertyId?: string | number | null): Promise<IOperationalArea> {
+  async createBarracksList(barracksList: Partial<IOperationalArea>): Promise<IOperationalArea> {
     try {
       const barracksListData: Partial<IOperationalArea> = {
         ...barracksList,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
         state: barracksList.state !== undefined ? barracksList.state : true
       };
 

@@ -10,12 +10,9 @@ class WorkerService {
    * Get all workers
    * @returns Promise with all workers
    */
-  async findAll(propertyId?: string | number | null): Promise<IWorkers[]> {
+  async findAll(): Promise<IWorkers[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.workers.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.workers.base}`;
+      const url = authService.buildUrlWithParams(ENDPOINTS.workers.base);
       
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
@@ -37,25 +34,17 @@ class WorkerService {
    * @param worker Worker data
    * @returns Promise with created worker
    */
-  async createWorker(worker: Partial<any>, propertyId?: string | number | null): Promise<IWorkers> {
+  async createWorker(worker: Partial<any>): Promise<IWorkers> {
     try {
       const workerData: Partial<any> = {
         ...worker,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
         state: worker.state !== undefined ? worker.state : true
       };
 
       console.log(workerData);
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workerData.propertyId = propertyId;
-      }
 
-
-      const response = await fetch(ENDPOINTS.workers.base, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.workers.base);
+      const response = await fetch(url, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerData),
@@ -84,13 +73,8 @@ class WorkerService {
       // @ts-ignore
       delete workerData.__v;
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workerData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.workers.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.workers.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerData),
@@ -116,13 +100,8 @@ class WorkerService {
     try {
       const stateData = { state: false };
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        stateData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.workers.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.workers.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(stateData),
@@ -146,13 +125,9 @@ class WorkerService {
    */
   async findById(id: string | number): Promise<IWorkers> {
     try {
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.workers.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
+      const url = authService.buildUrlWithParams(ENDPOINTS.workers.byId(id));
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       

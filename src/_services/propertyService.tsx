@@ -12,7 +12,8 @@ class PropertyService {
    */
   async findAll(): Promise<IProperty[]> {
     try {
-      const response = await fetch(ENDPOINTS.properties.base, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.base);
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -89,7 +90,8 @@ class PropertyService {
         enterpriseId: property.enterpriseId
       };
 
-      const response = await fetch(ENDPOINTS.properties.base, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.base);
+      const response = await fetch(url, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(propertyData),
@@ -114,7 +116,8 @@ class PropertyService {
    */
   async updateProperty(id: string | number, property: Partial<IProperty>): Promise<IProperty> {
     try {
-      const response = await fetch(ENDPOINTS.properties.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(property),
@@ -139,7 +142,8 @@ class PropertyService {
   async softDeleteProperty(id: string | number): Promise<any> {
     try {
       // Update only the status field to false
-      const response = await fetch(ENDPOINTS.properties.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify({ status: false }),
@@ -163,7 +167,8 @@ class PropertyService {
    */
   async findById(id: string | number): Promise<IProperty> {
     try {
-      const response = await fetch(ENDPOINTS.properties.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.byId(id));
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -185,7 +190,8 @@ class PropertyService {
    */
   async findByName(name: string): Promise<IProperty> {
     try {
-      const response = await fetch(ENDPOINTS.properties.byName(name), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.properties.byName(name));
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       
