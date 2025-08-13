@@ -209,7 +209,8 @@ const UnidadesMedida = () => {
   const handleAddMeasurementUnit = async (data: Partial<IMeasurementUnits>) => {
     try {
       const unitData: Partial<IMeasurementUnits> = {
-        type: data.type,
+        measurementUnitName: (data as any).type || data.measurementUnitName,
+        order: (data as any).order || 0,
         optionalCode: data.optionalCode || '',
         state: data.state !== undefined ? data.state : true
       };

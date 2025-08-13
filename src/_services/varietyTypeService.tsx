@@ -35,8 +35,9 @@ class VarietyTypeService {
   async createVariety(variety: Partial<IVarietyType>): Promise<IVarietyType> {
     try {
       const varietyData: Partial<IVarietyType> = {
-        idOrder: variety.idOrder,
-        cropName: variety.cropName,
+        order: (variety as any).idOrder || (variety as any).order || 0,
+        varietyName: (variety as any).cropName || variety.varietyName,
+        cropTypeId: variety.cropTypeId || '',
         state: variety.state !== undefined ? variety.state : true,
       };
 

@@ -13,9 +13,11 @@ class WorkerListService {
   async findAll(propertyId?: string | number | null): Promise<IWorkerList[]> {
     try {
       // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.workerList.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.workerList.base}`;
+      // const url = propertyId 
+      //   ? `${ENDPOINTS.workerList.base}?propertyId=${propertyId}`
+      //   : `${ENDPOINTS.workerList.base}`;
+
+      const url = authService.buildUrlWithParams(ENDPOINTS.workerList.base);
       
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),

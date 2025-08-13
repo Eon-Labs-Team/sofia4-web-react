@@ -35,17 +35,10 @@ class CropTypeService {
   async createCropType(cropType: Partial<ICropType>): Promise<ICropType> {
     try {
       const cropTypeData: Partial<ICropType> = {
-        idOrder: cropType.idOrder,
+        order: (cropType as any).idOrder || (cropType as any).order,
         cropName: cropType.cropName,
         mapColor: cropType.mapColor,
-        variety: cropType.variety,
-        totalVariety: cropType.totalVariety | 0 ,
-        phenologicalState: cropType.phenologicalState,
-        totalPhenologicalState: cropType.totalPhenologicalState | 0 ,
         cropListState: cropType.cropListState,
-        barracks: cropType.barracks,
-        barracksNumber: cropType.barracksNumber | 0 ,
-        updateColorBarracks: cropType.updateColorBarracks,
         state: cropType.state !== undefined ? cropType.state : true,
       };
 

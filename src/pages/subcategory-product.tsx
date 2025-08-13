@@ -193,8 +193,9 @@ const SubcategoryProduct = () => {
     try {
       // Prepare data according to the exact model structure
       const subcategoryData: Partial<ISubCategoryProduct> = {
-        idOrder: data.idOrder,
-        description: data.description,
+        order: (data as any).idOrder || (data as any).order || 0,
+        subcategoryName: (data as any).description || data.subcategoryName,
+        categoryId: data.categoryId || 0,
         state: data.state !== undefined ? data.state : false
       };
       
@@ -353,8 +354,9 @@ const SubcategoryProduct = () => {
             defaultValues={
               isEditMode && selectedSubcategory
                 ? {
-                    idOrder: selectedSubcategory.idOrder,
-                    description: selectedSubcategory.description,
+                    order: (selectedSubcategory as any).idOrder || selectedSubcategory.order,
+                    subcategoryName: (selectedSubcategory as any).description || selectedSubcategory.subcategoryName,
+                    categoryId: selectedSubcategory.categoryId,
                     state: selectedSubcategory.state,
                   }
                 : undefined

@@ -13,6 +13,7 @@ import {
   X
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
+import { useAuthStore } from "@/lib/store/authStore";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -892,6 +893,7 @@ interface WorkWithId extends IWork {
 }
 
 const FaenasAgricolas = () => {
+  const { propertyId } = useAuthStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [faenasAgricolas, setFaenasAgricolas] = useState<WorkWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -1495,7 +1497,7 @@ const FaenasAgricolas = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedFaena?.id || selectedFaena._id);
-      const data = await machineryService.findAll();
+      const data = await machineryService.findAll(propertyId);
       console.log('All machinery fetched:', data);
       
       const workId = selectedFaena.id || (selectedFaena as any)._id;

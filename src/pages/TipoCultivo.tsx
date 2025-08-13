@@ -345,18 +345,17 @@ const TipoCultivo = () => {
   // Function to handle adding a new crop type
   const handleAddCropType = async (data: Partial<ICropType>) => {
     try {
-      // Calculate derived fields
-      if (data.variety) {
-        data.totalVariety = data.variety.length;
-      }
-      if (data.phenologicalState) {
-        data.totalPhenologicalState = data.phenologicalState.length;
-      }
-      if (data.barracks) {
-        data.barracksNumber = data.barracks.length;
-      }
+      // Remove invalid properties that don't exist in ICropType interface
+      const cleanData = { ...data };
+      delete (cleanData as any).variety;
+      delete (cleanData as any).totalVariety;
+      delete (cleanData as any).phenologicalState;
+      delete (cleanData as any).totalPhenologicalState;
+      delete (cleanData as any).barracks;
+      delete (cleanData as any).barracksNumber;
+      delete (cleanData as any).updateColorBarracks;
       
-      await cropTypeService.createCropType(data);
+      await cropTypeService.createCropType(cleanData);
       
       toast({
         title: "Éxito",
@@ -378,18 +377,17 @@ const TipoCultivo = () => {
   // Function to handle updating an existing crop type
   const handleUpdateCropType = async (id: string | number, data: Partial<ICropType>) => {
     try {
-      // Calculate derived fields
-      if (data.variety) {
-        data.totalVariety = data.variety.length;
-      }
-      if (data.phenologicalState) {
-        data.totalPhenologicalState = data.phenologicalState.length;
-      }
-      if (data.barracks) {
-        data.barracksNumber = data.barracks.length;
-      }
+      // Remove invalid properties that don't exist in ICropType interface
+      const cleanData = { ...data };
+      delete (cleanData as any).variety;
+      delete (cleanData as any).totalVariety;
+      delete (cleanData as any).phenologicalState;
+      delete (cleanData as any).totalPhenologicalState;
+      delete (cleanData as any).barracks;
+      delete (cleanData as any).barracksNumber;
+      delete (cleanData as any).updateColorBarracks;
       
-      await cropTypeService.updateCropType(id, data);
+      await cropTypeService.updateCropType(id, cleanData);
       
       toast({
         title: "Éxito",
