@@ -238,7 +238,7 @@ const ListaCuadrillas = () => {
   const fetchCrewLists = async () => {
     setIsLoading(true);
     try {
-      const result = await crewListService.findAll(propertyId);
+      const result = await crewListService.findAll();
       // Comprobar si la respuesta tiene un formato diferente
       if (result && typeof result === 'object' && 'data' in result) {
         setCrewLists(result.data as ICrewList[]);
@@ -271,7 +271,7 @@ const ListaCuadrillas = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCrewList = await crewListService.createCrew(crewListData, propertyId);
+      const newCrewList = await crewListService.createCrew(crewListData);
       
       // Update the list with the new item
       setCrewLists(prev => [...prev, newCrewList]);

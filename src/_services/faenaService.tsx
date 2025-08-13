@@ -10,14 +10,9 @@ class FaenaService {
    * Get all faenas
    * @returns Promise with all faenas
    */
-  async findAll(propertyId?: string | number | null): Promise<ITaskType[]> {
+  async findAll(): Promise<ITaskType[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.faenas.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.faenas.base}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -38,22 +33,14 @@ class FaenaService {
    * @param faena Faena data
    * @returns Promise with created faena
    */
-  async createFaena(faena: Partial<ITaskType>, propertyId?: string | number | null): Promise<ITaskType> {
+  async createFaena(faena: Partial<ITaskType>): Promise<ITaskType> {
     try {
       const faenaData: Partial<ITaskType> = {
         ...faena,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: faena.state !== undefined ? faena.state : true
+        //state: faena.state !== undefined ? faena.state : true
       };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        faenaData.propertyId = propertyId;
-      }
 
-      const response = await fetch(ENDPOINTS.faenas.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
@@ -80,13 +67,7 @@ class FaenaService {
     try {
       const faenaData = { ...faena };
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        faenaData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.faenas.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
@@ -110,13 +91,7 @@ class FaenaService {
    */
   async softDeleteFaena(id: string | number): Promise<any> {
     try {
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.faenas.changeState(id, false));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.changeState(id, false)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });
@@ -139,13 +114,7 @@ class FaenaService {
    */
   async findById(id: string | number): Promise<ITaskType> {
     try {
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.faenas.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.byId(id)), {
         headers: authService.getAuthHeaders(),
       });
       

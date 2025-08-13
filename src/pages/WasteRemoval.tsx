@@ -317,7 +317,7 @@ const WasteRemoval = () => {
   const fetchWasteRemovals = async () => {
     setIsLoading(true);
     try {
-      const response = await wasteRemovalService.findAll(propertyId);
+      const response = await wasteRemovalService.findAll();
       // Handle response correctly
       const data = Array.isArray(response) ? response : 
       (response as any).data || [];
@@ -337,7 +337,7 @@ const WasteRemoval = () => {
   // Function to handle adding a new waste removal
   const handleAddWasteRemoval = async (data: Partial<IWasteRemoval>) => {
     try {
-      await wasteRemovalService.createWasteRemoval(data, propertyId);
+      await wasteRemovalService.createWasteRemoval(data);
       await fetchWasteRemovals();
       toast({
         title: "Éxito",

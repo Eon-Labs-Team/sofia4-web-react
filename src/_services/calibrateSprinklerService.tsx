@@ -12,7 +12,7 @@ class CalibrateSprinklerService {
    */
   async findAll(): Promise<ICalibrateSprinkler[] | { data: ICalibrateSprinkler[] }> {
     try {
-      const response = await fetch(ENDPOINTS.calibrateSprinkler.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.calibrateSprinkler.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -51,7 +51,7 @@ class CalibrateSprinklerService {
         state: calibrateSprinkler.state !== undefined ? calibrateSprinkler.state : true,
       };
 
-      const response = await fetch(ENDPOINTS.calibrateSprinkler.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.calibrateSprinkler.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(calibrateSprinklerData),

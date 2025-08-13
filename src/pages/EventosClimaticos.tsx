@@ -286,7 +286,7 @@ const EventosClimaticos = () => {
   const fetchWeatherEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await weatherEventService.findAll(propertyId);
+      const response = await weatherEventService.findAll();
       // Verificar si la respuesta es un objeto con una propiedad data o directamente un array
       setWeatherEvents(Array.isArray(response) ? response : (response as any).data || []);
     } catch (error) {
@@ -317,7 +317,7 @@ const EventosClimaticos = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newWeatherEvent = await weatherEventService.createWeatherEvent(weatherEventData, propertyId);
+      const newWeatherEvent = await weatherEventService.createWeatherEvent(weatherEventData);
       setWeatherEvents((prevEvents) => [...prevEvents, newWeatherEvent]);
       setIsDialogOpen(false);
       toast({

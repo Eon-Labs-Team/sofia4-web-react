@@ -277,7 +277,7 @@ const ChlorineRegistration = () => {
   const fetchChlorineRegistrations = async () => {
     setIsLoading(true);
     try {
-      const response = await chlorineRegistrationService.findAll(propertyId);
+      const response = await chlorineRegistrationService.findAll();
       // Manejar caso donde la respuesta puede ser un objeto con propiedad data o directamente un array
       if (Array.isArray(response)) {
         setChlorineRegistrations(response);
@@ -302,7 +302,7 @@ const ChlorineRegistration = () => {
   // Function to handle adding a new chlorine registration
   const handleAddChlorineRegistration = async (data: Partial<IChlorineRegistration>) => {
     try {
-      await chlorineRegistrationService.createChlorineRegistration(data, propertyId);
+      await chlorineRegistrationService.createChlorineRegistration(data);
       
       toast({
         title: "Éxito",

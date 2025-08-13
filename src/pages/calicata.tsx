@@ -311,7 +311,7 @@ const Calicata = () => {
   const fetchCalicatas = async () => {
     setIsLoading(true);
     try {
-      const data = await calicataService.findAll(propertyId);
+      const data = await calicataService.findAll();
       // @ts-ignore
       setCalicatas(data.data || data);
     } catch (error) {
@@ -329,7 +329,7 @@ const Calicata = () => {
   // Function to handle adding a new calicata
   const handleAddCalicata = async (data: Partial<ICalicata>) => {
     try {
-      await calicataService.createCalicata(data, propertyId);
+      await calicataService.createCalicata(data);
       await fetchCalicatas();
       setIsDialogOpen(false);
       toast({

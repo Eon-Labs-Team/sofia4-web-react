@@ -315,7 +315,7 @@ const EquipmentCalibration = () => {
   const fetchEquipmentCalibrations = async () => {
     setIsLoading(true);
     try {
-      const data = await equipmentCalibrationService.findAll(propertyId);
+      const data = await equipmentCalibrationService.findAll();
       // Check if data is an array directly or has a data property
       setEquipmentCalibrations(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
@@ -347,7 +347,7 @@ const EquipmentCalibration = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCalibration = await equipmentCalibrationService.createEquipmentCalibration(calibrationData, propertyId);
+      const newCalibration = await equipmentCalibrationService.createEquipmentCalibration(calibrationData);
       setEquipmentCalibrations((prevCalibrations) => [...prevCalibrations, newCalibration]);
       setIsDialogOpen(false);
       toast({

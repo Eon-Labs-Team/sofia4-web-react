@@ -47,21 +47,16 @@ class ListaMaquinariasService {
         state: machineryList.state !== undefined ? machineryList.state : true
       };
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        machineryListData.propertyId = propertyId;
-      }
-
       // Add createdBy field with current user ID
-      if (user?.id) {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser?.id) {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
-        machineryListData.createdBy = user.id;
+        machineryListData.createdBy = currentUser.id;
         // @ts-ignore - Adding a property that might not be in the interface but required by API
-        machineryListData.updatedBy = user.id;
+        machineryListData.updatedBy = currentUser.id;
       }
 
-      const response = await fetch(ENDPOINTS.listaMaquinarias.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaMaquinarias.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryListData),
@@ -86,21 +81,9 @@ class ListaMaquinariasService {
    */
   async updateMachineryList(id: string | number, machineryList: Partial<IMachineryList>): Promise<IMachineryList> {
     try {
-      const updateData = { ...machineryList };
+      const updateData = { ...machineryList };          
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        updateData.propertyId = propertyId;
-      }
-
-      // Add updatedBy field with current user ID
-      if (user?.id) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        updateData.updatedBy = user.id;
-      }
-      
-      const response = await fetch(ENDPOINTS.listaMaquinarias.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaMaquinarias.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(updateData),

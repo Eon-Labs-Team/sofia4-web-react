@@ -220,7 +220,7 @@ const ElectricityConsumption = () => {
   const fetchElectricityConsumptionData = async () => {
     setIsLoading(true);
     try {
-      const response = await electricityConsumptionService.findAll(propertyId);
+      const response = await electricityConsumptionService.findAll();
       // Handle the response which may come as { data: [...] } or directly as an array
       const data = Array.isArray(response) ? response : (response as unknown as ApiResponse<IElectricityConsumption[]>).data;
       setElectricityConsumptionData(data || []);
@@ -239,7 +239,7 @@ const ElectricityConsumption = () => {
   // Function to handle adding a new electricity consumption record
   const handleAddElectricityConsumption = async (data: Partial<IElectricityConsumption>) => {
     try {
-      await electricityConsumptionService.createElectricityConsumption(data, propertyId);
+      await electricityConsumptionService.createElectricityConsumption(data);
       await fetchElectricityConsumptionData();
       toast({
         title: "Éxito",

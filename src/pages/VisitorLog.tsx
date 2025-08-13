@@ -336,7 +336,7 @@ const VisitorLog = () => {
   const fetchVisitorLogs = async () => {
     setIsLoading(true);
     try {
-      const data = await visitorLogService.findAll(propertyId);
+      const data = await visitorLogService.findAll();
       setVisitorLogs(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading visitor logs:", error);
@@ -353,7 +353,7 @@ const VisitorLog = () => {
   // Function to handle adding a new visitor log
   const handleAddVisitorLog = async (data: Partial<IVisitorLog>) => {
     try {
-      await visitorLogService.createVisitorLog(data, propertyId);
+      await visitorLogService.createVisitorLog(data);
       
       toast({
         title: "Éxito",

@@ -302,7 +302,7 @@ const IrrigationSectorCapacity = () => {
   const fetchIrrigationSectorCapacities = async () => {
     setIsLoading(true);
     try {
-      const response = await irrigationSectorCapacityService.findAll(propertyId);
+      const response = await irrigationSectorCapacityService.findAll();
 
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IIrrigationSectorCapacity[]
@@ -330,7 +330,7 @@ const IrrigationSectorCapacity = () => {
         data.createDate = new Date().toISOString().split('T')[0];
       }
 
-      await irrigationSectorCapacityService.createIrrigationSectorCapacity(data, propertyId);
+      await irrigationSectorCapacityService.createIrrigationSectorCapacity(data);
       
       toast({
         title: "Éxito",

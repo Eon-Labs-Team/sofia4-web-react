@@ -237,7 +237,7 @@ const LavadoManos = () => {
   const fetchHandWashingRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await handWashingService.findAll(propertyId);
+      const response = await handWashingService.findAll();
 
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IHandWashingRecord[]
@@ -265,7 +265,7 @@ const LavadoManos = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await handWashingService.createHandWashingRecord(recordData, propertyId);
+      await handWashingService.createHandWashingRecord(recordData);
       await fetchHandWashingRecords();
       
       toast({

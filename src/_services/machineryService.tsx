@@ -10,14 +10,9 @@ class MachineryService {
    * Get all machinery
    * @returns Promise with all machinery
    */
-  async findAll(propertyId?: string | number | null): Promise<IMachinery[]> {
+  async findAll(): Promise<IMachinery[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.machinery.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.machinery.base}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machinery.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -37,24 +32,16 @@ class MachineryService {
    * @param machinery Machinery data
    * @returns Promise with created machinery
    */
-  async createMachinery(machinery: Partial<IMachinery>, propertyId?: string | number | null): Promise<IMachinery> {
+  async createMachinery(machinery: Partial<IMachinery>): Promise<IMachinery> {
     try {
       const machineryData: Partial<IMachinery> = {
         ...machinery,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: machinery.state !== undefined ? machinery.state : true
+//        state: machinery.state !== undefined ? machinery.state : true
       };
 
       console.log(machineryData);
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        machineryData.propertyId = propertyId;
-      }
 
-      const response = await fetch(ENDPOINTS.machinery.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machinery.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryData),
@@ -79,23 +66,14 @@ class MachineryService {
    */
   async updateMachinery(id: string | number, machinery: Partial<IMachinery>): Promise<IMachinery> {
     try {
-      const machineryData = { ...machinery };
-      
-      // Add updatedBy field
-      machineryData.updatedBy = user?.id || null;
+      const machineryData = { ...machinery };      
       
       // Remove version field if it exists
       if ('__v' in machineryData) {
         delete (machineryData as any).__v;
       }
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        machineryData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.machinery.byId(id), {
+
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machinery.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryData),
@@ -119,14 +97,9 @@ class MachineryService {
    */
   async softDeleteMachinery(id: string | number): Promise<any> {
     try {
-      const stateData: any = { state: false };
+      const stateData: any = { state: false };      
       
-      // Add propertyId if available
-      if (propertyId) {
-        stateData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.machinery.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machinery.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(stateData),
@@ -151,12 +124,9 @@ class MachineryService {
   async findById(id: string | number): Promise<IMachinery> {
     try {
       // Create URL with query parameters
-      const url = new URL(ENDPOINTS.machinery.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
+      const url = new URL(ENDPOINTS.machinery.byId(id));      
       
-      const response = await fetch(url.toString(), {
+      const response = await fetch(authService.buildUrlWithParams(url.toString()), {
         headers: authService.getAuthHeaders(),
       });
       

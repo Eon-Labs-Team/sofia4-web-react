@@ -215,7 +215,7 @@ const ProductCategories = () => {
   const fetchProductCategories = async () => {
     setIsLoading(true);
     try {
-      const response = await productCategoryService.findByEnterpriseId(propertyId);
+      const response = await productCategoryService.findByEnterpriseId();
       // Handle different response formats
       let categoriesData: IProductCategory[] = [];
       if (Array.isArray(response)) {
@@ -242,7 +242,7 @@ const ProductCategories = () => {
   // Function to handle adding a new category
   const handleAddCategory = async (data: Partial<IProductCategory>) => {
     try {
-      await productCategoryService.createProductCategory(data, propertyId);
+      await productCategoryService.createProductCategory(data);
       
       toast({
         title: "Éxito",

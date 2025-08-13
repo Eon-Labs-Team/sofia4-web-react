@@ -309,7 +309,7 @@ const IrrigationRecord = () => {
   const fetchIrrigationRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await irrigationRecordService.findAll(propertyId);
+      const response = await irrigationRecordService.findAll();
       // Handle different response formats
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IIrrigationRecord[]
@@ -330,7 +330,7 @@ const IrrigationRecord = () => {
   // Function to handle adding a new irrigation record
   const handleAddIrrigationRecord = async (data: Partial<IIrrigationRecord>) => {
     try {
-      const newIrrigationRecord = await irrigationRecordService.createIrrigationRecord(data, propertyId);
+      const newIrrigationRecord = await irrigationRecordService.createIrrigationRecord(data);
       await fetchIrrigationRecords();
       setIsDialogOpen(false);
       toast({

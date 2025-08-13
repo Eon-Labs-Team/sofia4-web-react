@@ -605,7 +605,7 @@ const SoilAnalysis = () => {
   const fetchSoilAnalyses = async () => {
     setIsLoading(true);
     try {
-      const data = await soilAnalysisService.findAll(propertyId);
+      const data = await soilAnalysisService.findAll();
       // @ts-ignore
       setSoilAnalyses(data.data);
     } catch (error) {
@@ -620,7 +620,7 @@ const SoilAnalysis = () => {
   // Function to handle adding a new soil analysis
   const handleAddSoilAnalysis = async (data: Partial<ISoilAnalysis>) => {
     try {
-      await soilAnalysisService.createSoilAnalysis(data, propertyId);
+      await soilAnalysisService.createSoilAnalysis(data);
       toast({
         title: "Análisis de suelo creado",
         description: "El análisis de suelo se ha creado correctamente",

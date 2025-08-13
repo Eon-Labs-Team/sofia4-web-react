@@ -391,7 +391,7 @@ const TrabajosRealizados = () => {
   const fetchTrabajos = async () => {
     setIsLoading(true);
     try {
-      const data = await workerService.findAll(propertyId);
+      const data = await workerService.findAll();
       // Asegurarse que los datos son un array
       const trabajosData = Array.isArray(data) ? data : (data as any)?.data || [];
       setTrabajos(trabajosData);
@@ -433,7 +433,7 @@ const TrabajosRealizados = () => {
         date: data.date,
         contractor: data.contractor,
         state: data.state
-      }, propertyId);
+      });
       
       toast({
         title: "Éxito",

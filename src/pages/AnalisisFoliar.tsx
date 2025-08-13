@@ -417,7 +417,7 @@ const AnalisisFoliar = () => {
   const fetchLeafAnalysisRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await leafAnalysisService.findAll(propertyId);
+      const response = await leafAnalysisService.findAll();
       // Handle both direct array response and wrapped object with data property
       const records = Array.isArray(response) 
         ? response 
@@ -435,7 +435,7 @@ const AnalisisFoliar = () => {
   // Function to handle adding a new leaf analysis
   const handleAddLeafAnalysis = async (data: Partial<ILeafAnalysisRecord>) => {
     try {
-      const newLeafAnalysis = await leafAnalysisService.createLeafAnalysis(data, propertyId);
+      const newLeafAnalysis = await leafAnalysisService.createLeafAnalysis(data);
       setLeafAnalysisRecords((prevRecords) => [...prevRecords, newLeafAnalysis]);
       setIsDialogOpen(false);
       toast({

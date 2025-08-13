@@ -335,7 +335,7 @@ const Capacitaciones = () => {
   const fetchTrainingTalks = async () => {
     setIsLoading(true);
     try {
-      const data = await trainingTalksService.findAll(propertyId);
+      const data = await trainingTalksService.findAll();
       setTrainingTalks(Array.isArray(data) ? data : (data as any)?.data || []);
     } catch (error) {
       console.error("Error loading training talks:", error);
@@ -367,7 +367,7 @@ const Capacitaciones = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await trainingTalksService.createTrainingTalk(trainingTalkData, propertyId);
+      await trainingTalksService.createTrainingTalk(trainingTalkData);
       
       toast({
         title: "Éxito",

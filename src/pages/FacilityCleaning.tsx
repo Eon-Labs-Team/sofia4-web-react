@@ -349,7 +349,7 @@ const FacilityCleaning = () => {
   const fetchFacilityCleaningRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await facilityCleaningService.findAll(propertyId);
+      const data = await facilityCleaningService.findAll();
       setFacilityCleaningRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading facility cleaning records:", error);
@@ -362,7 +362,7 @@ const FacilityCleaning = () => {
   // Function to handle adding a new facility cleaning record
   const handleAddFacilityCleaningRecord = async (data: Partial<IFacilityCleaningRecord>) => {
     try {
-      const newRecord = await facilityCleaningService.createFacilityCleaningRecord(data, propertyId);
+      const newRecord = await facilityCleaningService.createFacilityCleaningRecord(data);
       setFacilityCleaningRecords((prevRecords) => [...prevRecords, newRecord]);
       setIsDialogOpen(false);
       toast({

@@ -312,7 +312,7 @@ const AnimalAdmission = () => {
   const fetchAnimalAdmissions = async () => {
     setIsLoading(true);
     try {
-      const data = await animalAdmissionService.findAll(propertyId);
+      const data = await animalAdmissionService.findAll();
       // Handle both array format and any potential data property
       setAnimalAdmissions(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
@@ -330,7 +330,7 @@ const AnimalAdmission = () => {
   // Function to handle adding a new animal admission
   const handleAddAnimalAdmission = async (data: Partial<IAnimalAdmission>) => {
     try {
-      await animalAdmissionService.createAnimalAdmission(data, propertyId);
+      await animalAdmissionService.createAnimalAdmission(data);
       
       toast({
         title: "Éxito",

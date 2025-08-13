@@ -11,7 +11,7 @@ class InventoryInvoiceService {
    */
   async findById(id: string): Promise<IInventoryInvoice> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryInvoice.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.byId(id)), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -31,7 +31,7 @@ class InventoryInvoiceService {
    */
   async findByInvoiceNumber(invoiceNumber: string): Promise<IInventoryInvoice[]> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryInvoice.byInvoiceNumber(invoiceNumber), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.byInvoiceNumber(invoiceNumber)), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -67,39 +67,17 @@ class InventoryInvoiceService {
     totalAmount: number;
     status?: string;
     propertyId: string;
-  }, propertyId?: string | number | null): Promise<IInventoryInvoice> {
+  }): Promise<IInventoryInvoice> {
     try {
-      const invoiceDataData: {
-    invoiceNumber: string;
-    supplier: string;
-    date: Date;
-    items: Array<{
-      productId: string;
-      quantity: number;
-      unitPrice: number;
-      lotNumber?: string;
-      lotName?: string;
-      manufactureDate?: Date;
-      expiryDate?: Date;
-    }>;
-    warehouseId: string;
-    totalAmount: number;
-    status?: string;
-    propertyId: string;
-  } = {
+      const cleanInvoiceData = {
         ...invoiceData,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: invoiceData.state !== undefined ? invoiceData.state : true
+        //state: invoiceData.state !== undefined ? invoiceData.state : true
       };
 
-      const response = await fetch(ENDPOINTS.inventoryInvoice.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.base), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
-        body: JSON.stringify(requestData),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(cleanInvoiceData),
       });
 
       if (!response.ok) {
@@ -132,38 +110,17 @@ class InventoryInvoiceService {
     warehouseId: string;
     totalAmount: number;
     status?: string;
-  }, propertyId?: string | number | null): Promise<IInventoryInvoice> {
+  }): Promise<IInventoryInvoice> {
     try {
-      const invoiceDataData: {
-    invoiceNumber: string;
-    supplier: string;
-    date: Date;
-    items: Array<{
-      productId: string;
-      quantity: number;
-      unitPrice: number;
-      lotNumber?: string;
-      lotName?: string;
-      manufactureDate?: Date;
-      expiryDate?: Date;
-    }>;
-    warehouseId: string;
-    totalAmount: number;
-    status?: string;
-  } = {
+      const cleanInvoiceData = {
         ...invoiceData,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: invoiceData.state !== undefined ? invoiceData.state : true
+        //state: invoiceData.state !== undefined ? invoiceData.state : true
       };
 
-      const response = await fetch(ENDPOINTS.inventoryInvoice.central, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.central, { propertyId: '0' }), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': '0', // Central warehouse marker
-        },
-        body: JSON.stringify(requestData),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(cleanInvoiceData),
       });
 
       if (!response.ok) {
@@ -197,39 +154,17 @@ class InventoryInvoiceService {
     totalAmount: number;
     status?: string;
     propertyId: string;
-  }, propertyId?: string | number | null): Promise<IInventoryInvoice> {
+  }): Promise<IInventoryInvoice> {
     try {
-      const invoiceDataData: {
-    invoiceNumber: string;
-    supplier: string;
-    date: Date;
-    items: Array<{
-      productId: string;
-      quantity: number;
-      unitPrice: number;
-      lotNumber?: string;
-      lotName?: string;
-      manufactureDate?: Date;
-      expiryDate?: Date;
-    }>;
-    warehouseId: string;
-    totalAmount: number;
-    status?: string;
-    propertyId: string;
-  } = {
+      const cleanInvoiceData = {
         ...invoiceData,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: invoiceData.state !== undefined ? invoiceData.state : true
+        //state: invoiceData.state !== undefined ? invoiceData.state : true
       };
 
-      const response = await fetch(ENDPOINTS.inventoryInvoice.property, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.property), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
-        body: JSON.stringify(requestData),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(cleanInvoiceData),
       });
 
       if (!response.ok) {
@@ -255,7 +190,7 @@ class InventoryInvoiceService {
         delete (cleanData as any).__v;
       }
       
-      const response = await fetch(ENDPOINTS.inventoryInvoice.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(cleanData),
@@ -277,7 +212,7 @@ class InventoryInvoiceService {
    */
   async deleteInvoice(id: string): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryInvoice.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryInvoice.byId(id)), {
         method: 'DELETE',
         headers: authService.getAuthHeaders(),
       });
