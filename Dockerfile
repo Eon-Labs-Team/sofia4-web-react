@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:20-bookworm-slim AS build
 
 RUN apk add --no-cache ca-certificates openssl
 WORKDIR /app
