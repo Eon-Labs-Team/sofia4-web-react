@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -579,16 +580,32 @@ const SoilAnalysis = () => {
   const [selectedSoilAnalysis, setSelectedSoilAnalysis] = useState<ISoilAnalysis | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch soil analyses on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchSoilAnalyses();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch soil analyses on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchSoilAnalyses();
+    }
+  }, [propertyId]);
   
   // Function to fetch soil analyses data
   const fetchSoilAnalyses = async () => {
     setIsLoading(true);
     try {
-      const data = await soilAnalysisService.findAll();
+      const data = await soilAnalysisService.findAll(propertyId);
       // @ts-ignore
       setSoilAnalyses(data.data);
     } catch (error) {
@@ -603,7 +620,7 @@ const SoilAnalysis = () => {
   // Function to handle adding a new soil analysis
   const handleAddSoilAnalysis = async (data: Partial<ISoilAnalysis>) => {
     try {
-      await soilAnalysisService.createSoilAnalysis(data);
+      await soilAnalysisService.createSoilAnalysis(data, propertyId);
       toast({
         title: "Análisis de suelo creado",
         description: "El análisis de suelo se ha creado correctamente",

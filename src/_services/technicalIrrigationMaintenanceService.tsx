@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ITechnicalIrrigationMaintenance } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing technical irrigation maintenance data
@@ -12,9 +13,7 @@ class TechnicalIrrigationMaintenanceService {
   async findAll(): Promise<ITechnicalIrrigationMaintenance[]> {
     try {
       const response = await fetch(ENDPOINTS.technicalIrrigationMaintenance.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -49,9 +48,7 @@ class TechnicalIrrigationMaintenanceService {
 
       const response = await fetch(ENDPOINTS.technicalIrrigationMaintenance.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(maintenanceData),
       });
 
@@ -76,9 +73,7 @@ class TechnicalIrrigationMaintenanceService {
     try {
       const response = await fetch(ENDPOINTS.technicalIrrigationMaintenance.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(maintenance),
       });
 
@@ -102,9 +97,7 @@ class TechnicalIrrigationMaintenanceService {
     try {
       const response = await fetch(ENDPOINTS.technicalIrrigationMaintenance.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -126,9 +119,7 @@ class TechnicalIrrigationMaintenanceService {
   async findById(id: string | number): Promise<ITechnicalIrrigationMaintenance> {
     try {
       const response = await fetch(ENDPOINTS.technicalIrrigationMaintenance.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

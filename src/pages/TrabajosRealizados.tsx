@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -365,16 +366,32 @@ const TrabajosRealizados = () => {
   const [selectedTrabajo, setSelectedTrabajo] = useState<IWorkers | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch trabajos on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchTrabajos();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch trabajos on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchTrabajos();
+    }
+  }, [propertyId]);
   
   // Function to fetch trabajos data
   const fetchTrabajos = async () => {
     setIsLoading(true);
     try {
-      const data = await workerService.findAll();
+      const data = await workerService.findAll(propertyId);
       // Asegurarse que los datos son un array
       const trabajosData = Array.isArray(data) ? data : (data as any)?.data || [];
       setTrabajos(trabajosData);
@@ -416,7 +433,7 @@ const TrabajosRealizados = () => {
         date: data.date,
         contractor: data.contractor,
         state: data.state
-      });
+      }, propertyId);
       
       toast({
         title: "Éxito",

@@ -3,6 +3,7 @@ import { API_BASE_SOFIA } from '@/lib/constants';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
+const ENTERPRISE_ID_KEY = 'enterprise_id';
 
 const saveToken = (token: string): void => {
   localStorage.setItem(TOKEN_KEY, token);
@@ -10,6 +11,14 @@ const saveToken = (token: string): void => {
 
 const getToken = (): string | null => {
   return localStorage.getItem(TOKEN_KEY);
+};
+
+const saveEnterpriseId = (enterpriseId: string): void => {
+  localStorage.setItem(ENTERPRISE_ID_KEY, enterpriseId);
+};
+
+const getEnterpriseId = (): string | null => {
+  return localStorage.getItem(ENTERPRISE_ID_KEY);
 };
 
 const saveUser = (user: User): void => {
@@ -57,6 +66,7 @@ class AuthService {
       // Store auth data in localStorage
       saveToken(token);
       saveUser(user);
+      saveEnterpriseId(credentials.enterprise);
 
       return {
         user,
@@ -75,6 +85,7 @@ class AuthService {
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(ENTERPRISE_ID_KEY);
   }
   
   /**
@@ -96,6 +107,34 @@ class AuthService {
    */
   getAuthToken(): string | null {
     return getToken();
+  }
+
+  /**
+   * Get the current enterprise ID
+   */
+  getEnterpriseId(): string | null {
+    return getEnterpriseId();
+  }
+
+  /**
+   * Get authentication headers for API requests
+   */
+  getAuthHeaders(): Record<string, string> {
+    const token = this.getAuthToken();
+    const enterpriseId = this.getEnterpriseId();    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (enterpriseId) {
+      headers['enterpriseId'] = enterpriseId;
+    }
+
+    return headers;
   }
   
   /**

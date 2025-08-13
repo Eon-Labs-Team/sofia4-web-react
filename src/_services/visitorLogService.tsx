@@ -1,6 +1,7 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IVisitorLog } from '@eon-lib/eon-mongoose';
 import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing visitor logs
@@ -19,9 +20,7 @@ class VisitorLogService {
         : `${ENDPOINTS.visitorLog.base}`;
       
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -52,9 +51,7 @@ class VisitorLogService {
 
       const response = await fetch(`${ENDPOINTS.visitorLog.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(visitorLogData),
       });
 
@@ -79,9 +76,7 @@ class VisitorLogService {
     try {
       const response = await fetch(`${ENDPOINTS.visitorLog.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(visitorLog),
       });
 
@@ -105,9 +100,7 @@ class VisitorLogService {
     try {
       const response = await fetch(`${ENDPOINTS.visitorLog.changeState(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({}),
       });
 
@@ -130,9 +123,7 @@ class VisitorLogService {
   async findById(id: string | number): Promise<IVisitorLog> {
     try {
       const response = await fetch(`${ENDPOINTS.visitorLog.byId(id)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

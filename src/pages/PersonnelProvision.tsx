@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -278,16 +279,33 @@ const PersonnelProvision = () => {
   const [selectedProvision, setSelectedProvision] = useState<IPersonnelProvision | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch personnel provisions on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchPersonnelProvisions();
-  }, []);
+    if (!propertyId) {
+      // You could add a navigation here to redirect to home page if needed
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch personnel provisions on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchPersonnelProvisions();
+    }
+  }, [propertyId]);
   
   // Function to fetch personnel provisions data
   const fetchPersonnelProvisions = async () => {
     setIsLoading(true);
     try {
-      const response = await personnelProvisionService.findAll() as ApiResponse | IPersonnelProvision[];
+      const response = await personnelProvisionService.findAll(propertyId) as ApiResponse | IPersonnelProvision[];
       // Handle different response formats
       const provisions = Array.isArray(response) ? response : response?.data || [];
       setPersonnelProvisions(provisions);
@@ -306,7 +324,7 @@ const PersonnelProvision = () => {
   // Function to handle adding a new personnel provision
   const handleAddPersonnelProvision = async (data: Partial<IPersonnelProvision>) => {
     try {
-      await personnelProvisionService.createPersonnelProvision(data);
+      await personnelProvisionService.createPersonnelProvision(data, propertyId);
       
       toast({
         title: "Éxito",

@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ILeafAnalysisRecord } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing leaf analysis data
@@ -12,9 +13,7 @@ class LeafAnalysisService {
   async findAll(): Promise<ILeafAnalysisRecord[]> {
     try {
       const response = await fetch(ENDPOINTS.leafAnalysis.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -58,9 +57,7 @@ class LeafAnalysisService {
 
       const response = await fetch(ENDPOINTS.leafAnalysis.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(leafAnalysisData),
       });
 
@@ -85,9 +82,7 @@ class LeafAnalysisService {
     try {
       const response = await fetch(ENDPOINTS.leafAnalysis.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(leafAnalysis),
       });
 
@@ -111,9 +106,7 @@ class LeafAnalysisService {
     try {
       const response = await fetch(ENDPOINTS.leafAnalysis.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -135,9 +128,7 @@ class LeafAnalysisService {
   async findById(id: string | number): Promise<ILeafAnalysisRecord> {
     try {
       const response = await fetch(ENDPOINTS.leafAnalysis.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

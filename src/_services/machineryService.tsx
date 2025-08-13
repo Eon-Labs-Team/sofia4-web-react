@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMachinery } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing machinery data
@@ -10,20 +10,15 @@ class MachineryService {
    * Get all machinery
    * @returns Promise with all machinery
    */
-  async findAll(): Promise<IMachinery[]> {
+  async findAll(propertyId?: string | number | null): Promise<IMachinery[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.machinery.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.machinery.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.machinery.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -42,20 +37,13 @@ class MachineryService {
    * @param machinery Machinery data
    * @returns Promise with created machinery
    */
-  async createMachinery(machinery: Partial<IMachinery>): Promise<IMachinery> {
+  async createMachinery(machinery: Partial<IMachinery>, propertyId?: string | number | null): Promise<IMachinery> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
       const machineryData: Partial<IMachinery> = {
-        workId: machinery.workId,
-        machinery: machinery.machinery,
-        startTime: machinery.startTime,
-        endTime: machinery.endTime,
-        finalHours: machinery.finalHours,
-        timeValue: machinery.timeValue,
-        totalValue: machinery.totalValue,
-        createdBy: user?.id || null,
-        updatedBy: user?.id || null,
+        ...machinery,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: machinery.state !== undefined ? machinery.state : true
       };
 
       console.log(machineryData);
@@ -68,9 +56,7 @@ class MachineryService {
 
       const response = await fetch(ENDPOINTS.machinery.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryData),
       });
 
@@ -93,7 +79,6 @@ class MachineryService {
    */
   async updateMachinery(id: string | number, machinery: Partial<IMachinery>): Promise<IMachinery> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
       const machineryData = { ...machinery };
       
       // Add updatedBy field
@@ -112,9 +97,7 @@ class MachineryService {
       
       const response = await fetch(ENDPOINTS.machinery.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryData),
       });
 
@@ -136,8 +119,6 @@ class MachineryService {
    */
   async softDeleteMachinery(id: string | number): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const stateData: any = { state: false };
       
       // Add propertyId if available
@@ -147,9 +128,7 @@ class MachineryService {
       
       const response = await fetch(ENDPOINTS.machinery.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(stateData),
       });
 
@@ -171,8 +150,6 @@ class MachineryService {
    */
   async findById(id: string | number): Promise<IMachinery> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.machinery.byId(id));
       if (propertyId) {
@@ -180,9 +157,7 @@ class MachineryService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

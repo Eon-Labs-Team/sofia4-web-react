@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Zap,
   CheckCircle,
@@ -194,16 +195,32 @@ const ElectricityConsumption = () => {
   const [selectedRecord, setSelectedRecord] = useState<IElectricityConsumption | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch electricity consumption data on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchElectricityConsumptionData();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch electricity consumption data on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchElectricityConsumptionData();
+    }
+  }, [propertyId]);
   
   // Function to fetch electricity consumption data
   const fetchElectricityConsumptionData = async () => {
     setIsLoading(true);
     try {
-      const response = await electricityConsumptionService.findAll();
+      const response = await electricityConsumptionService.findAll(propertyId);
       // Handle the response which may come as { data: [...] } or directly as an array
       const data = Array.isArray(response) ? response : (response as unknown as ApiResponse<IElectricityConsumption[]>).data;
       setElectricityConsumptionData(data || []);
@@ -222,7 +239,7 @@ const ElectricityConsumption = () => {
   // Function to handle adding a new electricity consumption record
   const handleAddElectricityConsumption = async (data: Partial<IElectricityConsumption>) => {
     try {
-      await electricityConsumptionService.createElectricityConsumption(data);
+      await electricityConsumptionService.createElectricityConsumption(data, propertyId);
       await fetchElectricityConsumptionData();
       toast({
         title: "Éxito",

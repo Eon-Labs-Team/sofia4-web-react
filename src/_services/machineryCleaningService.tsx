@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMachineryCleaning } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing machinery cleaning data
@@ -12,9 +13,7 @@ class MachineryCleaningService {
   async findAll(): Promise<IMachineryCleaning[]> {
     try {
       const response = await fetch(ENDPOINTS.machineryCleaning.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -53,9 +52,7 @@ class MachineryCleaningService {
 
       const response = await fetch(ENDPOINTS.machineryCleaning.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryCleaningData),
       });
 
@@ -80,9 +77,7 @@ class MachineryCleaningService {
     try {
       const response = await fetch(ENDPOINTS.machineryCleaning.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryCleaning),
       });
 
@@ -106,9 +101,7 @@ class MachineryCleaningService {
     try {
       const response = await fetch(ENDPOINTS.machineryCleaning.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -130,9 +123,7 @@ class MachineryCleaningService {
   async findById(id: string | number): Promise<IMachineryCleaning> {
     try {
       const response = await fetch(ENDPOINTS.machineryCleaning.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

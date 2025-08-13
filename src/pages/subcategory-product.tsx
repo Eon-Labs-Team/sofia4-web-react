@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Tag,
   CheckCircle,
@@ -148,16 +149,32 @@ const SubcategoryProduct = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState<ISubCategoryProduct | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch subcategories on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchSubcategories();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch subcategories on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchSubcategories();
+    }
+  }, [propertyId]);
   
   // Function to fetch subcategories data
   const fetchSubcategories = async () => {
     setIsLoading(true);
     try {
-      const data = await subcategoryProductService.findAll();
+      const data = await subcategoryProductService.findAll(propertyId);
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading subcategories:", error);
@@ -181,7 +198,7 @@ const SubcategoryProduct = () => {
         state: data.state !== undefined ? data.state : false
       };
       
-      await subcategoryProductService.createSubcategoryProduct(subcategoryData);
+      await subcategoryProductService.createSubcategoryProduct(subcategoryData, propertyId);
       
       // Refresh the list after adding
       await fetchSubcategories();

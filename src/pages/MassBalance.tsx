@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -209,16 +210,32 @@ const MassBalance = () => {
   const [selectedMassBalance, setSelectedMassBalance] = useState<IMassBalance | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch mass balances on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchMassBalances();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch mass balances on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchMassBalances();
+    }
+  }, [propertyId]);
   
   // Function to fetch mass balances data
   const fetchMassBalances = async () => {
     setIsLoading(true);
     try {
-      const response = await massBalanceService.findAll();
+      const response = await massBalanceService.findAll(propertyId);
       // Handle both response formats
       const data = Array.isArray(response) ? response : 
                    (response as any)?.data || [];
@@ -248,7 +265,7 @@ const MassBalance = () => {
         state: data.state !== undefined ? data.state : true
       };
 
-      await massBalanceService.createMassBalance(massBalanceData);
+      await massBalanceService.createMassBalance(massBalanceData, propertyId);
       
       toast({
         title: "Éxito",

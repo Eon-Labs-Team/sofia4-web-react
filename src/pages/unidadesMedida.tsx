@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -152,16 +153,32 @@ const UnidadesMedida = () => {
   const [selectedUnit, setSelectedUnit] = useState<IMeasurementUnits | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch measurement units on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchMeasurementUnits();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch measurement units on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchMeasurementUnits();
+    }
+  }, [propertyId]);
   
   // Function to fetch measurement units data
   const fetchMeasurementUnits = async () => {
     setIsLoading(true);
     try {
-      const response = await measurementUnitsService.findAll();
+      const response = await measurementUnitsService.findAll(propertyId);
       // Handle both array and object response formats
       let units: IMeasurementUnits[] = [];
       
@@ -197,7 +214,7 @@ const UnidadesMedida = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await measurementUnitsService.createMeasurementUnit(unitData);
+      await measurementUnitsService.createMeasurementUnit(unitData, propertyId);
       
       toast({
         title: "Éxito",

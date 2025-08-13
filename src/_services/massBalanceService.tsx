@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IMassBalance } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing mass balance data
@@ -12,9 +13,7 @@ class MassBalanceService {
   async findAll(): Promise<IMassBalance[]> {
     try {
       const response = await fetch(ENDPOINTS.massBalance.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -46,9 +45,7 @@ class MassBalanceService {
 
       const response = await fetch(ENDPOINTS.massBalance.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(massBalanceData),
       });
 
@@ -73,9 +70,7 @@ class MassBalanceService {
     try {
       const response = await fetch(ENDPOINTS.massBalance.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(massBalance),
       });
 
@@ -99,9 +94,7 @@ class MassBalanceService {
     try {
       const response = await fetch(ENDPOINTS.massBalance.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -123,9 +116,7 @@ class MassBalanceService {
   async findById(id: string | number): Promise<IMassBalance> {
     try {
       const response = await fetch(ENDPOINTS.massBalance.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

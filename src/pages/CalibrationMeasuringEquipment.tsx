@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/lib/store/authStore';
 import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -187,16 +188,32 @@ const CalibrationMeasuringEquipment = () => {
   const [selectedCalibration, setSelectedCalibration] = useState<ICalibrationMeasuringEquipment | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch calibrations on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchCalibrations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch calibrations on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchCalibrations();
+    }
+  }, [propertyId]);
   
   // Function to fetch calibrations data
   const fetchCalibrations = async () => {
     setIsLoading(true);
     try {
-      const data = await calibrationMeasuringEquipmentService.findAll();
+      const data = await calibrationMeasuringEquipmentService.findAll(propertyId);
       setCalibrations(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
       console.error("Error loading calibrations:", error);
@@ -231,7 +248,7 @@ const CalibrationMeasuringEquipment = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCalibration = await calibrationMeasuringEquipmentService.createCalibrationMeasuringEquipment(calibrationData);
+      const newCalibration = await calibrationMeasuringEquipmentService.createCalibrationMeasuringEquipment(calibrationData, propertyId);
       setCalibrations((prevCalibrations) => [...prevCalibrations, newCalibration]);
       setIsDialogOpen(false);
       toast({

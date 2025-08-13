@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -291,16 +292,32 @@ const WasteRemoval = () => {
   const [selectedWasteRemoval, setSelectedWasteRemoval] = useState<IWasteRemoval | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch waste removals on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWasteRemovals();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch waste removals on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWasteRemovals();
+    }
+  }, [propertyId]);
   
   // Function to fetch waste removals data
   const fetchWasteRemovals = async () => {
     setIsLoading(true);
     try {
-      const response = await wasteRemovalService.findAll();
+      const response = await wasteRemovalService.findAll(propertyId);
       // Handle response correctly
       const data = Array.isArray(response) ? response : 
       (response as any).data || [];
@@ -320,7 +337,7 @@ const WasteRemoval = () => {
   // Function to handle adding a new waste removal
   const handleAddWasteRemoval = async (data: Partial<IWasteRemoval>) => {
     try {
-      await wasteRemovalService.createWasteRemoval(data);
+      await wasteRemovalService.createWasteRemoval(data, propertyId);
       await fetchWasteRemovals();
       toast({
         title: "Éxito",

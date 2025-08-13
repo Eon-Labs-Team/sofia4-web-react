@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IHygieneSanitation } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing hygiene and sanitation data
@@ -12,9 +13,7 @@ class HygieneSanitationService {
   async findAll(): Promise<IHygieneSanitation[]> {
     try {
       const response = await fetch(ENDPOINTS.hygieneSanitation.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -48,9 +47,7 @@ class HygieneSanitationService {
 
       const response = await fetch(ENDPOINTS.hygieneSanitation.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(hygieneSanitationData),
       });
 
@@ -75,9 +72,7 @@ class HygieneSanitationService {
     try {
       const response = await fetch(ENDPOINTS.hygieneSanitation.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(hygieneSanitation),
       });
 
@@ -101,9 +96,7 @@ class HygieneSanitationService {
     try {
       const response = await fetch(ENDPOINTS.hygieneSanitation.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -125,9 +118,7 @@ class HygieneSanitationService {
   async findById(id: string | number): Promise<IHygieneSanitation> {
     try {
       const response = await fetch(ENDPOINTS.hygieneSanitation.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

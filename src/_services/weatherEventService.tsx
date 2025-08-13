@@ -1,5 +1,6 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
 import { IWeatherEvent } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing weather events data
@@ -12,9 +13,7 @@ class WeatherEventService {
   async findAll(): Promise<IWeatherEvent[]> {
     try {
       const response = await fetch(ENDPOINTS.weatherEvent.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -49,9 +48,7 @@ class WeatherEventService {
 
       const response = await fetch(ENDPOINTS.weatherEvent.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(weatherEventData),
       });
 
@@ -76,9 +73,7 @@ class WeatherEventService {
     try {
       const response = await fetch(ENDPOINTS.weatherEvent.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(weatherEvent),
       });
 
@@ -102,9 +97,7 @@ class WeatherEventService {
     try {
       const response = await fetch(ENDPOINTS.weatherEvent.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -126,9 +119,7 @@ class WeatherEventService {
   async findById(id: string | number): Promise<IWeatherEvent> {
     try {
       const response = await fetch(ENDPOINTS.weatherEvent.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

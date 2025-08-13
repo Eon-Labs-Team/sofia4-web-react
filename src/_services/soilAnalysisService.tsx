@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ISoilAnalysis } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing soil analysis data
@@ -12,9 +13,7 @@ class SoilAnalysisService {
   async findAll(): Promise<ISoilAnalysis[]> {
     try {
       const response = await fetch(ENDPOINTS.soilAnalysis.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -66,9 +65,7 @@ class SoilAnalysisService {
 
       const response = await fetch(ENDPOINTS.soilAnalysis.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilAnalysisData),
       });
 
@@ -93,9 +90,7 @@ class SoilAnalysisService {
     try {
       const response = await fetch(ENDPOINTS.soilAnalysis.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilAnalysis),
       });
 
@@ -120,9 +115,7 @@ class SoilAnalysisService {
       // Update only the state field to false
       const response = await fetch(ENDPOINTS.soilAnalysis.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({ state: false }),
       });
 
@@ -145,9 +138,7 @@ class SoilAnalysisService {
   async findById(id: string | number): Promise<ISoilAnalysis> {
     try {
       const response = await fetch(ENDPOINTS.soilAnalysis.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

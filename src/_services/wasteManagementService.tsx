@@ -1,5 +1,6 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
 import { IWasteManagement } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing waste management data
@@ -12,9 +13,7 @@ class WasteManagementService {
   async findAll(): Promise<IWasteManagement[]> {
     try {
       const response = await fetch(`${ENDPOINTS.wasteManagement.base}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -54,9 +53,7 @@ class WasteManagementService {
 
       const response = await fetch(`${ENDPOINTS.wasteManagement.base}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(wasteManagementData),
       });
 
@@ -81,9 +78,7 @@ class WasteManagementService {
     try {
       const response = await fetch(`${ENDPOINTS.wasteManagement.byId(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(wasteManagement),
       });
 
@@ -107,9 +102,7 @@ class WasteManagementService {
     try {
       const response = await fetch(`${ENDPOINTS.wasteManagement.changeState(id)}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -131,9 +124,7 @@ class WasteManagementService {
   async findById(id: string | number): Promise<IWasteManagement> {
     try {
       const response = await fetch(`${ENDPOINTS.wasteManagement.byId(id)}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

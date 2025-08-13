@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useAuthStore } from "@/lib/store/authStore";
 import * as z from "zod";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Pencil, Trash2, Plus } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 import { Column } from "@/lib/store/gridStore";
 import Grid from "@/components/Grid/Grid";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
 import equipmentCalibrationService from "@/_services/equipmentCalibrationService";
 import { IEquipmentCalibration } from "@eon-lib/eon-mongoose";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
@@ -289,16 +290,32 @@ const EquipmentCalibration = () => {
   const [selectedCalibration, setSelectedCalibration] = useState<IEquipmentCalibration | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch equipment calibrations on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchEquipmentCalibrations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch equipment calibrations on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchEquipmentCalibrations();
+    }
+  }, [propertyId]);
   
   // Function to fetch equipment calibrations data
   const fetchEquipmentCalibrations = async () => {
     setIsLoading(true);
     try {
-      const data = await equipmentCalibrationService.findAll();
+      const data = await equipmentCalibrationService.findAll(propertyId);
       // Check if data is an array directly or has a data property
       setEquipmentCalibrations(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
@@ -330,7 +347,7 @@ const EquipmentCalibration = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCalibration = await equipmentCalibrationService.createEquipmentCalibration(calibrationData);
+      const newCalibration = await equipmentCalibrationService.createEquipmentCalibration(calibrationData, propertyId);
       setEquipmentCalibrations((prevCalibrations) => [...prevCalibrations, newCalibration]);
       setIsDialogOpen(false);
       toast({

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Droplets,
   CheckCircle,
@@ -276,16 +277,32 @@ const IrrigationSectorCapacity = () => {
   const [selectedIrrigationSectorCapacity, setSelectedIrrigationSectorCapacity] = useState<IIrrigationSectorCapacity | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch irrigation sector capacities on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchIrrigationSectorCapacities();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch irrigation sector capacities on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchIrrigationSectorCapacities();
+    }
+  }, [propertyId]);
   
   // Function to fetch irrigation sector capacities data
   const fetchIrrigationSectorCapacities = async () => {
     setIsLoading(true);
     try {
-      const response = await irrigationSectorCapacityService.findAll();
+      const response = await irrigationSectorCapacityService.findAll(propertyId);
 
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IIrrigationSectorCapacity[]
@@ -313,7 +330,7 @@ const IrrigationSectorCapacity = () => {
         data.createDate = new Date().toISOString().split('T')[0];
       }
 
-      await irrigationSectorCapacityService.createIrrigationSectorCapacity(data);
+      await irrigationSectorCapacityService.createIrrigationSectorCapacity(data, propertyId);
       
       toast({
         title: "Éxito",

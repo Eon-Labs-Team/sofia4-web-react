@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuthStore } from "@/lib/store/authStore";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -361,16 +362,32 @@ const FertilizacionSuelo = () => {
   const [selectedSoilFertilization, setSelectedSoilFertilization] = useState<ISoilFertilization | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch soil fertilizations on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchSoilFertilizations();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch soil fertilizations on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchSoilFertilizations();
+    }
+  }, [propertyId]);
   
   // Function to fetch soil fertilizations data
   const fetchSoilFertilizations = async () => {
     setIsLoading(true);
     try {
-      const response = await soilFertilizationService.findAll();
+      const response = await soilFertilizationService.findAll(propertyId);
       // Handle both formats: array of items or { data: items[] }
       const data = response && typeof response === 'object' && 'data' in response 
         ? response.data as ISoilFertilization[]
@@ -391,7 +408,7 @@ const FertilizacionSuelo = () => {
   // Function to handle adding a new soil fertilization
   const handleAddSoilFertilization = async (data: Partial<ISoilFertilization>) => {
     try {
-      const newSoilFertilization = await soilFertilizationService.createSoilFertilization(data);
+      const newSoilFertilization = await soilFertilizationService.createSoilFertilization(data, propertyId);
       await fetchSoilFertilizations();
       setIsDialogOpen(false);
       toast({

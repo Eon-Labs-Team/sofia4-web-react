@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ITaskType } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing faena (task type) data
@@ -10,20 +10,15 @@ class FaenaService {
    * Get all faenas
    * @returns Promise with all faenas
    */
-  async findAll(): Promise<ITaskType[]> {
+  async findAll(propertyId?: string | number | null): Promise<ITaskType[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.faenas.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.faenas.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.faenas.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -43,17 +38,13 @@ class FaenaService {
    * @param faena Faena data
    * @returns Promise with created faena
    */
-  async createFaena(faena: Partial<ITaskType>): Promise<ITaskType> {
+  async createFaena(faena: Partial<ITaskType>, propertyId?: string | number | null): Promise<ITaskType> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const faenaData: Partial<ITaskType> = {
-        name: faena.name,
-        optionalCode: faena.optionalCode,
-        workType: faena.workType,
-        usageScope: faena.usageScope,
-        usesCalibrationPerHa: faena.usesCalibrationPerHa !== undefined ? faena.usesCalibrationPerHa : false,
-        allowedFarms: faena.allowedFarms || [],
+        ...faena,
+        // @ts-ignore
+        propertyId, // Add propertyId to the data
+        state: faena.state !== undefined ? faena.state : true
       };
       
       // Add propertyId if available
@@ -64,9 +55,7 @@ class FaenaService {
 
       const response = await fetch(ENDPOINTS.faenas.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
       });
 
@@ -89,7 +78,6 @@ class FaenaService {
    */
   async updateFaena(id: string | number, faena: Partial<ITaskType>): Promise<ITaskType> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const faenaData = { ...faena };
       
       // Add propertyId if available
@@ -100,9 +88,7 @@ class FaenaService {
       
       const response = await fetch(ENDPOINTS.faenas.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
       });
 
@@ -124,8 +110,6 @@ class FaenaService {
    */
   async softDeleteFaena(id: string | number): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.faenas.changeState(id, false));
       if (propertyId) {
@@ -134,9 +118,7 @@ class FaenaService {
       
       const response = await fetch(url.toString(), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -157,8 +139,6 @@ class FaenaService {
    */
   async findById(id: string | number): Promise<ITaskType> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.faenas.byId(id));
       if (propertyId) {
@@ -166,9 +146,7 @@ class FaenaService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

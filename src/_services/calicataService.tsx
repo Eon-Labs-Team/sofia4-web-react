@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { ICalicata } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing calicata (soil pit) data
@@ -12,9 +13,7 @@ class CalicataService {
   async findAll(): Promise<ICalicata[]> {
     try {
       const response = await fetch(ENDPOINTS.calicata.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -50,9 +49,7 @@ class CalicataService {
 
       const response = await fetch(ENDPOINTS.calicata.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calicataData),
       });
 
@@ -77,9 +74,7 @@ class CalicataService {
     try {
       const response = await fetch(ENDPOINTS.calicata.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(calicata),
       });
 
@@ -103,9 +98,7 @@ class CalicataService {
     try {
       const response = await fetch(ENDPOINTS.calicata.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify({ state: false }),
       });
 
@@ -128,9 +121,7 @@ class CalicataService {
   async findById(id: string | number): Promise<ICalicata> {
     try {
       const response = await fetch(ENDPOINTS.calicata.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

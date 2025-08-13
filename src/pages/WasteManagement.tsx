@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -316,16 +317,32 @@ const WasteManagement = () => {
   const [selectedWasteManagement, setSelectedWasteManagement] = useState<IWasteManagement | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch waste managements on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchWasteManagements();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch waste managements on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchWasteManagements();
+    }
+  }, [propertyId]);
   
   // Function to fetch waste managements data
   const fetchWasteManagements = async () => {
     setIsLoading(true);
     try {
-      const response = await wasteManagementService.findAll();
+      const response = await wasteManagementService.findAll(propertyId);
       const data = Array.isArray(response) ? response : 
       (response as any).data || [];
       setWasteManagements(data);
@@ -340,7 +357,7 @@ const WasteManagement = () => {
   // Function to handle adding a new waste management
   const handleAddWasteManagement = async (data: Partial<IWasteManagement>) => {
     try {
-      await wasteManagementService.createWasteManagement(data);
+      await wasteManagementService.createWasteManagement(data, propertyId);
       await fetchWasteManagements();
       setIsDialogOpen(false);
       toast({

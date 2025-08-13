@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IBackPumpCalculation } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 /**
  * Service for managing back pump calculation data
@@ -12,9 +13,7 @@ class BackPumpCalculationService {
   async findAll(): Promise<IBackPumpCalculation[]> {
     try {
       const response = await fetch(ENDPOINTS.backPumpCalculation.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -51,9 +50,7 @@ class BackPumpCalculationService {
 
       const response = await fetch(ENDPOINTS.backPumpCalculation.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(backPumpCalculationData),
       });
 
@@ -78,9 +75,7 @@ class BackPumpCalculationService {
     try {
       const response = await fetch(ENDPOINTS.backPumpCalculation.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(backPumpCalculation),
       });
 
@@ -104,9 +99,7 @@ class BackPumpCalculationService {
     try {
       const response = await fetch(ENDPOINTS.backPumpCalculation.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -128,9 +121,7 @@ class BackPumpCalculationService {
   async findById(id: string | number): Promise<IBackPumpCalculation> {
     try {
       const response = await fetch(ENDPOINTS.backPumpCalculation.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuthStore } from "@/lib/store/authStore";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -283,16 +284,32 @@ const IrrigationRecord = () => {
   const [selectedRecord, setSelectedRecord] = useState<IIrrigationRecord | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch irrigation records on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchIrrigationRecords();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch irrigation records on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchIrrigationRecords();
+    }
+  }, [propertyId]);
   
   // Function to fetch irrigation records data
   const fetchIrrigationRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await irrigationRecordService.findAll();
+      const response = await irrigationRecordService.findAll(propertyId);
       // Handle different response formats
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IIrrigationRecord[]
@@ -313,7 +330,7 @@ const IrrigationRecord = () => {
   // Function to handle adding a new irrigation record
   const handleAddIrrigationRecord = async (data: Partial<IIrrigationRecord>) => {
     try {
-      const newIrrigationRecord = await irrigationRecordService.createIrrigationRecord(data);
+      const newIrrigationRecord = await irrigationRecordService.createIrrigationRecord(data, propertyId);
       await fetchIrrigationRecords();
       setIsDialogOpen(false);
       toast({

@@ -1,5 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IChlorineRegistration } from '@eon-lib/eon-mongoose';
+import authService from './authService';
 
 interface APIResponse<T> {
   data: T[];
@@ -17,9 +18,7 @@ class ChlorineRegistrationService {
   async findAll(): Promise<APIResponse<IChlorineRegistration> | IChlorineRegistration[]> {
     try {
       const response = await fetch(ENDPOINTS.chlorineRegistration.base, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -53,9 +52,7 @@ class ChlorineRegistrationService {
 
       const response = await fetch(ENDPOINTS.chlorineRegistration.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(chlorineRegistrationData),
       });
 
@@ -80,9 +77,7 @@ class ChlorineRegistrationService {
     try {
       const response = await fetch(ENDPOINTS.chlorineRegistration.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(chlorineRegistration),
       });
 
@@ -106,9 +101,7 @@ class ChlorineRegistrationService {
     try {
       const response = await fetch(ENDPOINTS.chlorineRegistration.changeState(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -130,9 +123,7 @@ class ChlorineRegistrationService {
   async findById(id: string | number): Promise<IChlorineRegistration> {
     try {
       const response = await fetch(ENDPOINTS.chlorineRegistration.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

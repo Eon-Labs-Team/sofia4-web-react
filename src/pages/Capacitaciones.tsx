@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -309,16 +310,32 @@ const Capacitaciones = () => {
   const [selectedTrainingTalk, setSelectedTrainingTalk] = useState<ITrainingTalks | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch training talks on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchTrainingTalks();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch training talks on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchTrainingTalks();
+    }
+  }, [propertyId]);
   
   // Function to fetch training talks data
   const fetchTrainingTalks = async () => {
     setIsLoading(true);
     try {
-      const data = await trainingTalksService.findAll();
+      const data = await trainingTalksService.findAll(propertyId);
       setTrainingTalks(Array.isArray(data) ? data : (data as any)?.data || []);
     } catch (error) {
       console.error("Error loading training talks:", error);
@@ -350,7 +367,7 @@ const Capacitaciones = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await trainingTalksService.createTrainingTalk(trainingTalkData);
+      await trainingTalksService.createTrainingTalk(trainingTalkData, propertyId);
       
       toast({
         title: "Éxito",

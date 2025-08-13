@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IWorkers } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
+import authService from './authService';
 
 /**
  * Service for managing workers (trabajos realizados) data
@@ -10,20 +10,15 @@ class WorkerService {
    * Get all workers
    * @returns Promise with all workers
    */
-  async findAll(): Promise<IWorkers[]> {
+  async findAll(propertyId?: string | number | null): Promise<IWorkers[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      // If propertyId is provided, add it as a query parameter
+      const url = propertyId 
+        ? `${ENDPOINTS.workers.base}?propertyId=${propertyId}`
+        : `${ENDPOINTS.workers.base}`;
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.workers.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(url, {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {
@@ -42,39 +37,13 @@ class WorkerService {
    * @param worker Worker data
    * @returns Promise with created worker
    */
-  async createWorker(worker: Partial<any>): Promise<IWorkers> {
+  async createWorker(worker: Partial<any>, propertyId?: string | number | null): Promise<IWorkers> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
-      
-      const workerData: Partial<IWorkers> = {
+      const workerData: Partial<any> = {
+        ...worker,
         // @ts-ignore
-        classification: worker.classification,
-        worker: worker.worker,
-        quadrille: worker.quadrille,
-        workingDay: worker.workingDay,
-        paymentMethod: worker.paymentMethod,
-        yield: worker.yield,
-        totalHoursYield: worker.totalHoursYield,
-        overtime: worker.overtime,
-        bonus: worker.bonus,
-        // @ts-ignore
-        bond: worker.bond,
-        yieldValue: worker.yieldValue,
-        dayValue: worker.dayValue,
-        additionalBonuses: worker.additionalBonuses,
-        exportPerformance: worker.exportPerformance,
-        juicePerformance: worker.juicePerformance,
-        othersPerformance: worker.othersPerformance,
-        totalDeal: worker.totalDeal,
-        dailyTotal: worker.dailyTotal,
-        value: worker.value,
-        salary: worker.salary,
-        date: worker.date,
-        contractor: worker.contractor,
-        workId: worker.workId,
-        state: worker.state !== undefined ? worker.state : true,
-        createdBy: user?.id || null,
-        updatedBy: user?.id || null,
+        propertyId, // Add propertyId to the data
+        state: worker.state !== undefined ? worker.state : true
       };
 
       console.log(workerData);
@@ -88,9 +57,7 @@ class WorkerService {
 
       const response = await fetch(ENDPOINTS.workers.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerData),
       });
 
@@ -113,7 +80,6 @@ class WorkerService {
    */
   async updateWorker(id: string | number, worker: Partial<IWorkers>): Promise<IWorkers> {
     try {
-      const { propertyId } = useAuthStore.getState();
       const workerData = { ...worker};
       // @ts-ignore
       delete workerData.__v;
@@ -126,9 +92,7 @@ class WorkerService {
       
       const response = await fetch(ENDPOINTS.workers.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerData),
       });
 
@@ -150,8 +114,6 @@ class WorkerService {
    */
   async softDeleteWorker(id: string | number): Promise<any> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       const stateData = { state: false };
       
       // Add propertyId if available
@@ -162,9 +124,7 @@ class WorkerService {
       
       const response = await fetch(ENDPOINTS.workers.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(stateData),
       });
 
@@ -186,8 +146,6 @@ class WorkerService {
    */
   async findById(id: string | number): Promise<IWorkers> {
     try {
-      const { propertyId } = useAuthStore.getState();
-      
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.workers.byId(id));
       if (propertyId) {
@@ -195,9 +153,7 @@ class WorkerService {
       }
       
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

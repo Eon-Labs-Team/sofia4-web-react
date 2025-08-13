@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   CheckCircle,
   XCircle,
@@ -363,16 +364,32 @@ const Labores = () => {
   });
   
   // Fetch labores and task types on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchLabores();
-    fetchTaskTypes();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  useEffect(() => {
+    if (propertyId) {
+      fetchLabores();
+      fetchTaskTypes();
+    }
+  }, [propertyId]);
   
   // Function to fetch labores data
   const fetchLabores = async () => {
     setIsLoading(true);
     try {
-      const data = await laborService.findAll();
+      const data = await laborService.findAll(propertyId);
       // Cast the data to include _id since we know MongoDB adds it
       setLabores(data as ITaskWithId[]);
     } catch (error) {
@@ -390,7 +407,7 @@ const Labores = () => {
   // Function to fetch task types (faenas)
   const fetchTaskTypes = async () => {
     try {
-      const data = await faenaService.findAll();
+      const data = await faenaService.findAll(propertyId);
       setTaskTypes(data as ITaskTypeWithId[]);
     } catch (error) {
       console.error("Error loading faenas:", error);
@@ -405,7 +422,7 @@ const Labores = () => {
   // Function to handle adding a new labor
   const handleAddLabor = async (data: Partial<ITask>) => {
     try {
-      await laborService.createLabor(data);
+      await laborService.createLabor(data, propertyId);
       toast({
         title: "Éxito",
         description: "Labor creada correctamente",

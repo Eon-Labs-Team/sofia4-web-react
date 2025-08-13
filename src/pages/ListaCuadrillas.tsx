@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -212,16 +213,32 @@ const ListaCuadrillas = () => {
   const [selectedCrewList, setSelectedCrewList] = useState<ICrewList | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch crewLists on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchCrewLists();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch crewLists on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchCrewLists();
+    }
+  }, [propertyId]);
   
   // Function to fetch crew lists data
   const fetchCrewLists = async () => {
     setIsLoading(true);
     try {
-      const result = await crewListService.findAll();
+      const result = await crewListService.findAll(propertyId);
       // Comprobar si la respuesta tiene un formato diferente
       if (result && typeof result === 'object' && 'data' in result) {
         setCrewLists(result.data as ICrewList[]);
@@ -254,7 +271,7 @@ const ListaCuadrillas = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCrewList = await crewListService.createCrew(crewListData);
+      const newCrewList = await crewListService.createCrew(crewListData, propertyId);
       
       // Update the list with the new item
       setCrewLists(prev => [...prev, newCrewList]);

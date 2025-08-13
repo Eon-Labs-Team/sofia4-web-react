@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -176,11 +177,27 @@ const Faenas = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
   
-  // Fetch faenas on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchFaenas();
-    fetchProperties();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch faenas on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchFaenas();
+    }
+    fetchProperties(); // Properties are not filtered by propertyId
+  }, [propertyId]);
   
   // Function to fetch properties data
   const fetchProperties = async () => {
@@ -208,7 +225,7 @@ const Faenas = () => {
   const fetchFaenas = async () => {
     setIsLoading(true);
     try {
-      const data = await faenaService.findAll();
+      const data = await faenaService.findAll(propertyId);
       setFaenas(data as FaenaWithId[]);
     } catch (error) {
       console.error("Error loading faenas:", error);
@@ -225,7 +242,7 @@ const Faenas = () => {
   // Function to handle adding a new faena
   const handleAddFaena = async (data: Partial<ITaskType>) => {
     try {
-      await faenaService.createFaena(data);
+      await faenaService.createFaena(data, propertyId);
       
       toast({
         title: "Éxito",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Building2,
   CheckCircle,
@@ -285,16 +286,32 @@ const Calicata = () => {
   const [selectedCalicata, setSelectedCalicata] = useState<ICalicata | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch calicatas on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchCalicatas();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch calicatas on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchCalicatas();
+    }
+  }, [propertyId]);
   
   // Function to fetch calicatas data
   const fetchCalicatas = async () => {
     setIsLoading(true);
     try {
-      const data = await calicataService.findAll();
+      const data = await calicataService.findAll(propertyId);
       // @ts-ignore
       setCalicatas(data.data || data);
     } catch (error) {
@@ -312,7 +329,7 @@ const Calicata = () => {
   // Function to handle adding a new calicata
   const handleAddCalicata = async (data: Partial<ICalicata>) => {
     try {
-      await calicataService.createCalicata(data);
+      await calicataService.createCalicata(data, propertyId);
       await fetchCalicatas();
       setIsDialogOpen(false);
       toast({

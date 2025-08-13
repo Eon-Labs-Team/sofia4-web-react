@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Grid } from "@/components/Grid/Grid";
+import { useAuthStore } from "@/lib/store/authStore";
 import {
   Tag,
   CheckCircle,
@@ -189,16 +190,32 @@ const ProductCategories = () => {
   const [selectedCategory, setSelectedCategory] = useState<IProductCategory | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Fetch categories on component mount
+  // Get propertyId from AuthStore
+  const { propertyId } = useAuthStore();
+  
+  // Redirect to homepage if no propertyId is available
   useEffect(() => {
-    fetchProductCategories();
-  }, []);
+    if (!propertyId) {
+      toast({
+        title: "Error",
+        description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
+        variant: "destructive",
+      });
+    }
+  }, [propertyId]);
+  
+  // Fetch categories on component mount and when propertyId changes
+  useEffect(() => {
+    if (propertyId) {
+      fetchProductCategories();
+    }
+  }, [propertyId]);
   
   // Function to fetch categories data
   const fetchProductCategories = async () => {
     setIsLoading(true);
     try {
-      const response = await productCategoryService.findByEnterpriseId();
+      const response = await productCategoryService.findByEnterpriseId(propertyId);
       // Handle different response formats
       let categoriesData: IProductCategory[] = [];
       if (Array.isArray(response)) {
@@ -225,7 +242,7 @@ const ProductCategories = () => {
   // Function to handle adding a new category
   const handleAddCategory = async (data: Partial<IProductCategory>) => {
     try {
-      await productCategoryService.createProductCategory(data);
+      await productCategoryService.createProductCategory(data, propertyId);
       
       toast({
         title: "Éxito",
