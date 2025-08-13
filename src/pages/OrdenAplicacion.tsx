@@ -43,6 +43,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
+import ProductSelectionModal from "@/components/ProductSelectionModal";
 import { z } from "zod";
 import { IWork } from "@eon-lib/eon-mongoose";
 import { IWorkers } from "@eon-lib/eon-mongoose";
@@ -833,6 +834,24 @@ const OrdenAplicacion = () => {
     },
   ];
 
+  // Functions for product selection modal
+  const handleProductModalOpen = (field: any) => {
+    setCurrentProductField(field);
+    setIsProductModalOpen(true);
+  };
+
+  const handleProductSelect = (product: any) => {
+    if (currentProductField) {
+      currentProductField.onChange(product.name);
+      
+      // TODO: Implementar auto-llenado de unidad de medida
+      // Cuando el producto tenga unitOfMeasurement, podríamos actualizarlo automáticamente
+      // Para esto necesitaríamos acceso al formulario padre (React Hook Form)
+    }
+    setIsProductModalOpen(false);
+    setCurrentProductField(null);
+  };
+
   // Función para manejar la selección del tipo de ingreso
   const handleIngresoOptionSelect = (option: SplitButtonOption) => {
     if (option.value === "wizard") {
@@ -859,6 +878,8 @@ const OrdenAplicacion = () => {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formType, setFormType] = useState<"complete" | "wizard">("complete");
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [currentProductField, setCurrentProductField] = useState<any>(null);
   const [ordenesAplicacion, setOrdenesAplicacion] = useState<IWork[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOrden, setSelectedOrden] = useState<IWork | null>(null);
@@ -2122,16 +2143,16 @@ const OrdenAplicacion = () => {
   // Products grid columns
   const productsColumns: Column[] = [
     {
-      id: "category",
-      header: "Categoría",
-      accessor: "category",
+      id: "product",
+      header: "Producto",
+      accessor: "product",
       visible: true,
       sortable: true,
     },
     {
-      id: "product",
-      header: "Producto",
-      accessor: "product",
+      id: "category",
+      header: "Categoría",
+      accessor: "category",
       visible: true,
       sortable: true,
     },
@@ -3168,10 +3189,12 @@ const OrdenAplicacion = () => {
                     type: 'select',
                     placeholder: "Seleccionar trabajador",
                     style: { minWidth: '150px' },
-                    options: workerList.map((worker) => ({
-                      value: worker._id || "",
-                      label: `${worker.names} ${worker.lastName} (${worker.rut})`
-                    }))
+                    options: workerList
+                      .filter(worker => worker._id) // Solo incluir workers con _id válido
+                      .map((worker) => ({
+                        value: worker._id,
+                        label: `${worker.names} ${worker.lastName} (${worker.rut})`
+                      }))
                   },    
                   classification: {
                     type: 'text',
@@ -3478,10 +3501,12 @@ const OrdenAplicacion = () => {
                     type: 'select',
                     placeholder: "Seleccionar maquinaria",
                     style: { minWidth: '200px' },
-                    options: machineryList.map((machine) => ({
-                      value: machine._id || "",
-                      label: `${machine.equipment} - ${machine.machineryCode} (${machine.brand})`
-                    }))
+                    options: machineryList
+                      .filter(machine => machine._id) // Solo incluir machinery con _id válido
+                      .map((machine) => ({
+                        value: machine._id,
+                        label: `${machine.equipment} - ${machine.machineryCode} (${machine.brand})`
+                      }))
                   },
                   startTime: {
                     type: 'time'
@@ -3631,29 +3656,55 @@ const OrdenAplicacion = () => {
                 ]}
                 fieldConfigurations={{
                   category: {
-                    type: 'select',
-                    placeholder: "Seleccionar categoría",
-                    options: [
-                      { value: "", label: "Todas las categorías" },
-                      ...(Array.isArray(productCategories) ? productCategories.map(category => ({
-                        value: category.description,
-                        label: category.description
-                      })) : [])
-                    ]
+                    type: 'text',
+                    placeholder: "Categoría",
+                    readonly: true,
+                    style: { 
+                      backgroundColor: '#f5f5f5', 
+                      color: '#666',
+                      cursor: 'not-allowed' 
+                    }
                   },
                   product: {
-                    type: 'select',
+                    type: 'custom',
                     placeholder: "Seleccionar producto",
-                    options: filteredWarehouseProducts.length > 0 ? 
-                      filteredWarehouseProducts.map(product => ({
-                        value: product.name,
-                        label: product.name
-                      })) : 
-                      [{ value: "", label: "No hay productos disponibles" }]
+                    customRender: (field: any, config: any, handleChange: (value: any) => void) => (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={field.value || ""}
+                          placeholder={config.placeholder}
+                          readOnly
+                          onClick={() => handleProductModalOpen(field)}
+                          className="h-8 w-full rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                        />
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg
+                            className="h-4 w-4 text-muted-foreground"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    )
                   },
                   unitOfMeasurement: {
                     type: 'text',
-                    placeholder: "Unidad de medida"
+                    placeholder: "Unidad de medida",
+                    readonly: true,
+                    style: { 
+                      backgroundColor: '#f5f5f5', 
+                      color: '#666',
+                      cursor: 'not-allowed' 
+                    }
                   },
                   amountPerHour: {
                     type: 'number',
@@ -3681,8 +3732,15 @@ const OrdenAplicacion = () => {
                     placeholder: "0"
                   },
                   machineryRelationship: {
-                    type: 'text',
-                    placeholder: "Relación con maquinaria"
+                    type: 'select',
+                    placeholder: "Seleccionar maquinaria",
+                    style: { minWidth: '200px' },
+                    options: machineryList
+                      .filter(machine => machine._id) // Solo incluir machinery con _id válido
+                      .map((machine) => ({
+                        value: machine._id,
+                        label: `${machine.equipment} - ${machine.machineryCode} (${machine.brand})`
+                      }))
                   },
                   packagingCode: {
                     type: 'text',
@@ -3790,6 +3848,19 @@ const OrdenAplicacion = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Product Selection Modal */}
+      <ProductSelectionModal
+        isOpen={isProductModalOpen}
+        onClose={() => {
+          setIsProductModalOpen(false);
+          setCurrentProductField(null);
+        }}
+        onSelect={handleProductSelect}
+        products={filteredWarehouseProducts}
+        title="Seleccionar Producto"
+        description="Busca y selecciona un producto para agregar al registro"
+      />
     </div>
   );
 };
