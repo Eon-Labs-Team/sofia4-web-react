@@ -397,7 +397,7 @@ const CalibrarAspersion = () => {
   const fetchCalibraciones = async () => {
     setIsLoading(true);
     try {
-      const response = await calibrateSprinklerService.findAll(propertyId);
+      const response = await calibrateSprinklerService.findAll();
       
       // Since we're not sure of the exact API response format, handle different possibilities
       let calibraciones: ICalibrateSprinkler[] = [];
@@ -429,7 +429,7 @@ const CalibrarAspersion = () => {
   // Function to handle adding a new calibration
   const handleAddCalibracion = async (data: Partial<ICalibrateSprinkler>) => {
     try {
-      await calibrateSprinklerService.createCalibrateSprinkler(data, propertyId);
+      await calibrateSprinklerService.createCalibrateSprinkler(data);
       await fetchCalibraciones();
       setIsDialogOpen(false);
       toast({

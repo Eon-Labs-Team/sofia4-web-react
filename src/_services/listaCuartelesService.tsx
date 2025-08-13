@@ -107,20 +107,15 @@ class ListaCuartelesService {
         });
       }
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        barracksListData.propertyId = propertyId;
-      }
-
       // Add createdBy field with current user ID
-      if (user?.id) {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser?.id) {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
-        barracksListData.createdBy = user.id;
-        barracksListData.updatedBy = user.id;
+        barracksListData.createdBy = currentUser.id;
+        barracksListData.updatedBy = currentUser.id;
       }
 
-      const response = await fetch(ENDPOINTS.listaCuarteles.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaCuarteles.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(barracksListData),
@@ -200,9 +195,10 @@ class ListaCuartelesService {
       }
 
       // Add updatedBy field with current user ID
-      if (user?.id) {
+      const currentUser = authService.getCurrentUser();
+      if (currentUser?.id) {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
-        barracksListData.updatedBy = user.id;
+        barracksListData.updatedBy = currentUser.id;
       }
 
       const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {

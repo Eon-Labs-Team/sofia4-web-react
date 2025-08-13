@@ -271,7 +271,7 @@ const WaterChlorination = () => {
   const fetchChlorinations = async () => {
     setIsLoading(true);
     try {
-      const data = await chlorinationService.findAll(propertyId);
+      const data = await chlorinationService.findAll();
       // @ts-ignore
       setChlorinations(data.data || data);
     } catch (error) {
@@ -289,7 +289,7 @@ const WaterChlorination = () => {
   // Function to handle adding a new chlorination record
   const handleAddChlorination = async (data: Partial<IChlorination>) => {
     try {
-      await chlorinationService.createChlorination(data, propertyId);
+      await chlorinationService.createChlorination(data);
       await fetchChlorinations();
       setIsDialogOpen(false);
       toast({

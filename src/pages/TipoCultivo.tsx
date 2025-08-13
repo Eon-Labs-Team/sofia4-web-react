@@ -327,7 +327,7 @@ const TipoCultivo = () => {
   const fetchCropTypes = async () => {
     setIsLoading(true);
     try {
-      const response = await cropTypeService.findAll(propertyId);
+      const response = await cropTypeService.findAll();
       // @ts-ignore
       setCropTypes(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
@@ -356,7 +356,7 @@ const TipoCultivo = () => {
         data.barracksNumber = data.barracks.length;
       }
       
-      await cropTypeService.createCropType(data, propertyId);
+      await cropTypeService.createCropType(data);
       
       toast({
         title: "Éxito",

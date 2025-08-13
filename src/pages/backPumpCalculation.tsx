@@ -343,7 +343,7 @@ const BackPumpCalculation = () => {
   const fetchBackPumpCalculations = async () => {
     setIsLoading(true);
     try {
-      const response = await backPumpCalculationService.findAll(propertyId);
+      const response = await backPumpCalculationService.findAll();
       // Manejar tanto la respuesta como array directo o como objeto con propiedad data
       let calculationsData: IBackPumpCalculation[] = [];
       
@@ -369,7 +369,7 @@ const BackPumpCalculation = () => {
   // Function to handle adding a new back pump calculation
   const handleAddBackPumpCalculation = async (data: Partial<IBackPumpCalculation>) => {
     try {
-      await backPumpCalculationService.createBackPumpCalculation(data, propertyId);
+      await backPumpCalculationService.createBackPumpCalculation(data);
       toast({
         title: "Éxito",
         description: "Cálculo de bomba de espalda agregado correctamente",

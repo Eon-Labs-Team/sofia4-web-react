@@ -389,7 +389,7 @@ const Labores = () => {
   const fetchLabores = async () => {
     setIsLoading(true);
     try {
-      const data = await laborService.findAll(propertyId);
+      const data = await laborService.findAll();
       // Cast the data to include _id since we know MongoDB adds it
       setLabores(data as ITaskWithId[]);
     } catch (error) {
@@ -407,7 +407,7 @@ const Labores = () => {
   // Function to fetch task types (faenas)
   const fetchTaskTypes = async () => {
     try {
-      const data = await faenaService.findAll(propertyId);
+      const data = await faenaService.findAll();
       setTaskTypes(data as ITaskTypeWithId[]);
     } catch (error) {
       console.error("Error loading faenas:", error);
@@ -422,7 +422,7 @@ const Labores = () => {
   // Function to handle adding a new labor
   const handleAddLabor = async (data: Partial<ITask>) => {
     try {
-      await laborService.createLabor(data, propertyId);
+      await laborService.createLabor(data);
       toast({
         title: "Éxito",
         description: "Labor creada correctamente",

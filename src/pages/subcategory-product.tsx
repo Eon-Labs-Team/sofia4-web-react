@@ -174,7 +174,7 @@ const SubcategoryProduct = () => {
   const fetchSubcategories = async () => {
     setIsLoading(true);
     try {
-      const data = await subcategoryProductService.findAll(propertyId);
+      const data = await subcategoryProductService.findAll();
       setSubcategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading subcategories:", error);
@@ -198,7 +198,7 @@ const SubcategoryProduct = () => {
         state: data.state !== undefined ? data.state : false
       };
       
-      await subcategoryProductService.createSubcategoryProduct(subcategoryData, propertyId);
+      await subcategoryProductService.createSubcategoryProduct(subcategoryData);
       
       // Refresh the list after adding
       await fetchSubcategories();

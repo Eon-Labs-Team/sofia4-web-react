@@ -225,7 +225,7 @@ const Faenas = () => {
   const fetchFaenas = async () => {
     setIsLoading(true);
     try {
-      const data = await faenaService.findAll(propertyId);
+      const data = await faenaService.findAll();
       setFaenas(data as FaenaWithId[]);
     } catch (error) {
       console.error("Error loading faenas:", error);
@@ -242,7 +242,7 @@ const Faenas = () => {
   // Function to handle adding a new faena
   const handleAddFaena = async (data: Partial<ITaskType>) => {
     try {
-      await faenaService.createFaena(data, propertyId);
+      await faenaService.createFaena(data);
       
       toast({
         title: "Éxito",

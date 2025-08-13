@@ -415,7 +415,7 @@ const MonitoreoMaleza = () => {
   const fetchWeedMonitoringRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await weedMonitoringService.findAll(propertyId);
+      const response = await weedMonitoringService.findAll();
       // Handle different response structures
       if (Array.isArray(response)) {
         setWeedMonitoringRecords(response);
@@ -441,7 +441,7 @@ const MonitoreoMaleza = () => {
   // Function to handle adding a new weed monitoring record
   const handleAddWeedMonitoring = async (data: Partial<IWeedMonitoring>) => {
     try {
-      await weedMonitoringService.createWeedMonitoring(data, propertyId);
+      await weedMonitoringService.createWeedMonitoring(data);
       toast({
         title: "Éxito",
         description: "Monitoreo de maleza creado correctamente",

@@ -10,14 +10,9 @@ class LaborService {
    * Get all labores
    * @returns Promise with all labores
    */
-  async findAll(propertyId?: string | number | null): Promise<ITask[]> {
+  async findAll(): Promise<ITask[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.labores.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.labores.base}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -38,22 +33,14 @@ class LaborService {
    * @param labor Labor data
    * @returns Promise with created labor
    */
-  async createLabor(labor: Partial<ITask>, propertyId?: string | number | null): Promise<ITask> {
+  async createLabor(labor: Partial<ITask>): Promise<ITask> {
     try {
       const laborData: Partial<ITask> = {
         ...labor,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: labor.state !== undefined ? labor.state : true
+        //state: labor.state !== undefined ? labor.state : true
       };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        laborData.propertyId = propertyId;
-      }
 
-      const response = await fetch(ENDPOINTS.labores.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
@@ -80,13 +67,7 @@ class LaborService {
     try {
       const laborData = { ...labor };
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        laborData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.labores.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
@@ -110,13 +91,7 @@ class LaborService {
    */
   async softDeleteLabor(id: string | number): Promise<any> {
     try {
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.labores.changeState(id, false));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.changeState(id, false)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });
@@ -139,13 +114,7 @@ class LaborService {
    */
   async findById(id: string | number): Promise<ITask> {
     try {
-      // Create URL with query parameters
-      const url = new URL(ENDPOINTS.labores.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.byId(id)), {
         headers: authService.getAuthHeaders(),
       });
       

@@ -284,7 +284,7 @@ const TechnicalIrrigationMaintenance = () => {
   const fetchMaintenances = async () => {
     setIsLoading(true);
     try {
-      const response = await technicalIrrigationMaintenanceService.findAll(propertyId);
+      const response = await technicalIrrigationMaintenanceService.findAll();
       // Handle the case where the response might be wrapped in a data property
       const data = Array.isArray(response) ? response : 
         (response as any).data || [];
@@ -304,7 +304,7 @@ const TechnicalIrrigationMaintenance = () => {
   // Function to handle adding a new maintenance
   const handleAddMaintenance = async (data: Partial<ITechnicalIrrigationMaintenance>) => {
     try {
-      const newMaintenance = await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data, propertyId);
+      const newMaintenance = await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data);
       await fetchMaintenances();
       setIsDialogOpen(false);
       toast({

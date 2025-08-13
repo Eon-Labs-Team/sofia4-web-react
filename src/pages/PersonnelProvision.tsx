@@ -305,7 +305,7 @@ const PersonnelProvision = () => {
   const fetchPersonnelProvisions = async () => {
     setIsLoading(true);
     try {
-      const response = await personnelProvisionService.findAll(propertyId) as ApiResponse | IPersonnelProvision[];
+      const response = await personnelProvisionService.findAll() as ApiResponse | IPersonnelProvision[];
       // Handle different response formats
       const provisions = Array.isArray(response) ? response : response?.data || [];
       setPersonnelProvisions(provisions);
@@ -324,7 +324,7 @@ const PersonnelProvision = () => {
   // Function to handle adding a new personnel provision
   const handleAddPersonnelProvision = async (data: Partial<IPersonnelProvision>) => {
     try {
-      await personnelProvisionService.createPersonnelProvision(data, propertyId);
+      await personnelProvisionService.createPersonnelProvision(data);
       
       toast({
         title: "Éxito",

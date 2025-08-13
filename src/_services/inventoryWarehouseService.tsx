@@ -11,7 +11,7 @@ class InventoryWarehouseService {
    */
   async findAll(): Promise<IInventoryWarehouse[]> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryWarehouse.findAll, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryWarehouse.findAll), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -77,7 +77,7 @@ class InventoryWarehouseService {
    */
   async findById(id: string): Promise<IInventoryWarehouse> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryWarehouse.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryWarehouse.byId(id)), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -103,30 +103,17 @@ class InventoryWarehouseService {
       capacity?: number;
     };
     status?: boolean;
-  }, propertyId?: string | number | null): Promise<IInventoryWarehouse> {
+  }): Promise<IInventoryWarehouse> {
     try {
-      const warehouseDataData: {
-    name: string;
-    propertyId: string;
-    location: {
-      name: string;
-      capacity?: number;
-    };
-    status?: boolean;
-  } = {
+      const cleanWarehouseData = {
         ...warehouseData,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: warehouseData.state !== undefined ? warehouseData.state : true
+        //state: warehouseData.state !== undefined ? warehouseData.state : true
       };
 
-      const response = await fetch(ENDPOINTS.inventoryWarehouse.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryWarehouse.base), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
-        body: JSON.stringify(requestData),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(cleanWarehouseData),
       });
 
       if (!response.ok) {

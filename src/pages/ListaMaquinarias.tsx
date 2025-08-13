@@ -622,7 +622,7 @@ const ListaMaquinarias = () => {
     console.log('🚀 Starting fetchListaMaquinarias with propertyId:', propertyId);
     
     try {
-      const rawData = await listaMaquinariasService.findAll(propertyId);
+      const rawData = await listaMaquinariasService.findAll();
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
@@ -677,7 +677,7 @@ const ListaMaquinarias = () => {
   const handleAddListaMaquinarias = async (data: Partial<IMachineryList>) => {
     try {
       console.log('📝 Adding new maquinaria:', data);
-      await listaMaquinariasService.createMachineryList(data, propertyId);
+      await listaMaquinariasService.createMachineryList(data);
       
       toast({
         title: "Éxito",

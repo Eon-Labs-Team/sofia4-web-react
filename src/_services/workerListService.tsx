@@ -53,14 +53,6 @@ class WorkerListService {
         workerListData.propertyId = propertyId;
       }
 
-      // Add createdBy field with current user ID
-      if (user?.id) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workerListData.createdBy = user.id;
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workerListData.updatedBy = user.id;
-      }
-
       console.log("workerlistData to insert in service", workerListData);
 
       const response = await fetch(ENDPOINTS.workerList.base, {
@@ -88,6 +80,9 @@ class WorkerListService {
    */
   async updateWorkerList(id: string | number, workerList: Partial<IWorkerList>): Promise<IWorkerList> {
     try {
+      // Get propertyId first
+      const propertyId = authService.getPropertyId();
+      
       // Apply fallbacks for required fields if they are being updated
       const updateData: Partial<IWorkerList> = {
         ...workerList,
@@ -105,19 +100,12 @@ class WorkerListService {
         // Handle provisionalRegime separately as it's boolean
         ...(workerList.provisionalRegime !== undefined && { provisionalRegime: workerList.provisionalRegime })
       };
-      
       // Add propertyId if available
       if (propertyId) {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
         updateData.propertyId = propertyId;
       }
 
-      // Add updatedBy field with current user ID
-      if (user?.id) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        updateData.updatedBy = user.id;
-      }
-      
       const response = await fetch(ENDPOINTS.workerList.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),

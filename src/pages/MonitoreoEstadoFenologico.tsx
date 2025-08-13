@@ -358,7 +358,7 @@ const MonitoreoEstadoFenologico = () => {
   const fetchMonitoringRecords = async () => {
     setIsLoading(true);
     try {
-      const response = await monitoringOfPhenologicalStateService.findAll(propertyId);
+      const response = await monitoringOfPhenologicalStateService.findAll();
       // Handle different response structures
       if (Array.isArray(response)) {
         setMonitoringRecords(response);
@@ -384,7 +384,7 @@ const MonitoreoEstadoFenologico = () => {
   // Function to handle adding a new monitoring record
   const handleAddMonitoring = async (data: Partial<IMonitoringOfPhenologicalState>) => {
     try {
-      await monitoringOfPhenologicalStateService.createMonitoring(data, propertyId);
+      await monitoringOfPhenologicalStateService.createMonitoring(data);
       toast({
         title: "Éxito",
         description: "Monitoreo creado correctamente",

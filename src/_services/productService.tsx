@@ -35,8 +35,7 @@ class ProductService {
    * @returns Promise with created product
    */
   async createProduct(product: Partial<IProducts>): Promise<IProducts> {
-    try {
-      const { propertyId, user } = useAuthStore.getState();
+    try {      
       
       const productData: Partial<IProducts> = {
         workId: product.workId,
@@ -51,19 +50,13 @@ class ProductService {
         machineryRelationship: product.machineryRelationship,
         packagingCode: product.packagingCode,
         invoiceNumber: product.invoiceNumber,
-        createdBy: user?.id || '',
-        updatedBy: user?.id || '',
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || '',
       };
 
       console.log(productData);
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        productData.propertyId = propertyId;
-      }
-
-      const response = await fetch(ENDPOINTS.products.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.products.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(productData),
@@ -88,20 +81,13 @@ class ProductService {
    */
   async updateProduct(id: string | number, product: Partial<IProducts>): Promise<IProducts> {
     try {
-      const { propertyId, user } = useAuthStore.getState();
       const productData = { 
         ...product,
-        updatedBy: user?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || '',
       };
       delete (productData as any).__v;
       
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        productData.propertyId = propertyId;
-      }
-      
-      const response = await fetch(ENDPOINTS.products.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.products.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(productData),
@@ -124,16 +110,12 @@ class ProductService {
    * @returns Promise with operation result
    */
   async deleteProduct(id: string | number): Promise<any> {
-    try {
-      const { propertyId } = useAuthStore.getState();
-      
+    try {            
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.products.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
       
-      const response = await fetch(url.toString(), {
+      
+      const response = await fetch(authService.buildUrlWithParams(url.toString()), {
         method: 'DELETE',
         headers: authService.getAuthHeaders(),
       });
@@ -156,15 +138,13 @@ class ProductService {
    */
   async findById(id: string | number): Promise<IProducts> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      
       
       // Create URL with query parameters
       const url = new URL(ENDPOINTS.products.byId(id));
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
       
-      const response = await fetch(url.toString(), {
+      
+      const response = await fetch(authService.buildUrlWithParams(url.toString()), {
         headers: authService.getAuthHeaders(),
       });
       

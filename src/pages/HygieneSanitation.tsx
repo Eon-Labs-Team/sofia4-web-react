@@ -271,7 +271,7 @@ const HygieneSanitation = () => {
   const fetchRecords = async () => {
     setIsLoading(true);
     try {
-      const data = await hygieneSanitationService.findAll(propertyId);
+      const data = await hygieneSanitationService.findAll();
       setRecords(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading hygiene and sanitation records:", error);
@@ -288,7 +288,7 @@ const HygieneSanitation = () => {
   // Function to handle adding a new record
   const handleAddRecord = async (data: Partial<IHygieneSanitation>) => {
     try {
-      await hygieneSanitationService.createHygieneSanitation(data, propertyId);
+      await hygieneSanitationService.createHygieneSanitation(data);
       
       toast({
         title: "Éxito",

@@ -587,7 +587,7 @@ const AnalisisAgua = () => {
   const fetchWaterAnalysisData = async () => {
     setIsLoading(true);
     try {
-      const response = await waterAnalysisService.findAll(propertyId);
+      const response = await waterAnalysisService.findAll();
       // Manejar diferentes posibles estructuras de respuesta
       if (Array.isArray(response)) {
         setWaterAnalysisData(response);
@@ -618,7 +618,7 @@ const AnalisisAgua = () => {
   // Function to handle adding a new water analysis
   const handleAddWaterAnalysis = async (data: Partial<IWaterAnalysis>) => {
     try {
-      await waterAnalysisService.createWaterAnalysis(data, propertyId);
+      await waterAnalysisService.createWaterAnalysis(data);
       setIsDialogOpen(false);
       toast({
         title: "Éxito",

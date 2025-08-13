@@ -11,7 +11,7 @@ class InventoryLotService {
    */
   async findAll(): Promise<IInventoryLot[]> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryLot.findAll, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryLot.findAll), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -32,7 +32,7 @@ class InventoryLotService {
    */
   async findById(id: string): Promise<IInventoryLot> {
     try {
-      const response = await fetch(ENDPOINTS.inventoryLot.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryLot.byId(id)), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -168,32 +168,17 @@ class InventoryLotService {
     lotName?: string;
     manufactureDate?: Date;
     expiryDate?: Date;
-  }, propertyId?: string | number | null): Promise<IInventoryLot> {
+  }): Promise<IInventoryLot> {
     try {
-      const lotDataData: {
-    productId: string;
-    warehouseId: string;
-    lotNumber: string;
-    quantity: number;
-    status?: string;
-    propertyId: string;
-    lotName?: string;
-    manufactureDate?: Date;
-    expiryDate?: Date;
-  } = {
+      const cleanLotData = {
         ...lotData,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: lotData.state !== undefined ? lotData.state : true
+        //state: lotData.state !== undefined ? lotData.state : true
       };
 
-      const response = await fetch(ENDPOINTS.inventoryLot.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryLot.base), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
-        body: JSON.stringify(requestData),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(cleanLotData),
       });
 
       if (!response.ok) {

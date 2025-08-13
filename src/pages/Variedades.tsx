@@ -174,7 +174,7 @@ const Variedades = () => {
   const fetchVarieties = async () => {
     setIsLoading(true);
     try {
-      const response = await varietyTypeService.findAll(propertyId);
+      const response = await varietyTypeService.findAll();
       // Verificar si la respuesta es un array o un objeto con propiedad data
       const data = Array.isArray(response) ? response : (response as any).data || [];
       setVarieties(data);
@@ -189,7 +189,7 @@ const Variedades = () => {
   // Function to handle adding a new variety
   const handleAddVariety = async (data: Partial<IVarietyType>) => {
     try {
-      await varietyTypeService.createVariety(data, propertyId);
+      await varietyTypeService.createVariety(data);
       toast({
         title: "Variedad agregada",
         description: "La variedad ha sido agregada exitosamente.",

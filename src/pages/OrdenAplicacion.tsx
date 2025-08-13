@@ -1477,7 +1477,7 @@ const OrdenAplicacion = () => {
   // Fetch task types and tasks from services
   const fetchTaskTypes = async () => {
     try {
-      const data = await faenaService.findAll(propertyId);
+      const data = await faenaService.findAll();
       console.log('Fetched task types:', data);
       setTaskTypes(data);
     } catch (error) {
@@ -1492,7 +1492,7 @@ const OrdenAplicacion = () => {
   
   const fetchTasks = async () => {
     try {
-      const data = await laborService.findAll(propertyId);
+      const data = await laborService.findAll();
       console.log('Fetched tasks:', data);
       setAllTasks(data);
     } catch (error) {
@@ -1541,7 +1541,7 @@ const OrdenAplicacion = () => {
   
   const fetchWarehouseProducts = async () => {
     try {
-      const data = await inventoryProductService.findAll(propertyId);
+      const data = await inventoryProductService.findAll();
       console.log('Fetched warehouse products:', data);
       // Ensure we always have an array
       const productsArray = Array.isArray(data) ? data : [];
@@ -1685,7 +1685,7 @@ const OrdenAplicacion = () => {
   const fetchOrdenesAplicacion = async () => {
     setIsLoading(true);
     try {
-      const data = await workService.findAll(propertyId);
+      const data = await workService.findAll();
       // Handle both array responses and paginated responses
       const allWorksData = Array.isArray(data) ? data : (data as any)?.data || [];
       
@@ -1711,7 +1711,7 @@ const OrdenAplicacion = () => {
     console.log("orden de aplicacion", data);
 
     try {
-      await workService.createApplication(data, propertyId);
+      await workService.createApplication(data);
       toast({
         title: "Éxito",
         description: "Orden de aplicación creada correctamente",
@@ -2258,7 +2258,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching workers for order:', selectedOrden?.id || selectedOrden?._id);
-      const data = await workerService.findAll(propertyId);
+      const data = await workerService.findAll();
       console.log('All workers fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2296,7 +2296,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await machineryService.findAll(propertyId);
+      const data = await machineryService.findAll();
       console.log('All machinery fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2334,7 +2334,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching products for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await productService.findAll(propertyId);
+      const data = await productService.findAll();
       console.log('All products fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2398,7 +2398,7 @@ const OrdenAplicacion = () => {
       console.log('Fetching worker list for selectable dropdown...');
       
       // Using real service to fetch worker data
-      const data = await workerListService.findAll(propertyId);
+      const data = await workerListService.findAll();
       console.log('Fetched worker list:', data);
       
       setWorkerList(data);
@@ -2418,7 +2418,7 @@ const OrdenAplicacion = () => {
       console.log('Fetching machinery list for selectable dropdown...');
       
       // Using real service to fetch machinery data
-      const data = await listaMaquinariasService.findAll(propertyId);
+      const data = await listaMaquinariasService.findAll();
       console.log('Fetched machinery list:', data);
       
       setMachineryList(data);
@@ -3416,7 +3416,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new worker:', workerData);
-                    await workerService.createWorker(workerData as any, propertyId);
+                    await workerService.createWorker(workerData as any);
                     await fetchWorkers();
                   } catch (error) {
                     console.error('Error adding worker:', error);
@@ -3572,7 +3572,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new machinery:', machineryData);
-                    await machineryService.createMachinery(machineryData, propertyId);
+                    await machineryService.createMachinery(machineryData);
                     await fetchMachinery();
                   } catch (error) {
                     console.error('Error adding machinery:', error);
@@ -3774,7 +3774,7 @@ const OrdenAplicacion = () => {
                     };
                     
                     console.log('Adding new product:', productData);
-                    await productService.createProduct(productData, propertyId);
+                    await productService.createProduct(productData);
                     await fetchProducts();
                   } catch (error) {
                     console.error('Error adding product:', error);

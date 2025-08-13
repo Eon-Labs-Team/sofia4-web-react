@@ -378,7 +378,7 @@ const LimpiezaMaquinaria = () => {
   const fetchMachineryCleanings = async () => {
     setIsLoading(true);
     try {
-      const response = await machineryCleaningService.findAll(propertyId);
+      const response = await machineryCleaningService.findAll();
       const data = response && typeof response === 'object' && 'data' in response 
       ? response.data as IMachineryCleaning[]
       : Array.isArray(response) ? response as IMachineryCleaning[] : [] as IMachineryCleaning[];
@@ -394,7 +394,7 @@ const LimpiezaMaquinaria = () => {
   // Function to handle adding a new machinery cleaning record
   const handleAddMachineryCleaning = async (data: Partial<IMachineryCleaning>) => {
     try {
-      await machineryCleaningService.createMachineryCleaning(data, propertyId);
+      await machineryCleaningService.createMachineryCleaning(data);
       toast({
         title: "Limpieza de maquinaria agregada",
         description: "Se ha agregado correctamente la limpieza de maquinaria.",

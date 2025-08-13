@@ -213,7 +213,7 @@ const CalibrationMeasuringEquipment = () => {
   const fetchCalibrations = async () => {
     setIsLoading(true);
     try {
-      const data = await calibrationMeasuringEquipmentService.findAll(propertyId);
+      const data = await calibrationMeasuringEquipmentService.findAll();
       setCalibrations(Array.isArray(data) ? data : (data as any).data || []);
     } catch (error) {
       console.error("Error loading calibrations:", error);
@@ -248,7 +248,7 @@ const CalibrationMeasuringEquipment = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      const newCalibration = await calibrationMeasuringEquipmentService.createCalibrationMeasuringEquipment(calibrationData, propertyId);
+      const newCalibration = await calibrationMeasuringEquipmentService.createCalibrationMeasuringEquipment(calibrationData);
       setCalibrations((prevCalibrations) => [...prevCalibrations, newCalibration]);
       setIsDialogOpen(false);
       toast({

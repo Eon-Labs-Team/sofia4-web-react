@@ -173,7 +173,7 @@ const TiposSuelo = () => {
   const fetchSoilTypes = async () => {
     setIsLoading(true);
     try {
-      const data = await soilTypeService.findAll(propertyId);
+      const data = await soilTypeService.findAll();
       // Handle different API response formats
       // @ts-ignore
       setSoilTypes(Array.isArray(data) ? data : (data?.data || []));
@@ -198,7 +198,7 @@ const TiposSuelo = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await soilTypeService.createSoilType(soilTypeData, propertyId);
+      await soilTypeService.createSoilType(soilTypeData);
       
       toast({
         title: "Éxito",

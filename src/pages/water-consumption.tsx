@@ -311,7 +311,7 @@ const WaterConsumption = () => {
   const fetchWaterConsumptionData = async () => {
     setIsLoading(true);
     try {
-      const response = await waterConsumptionService.findAll(propertyId);
+      const response = await waterConsumptionService.findAll();
       // Handle the response which may come as { data: [...] } or directly as an array
       const data = Array.isArray(response) ? response : (response as unknown as ApiResponse<IWaterConsumption[]>).data;
       setWaterConsumptionData(data || []);
@@ -330,7 +330,7 @@ const WaterConsumption = () => {
   // Function to handle adding a new water consumption record
   const handleAddWaterConsumption = async (data: Partial<IWaterConsumption>) => {
     try {
-      await waterConsumptionService.createWaterConsumption(data, propertyId);
+      await waterConsumptionService.createWaterConsumption(data);
       await fetchWaterConsumptionData();
       toast({
         title: "Éxito",

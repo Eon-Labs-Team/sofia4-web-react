@@ -235,7 +235,7 @@ const MassBalance = () => {
   const fetchMassBalances = async () => {
     setIsLoading(true);
     try {
-      const response = await massBalanceService.findAll(propertyId);
+      const response = await massBalanceService.findAll();
       // Handle both response formats
       const data = Array.isArray(response) ? response : 
                    (response as any)?.data || [];
@@ -265,7 +265,7 @@ const MassBalance = () => {
         state: data.state !== undefined ? data.state : true
       };
 
-      await massBalanceService.createMassBalance(massBalanceData, propertyId);
+      await massBalanceService.createMassBalance(massBalanceData);
       
       toast({
         title: "Éxito",

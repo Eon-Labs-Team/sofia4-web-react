@@ -670,7 +670,7 @@ const ListaTrabajadores = () => {
     console.log('🚀 Starting fetchWorkerList with propertyId:', propertyId);
     
     try {
-      const rawData = await workerListService.findAll(propertyId);
+      const rawData = await workerListService.findAll();
       console.log('📥 Raw data received from service:', rawData);
       
       // Handle potential double-wrapped data
@@ -732,7 +732,7 @@ const ListaTrabajadores = () => {
       };
       console.log("workerlistData to insert", workerData);
       
-      const newWorker = await workerListService.createWorkerList(workerData, propertyId);
+      const newWorker = await workerListService.createWorkerList(workerData);
       await fetchWorkerList();
       setIsDialogOpen(false);
       toast({

@@ -178,7 +178,7 @@ const UnidadesMedida = () => {
   const fetchMeasurementUnits = async () => {
     setIsLoading(true);
     try {
-      const response = await measurementUnitsService.findAll(propertyId);
+      const response = await measurementUnitsService.findAll();
       // Handle both array and object response formats
       let units: IMeasurementUnits[] = [];
       
@@ -214,7 +214,7 @@ const UnidadesMedida = () => {
         state: data.state !== undefined ? data.state : true
       };
       
-      await measurementUnitsService.createMeasurementUnit(unitData, propertyId);
+      await measurementUnitsService.createMeasurementUnit(unitData);
       
       toast({
         title: "Éxito",

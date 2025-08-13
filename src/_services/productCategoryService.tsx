@@ -12,19 +12,8 @@ class ProductCategoryService {
    */
   async findByEnterpriseId(): Promise<IProductCategory[]> {
     try {
-      const enterpriseId = "1234"; // todo: manejar session
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.productCategory.byEnterpriseId);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'enterpriseId': enterpriseId
-        },
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.productCategory.byEnterpriseId), {
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -387,7 +387,7 @@ const FertilizacionSuelo = () => {
   const fetchSoilFertilizations = async () => {
     setIsLoading(true);
     try {
-      const response = await soilFertilizationService.findAll(propertyId);
+      const response = await soilFertilizationService.findAll();
       // Handle both formats: array of items or { data: items[] }
       const data = response && typeof response === 'object' && 'data' in response 
         ? response.data as ISoilFertilization[]
@@ -408,7 +408,7 @@ const FertilizacionSuelo = () => {
   // Function to handle adding a new soil fertilization
   const handleAddSoilFertilization = async (data: Partial<ISoilFertilization>) => {
     try {
-      const newSoilFertilization = await soilFertilizationService.createSoilFertilization(data, propertyId);
+      const newSoilFertilization = await soilFertilizationService.createSoilFertilization(data);
       await fetchSoilFertilizations();
       setIsDialogOpen(false);
       toast({

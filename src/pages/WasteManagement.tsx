@@ -342,7 +342,7 @@ const WasteManagement = () => {
   const fetchWasteManagements = async () => {
     setIsLoading(true);
     try {
-      const response = await wasteManagementService.findAll(propertyId);
+      const response = await wasteManagementService.findAll();
       const data = Array.isArray(response) ? response : 
       (response as any).data || [];
       setWasteManagements(data);
@@ -357,7 +357,7 @@ const WasteManagement = () => {
   // Function to handle adding a new waste management
   const handleAddWasteManagement = async (data: Partial<IWasteManagement>) => {
     try {
-      await wasteManagementService.createWasteManagement(data, propertyId);
+      await wasteManagementService.createWasteManagement(data);
       await fetchWasteManagements();
       setIsDialogOpen(false);
       toast({

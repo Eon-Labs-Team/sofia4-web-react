@@ -10,14 +10,9 @@ class WorkService {
    * Get all works with type A (Orden de aplicación)
    * @returns Promise with all orden de aplicación
    */
-  async findAll(propertyId?: string | number | null): Promise<IWork[]> {
+  async findAll(): Promise<IWork[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${`${ENDPOINTS.work?.base}`}?propertyId=${propertyId}`
-        : `${`${ENDPOINTS.work?.base}`}`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.work?.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -37,24 +32,16 @@ class WorkService {
    * @param work Work data
    * @returns Promise with created work
    */
-  async createApplication(work: Partial<IWork>, propertyId?: string | number | null): Promise<IWork> {
+  async createApplication(work: Partial<IWork>): Promise<IWork> {
     try {
       const workData: Partial<IWork> = {
         ...work,
-        // @ts-ignore
-        propertyId, // Add propertyId to the data
-        state: work.state !== undefined ? work.state : true
+        //state: work.state !== undefined ? work.state : true
       };
-      
-      // Add propertyId if available
-      if (propertyId) {
-        // @ts-ignore - Adding a property that might not be in the interface but required by API
-        workData.propertyId = propertyId;
-      }
 
       console.log('Sending to API:', JSON.stringify(workData));
 
-      const response = await fetch(ENDPOINTS.work?.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.work?.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(workData),
@@ -84,7 +71,7 @@ class WorkService {
         ...work,
         // @ts-ignore
         propertyId, // Add propertyId to the data
-        state: work.state !== undefined ? work.state : true
+        //  state: work.state !== undefined ? work.state : true
       };
       
       // Add propertyId if available
