@@ -12,7 +12,8 @@ class CalicataService {
    */
   async findAll(): Promise<ICalicata[]> {
     try {
-      const response = await fetch(ENDPOINTS.calicata.base, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.calicata.base);
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -47,7 +48,8 @@ class CalicataService {
         state: calicata.state !== undefined ? calicata.state : true,
       };
 
-      const response = await fetch(ENDPOINTS.calicata.base, {
+      const url = authService.buildUrlWithParams(ENDPOINTS.calicata.base);
+      const response = await fetch(url, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(calicataData),
@@ -72,7 +74,8 @@ class CalicataService {
    */
   async updateCalicata(id: string | number, calicata: Partial<ICalicata>): Promise<ICalicata> {
     try {
-      const response = await fetch(ENDPOINTS.calicata.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.calicata.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(calicata),
@@ -96,7 +99,8 @@ class CalicataService {
    */
   async softDeleteCalicata(id: string | number): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.calicata.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.calicata.byId(id));
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify({ state: false }),
@@ -120,7 +124,8 @@ class CalicataService {
    */
   async findById(id: string | number): Promise<ICalicata> {
     try {
-      const response = await fetch(ENDPOINTS.calicata.byId(id), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.calicata.byId(id));
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       

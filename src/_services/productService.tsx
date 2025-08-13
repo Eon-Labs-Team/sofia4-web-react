@@ -1,6 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
 import { IProducts } from '@eon-lib/eon-mongoose';
-import { useAuthStore } from '@/lib/store/authStore';
 import authService from './authService';
 
 /**
@@ -13,15 +12,9 @@ class ProductService {
    */
   async findAll(): Promise<IProducts[]> {
     try {
-      const { propertyId } = useAuthStore.getState();
+      const url = authService.buildUrlWithParams(ENDPOINTS.products.base);
       
-      // Create a URL with query parameters
-      const url = new URL(ENDPOINTS.products.base);
-      if (propertyId) {
-        url.searchParams.append('propertyId', propertyId.toString());
-      }
-      
-      const response = await fetch(url.toString(), {
+      const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
       });
       

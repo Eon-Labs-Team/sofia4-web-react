@@ -12,12 +12,9 @@ class InventoryMovementService {
    * @param propertyId The ID of the property to get inventory movements for
    * @returns Promise with inventory movements for the property
    */
-  async findAll(propertyId?: string | number | null): Promise<IInventoryMovement[]> {
+  async findAll(): Promise<IInventoryMovement[]> {
     try {
-      // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.inventoryMovement.findAll}?propertyId=${propertyId}`
-        : `${ENDPOINTS.inventoryMovement.findAll}`;
+      const url = authService.buildUrlWithParams(ENDPOINTS.inventoryMovement.findAll);
       
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),

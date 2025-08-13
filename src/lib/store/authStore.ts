@@ -3,10 +3,11 @@ import { User, LoginCredentials } from '@/types/auth';
 import authService from '@/_services/authService';
 
 // Constants for localStorage keys
-const PROPERTY_ID_KEY = 'selected_property_id';
+import { PROPERTY_ID_KEY } from '@/_services/authService';
 
 // Helper functions for localStorage
 const savePropertyIdToStorage = (id: string | number): void => {
+  console.log('saving propertyId to storage', id);
   localStorage.setItem(PROPERTY_ID_KEY, id.toString());
 };
 
