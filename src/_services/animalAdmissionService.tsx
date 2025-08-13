@@ -11,6 +11,7 @@ class AnimalAdmissionService {
    * @param propertyId The ID of the property to get animal admissions for
    * @returns Promise with animal admissions for the property
    */
+
   async findAll(propertyId?: string | number | null): Promise<IAnimalAdmission[]> {
     try {
       // If propertyId is provided, add it as a query parameter
