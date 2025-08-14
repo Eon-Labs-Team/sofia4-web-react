@@ -26,7 +26,7 @@ import DynamicForm, {
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { ITaskType, WorkType, UsageScope } from "@eon-lib/eon-mongoose";
-import faenaService from "@/_services/faenaService";
+import faenaService from "@/_services/taskTypeService";
 import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -38,9 +38,13 @@ interface FaenaWithId {
   workType: WorkType;
   usageScope: UsageScope;
   usesCalibrationPerHa: boolean;
-  allowedFarms: string[];
+  assignedProperties: string[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface FaenasProps {
+  isModal?: boolean;
 }
 
 // Render function for the workType column
@@ -81,7 +85,52 @@ const renderBoolean = (value: boolean) => {
   );
 };
 
-// Column configuration for the grid
+const renderProperties = (value: string) => {
+  return 
+}
+
+
+
+// Expandable content for each row
+const expandableContent = (row: FaenaWithId) => (
+  <div className="p-4">
+    <h3 className="text-lg font-semibold mb-2">{row.name}</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <p>
+          <strong>Código Opcional:</strong> {row.optionalCode || 'N/A'}
+        </p>
+        <p>
+          <strong>Tipo Faena:</strong> {renderWorkType(row.workType)}
+        </p>
+      </div>
+      <div>
+        <p>
+          <strong>Usar en:</strong> {renderUsageScope(row.usageScope)}
+        </p>
+        <p>
+          <strong>Utiliza Calibración Ha:</strong> {row.usesCalibrationPerHa ? 'Sí' : 'No'}
+        </p>
+        <p>
+          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? row.assignedProperties.join(", ") : 'Todos'}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const Faenas = ({ isModal = false }: FaenasProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [faenas, setFaenas] = useState<FaenaWithId[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFaena, setSelectedFaena] = useState<FaenaWithId | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [properties, setProperties] = useState<any[]>([]);
+  
+  // Get propertyId from AuthStore (only used for validation when not in modal)
+  const { propertyId } = useAuthStore();
+
+  // Column configuration for the grid
 const columns: Column[] = [
   {
     id: "id",
@@ -133,71 +182,48 @@ const columns: Column[] = [
     render: renderBoolean,
   },
   {
-    id: "allowedFarms",
-    header: "Predios Permitidos",
-    accessor: "allowedFarms",
+    id: "assignedProperties",
+    header: "Predios Asignados",
+    accessor: "assignedProperties",
     visible: true,
-    render: (value: string[]) => value ? value.join(", ") : '',
+    render: (value: string[], row: any) => {
+      // Suponiendo que tienes acceso a la lista de propiedades en el scope del componente
+      // y que cada propiedad tiene { id, name }
+      // Si no, deberás ajustar para obtener los nombres de otra manera
+      if (!value || value.length === 0) return 'Todos';
+      if (!Array.isArray(value)) return 'Todos';
+      // 'properties' debe estar disponible en el scope del componente
+      if (typeof properties === "undefined" || !Array.isArray(properties)) return value.join(", ");
+      const names = value
+        .map((id) => {
+          const prop = properties.find((p) => p.id === id);
+          return prop ? prop.name : id;
+        })
+        .filter(Boolean);
+      return names.length > 0 ? names.join(", ") : 'Todos';
+    },
   }
 ];
-
-// Expandable content for each row
-const expandableContent = (row: FaenaWithId) => (
-  <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">{row.name}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <p>
-          <strong>Código Opcional:</strong> {row.optionalCode || 'N/A'}
-        </p>
-        <p>
-          <strong>Tipo Faena:</strong> {renderWorkType(row.workType)}
-        </p>
-      </div>
-      <div>
-        <p>
-          <strong>Usar en:</strong> {renderUsageScope(row.usageScope)}
-        </p>
-        <p>
-          <strong>Utiliza Calibración Ha:</strong> {row.usesCalibrationPerHa ? 'Sí' : 'No'}
-        </p>
-        <p>
-          <strong>Predios Permitidos:</strong> {row.allowedFarms && row.allowedFarms.length > 0 ? row.allowedFarms.join(", ") : 'Todos'}
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-const Faenas = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [faenas, setFaenas] = useState<FaenaWithId[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedFaena, setSelectedFaena] = useState<FaenaWithId | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [properties, setProperties] = useState<any[]>([]);
   
-  // Get propertyId from AuthStore
-  const { propertyId } = useAuthStore();
-  
-  // Redirect to homepage if no propertyId is available
+  // Redirect to homepage if no propertyId is available and not in modal mode
   useEffect(() => {
-    if (!propertyId) {
+    if (!isModal && !propertyId) {
       toast({
         title: "Error",
         description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
         variant: "destructive",
       });
     }
-  }, [propertyId]);
+  }, [propertyId, isModal]);
   
-  // Fetch faenas on component mount and when propertyId changes
+  // Fetch faenas on component mount
   useEffect(() => {
-    if (propertyId) {
+    // In modal mode, always fetch. In page mode, only fetch if propertyId exists
+    if (isModal || propertyId) {
       fetchFaenas();
     }
     fetchProperties(); // Properties are not filtered by propertyId
-  }, [propertyId]);
+  }, [propertyId, isModal]);
   
   // Function to fetch properties data
   const fetchProperties = async () => {
@@ -210,6 +236,7 @@ const Faenas = () => {
         region: property.region,
         city: property.city
       }));
+      console.log("properties fetched and formatted", formattedProperties )
       setProperties(formattedProperties);
     } catch (error) {
       console.error("Error loading properties:", error);
@@ -229,7 +256,7 @@ const Faenas = () => {
       // Map ITaskType to FaenaWithId
       const mappedData = data.map(task => ({
         ...task,
-        allowedFarms: task.assignedProperties || []
+        assignedProperties: task.assignedProperties || []
       })) as FaenaWithId[];
       setFaenas(mappedData);
     } catch (error) {
@@ -379,21 +406,16 @@ const Faenas = () => {
           helperText: "Indica si la faena requiere calibración por hectárea"
         },
         {
-          id: "allowedFarms",
-          type: "selectableGrid",
-          label: "Predios Permitidos",
-          name: "allowedFarms",
+          id: "assignedProperties",
+          type: "checkboxGroup",
+          label: "Predios Asignados",
+          name: "assignedProperties",
           required: false,
-          helperText: "Seleccione los predios donde está permitida la faena (deje vacío para todos)",
-          gridConfig: {
-            columns: [
-              { id: "propertyName", header: "Nombre Predio", accessor: "propertyName" },
-              { id: "region", header: "Región", accessor: "region" },
-              { id: "city", header: "Ciudad", accessor: "city" }
-            ],
-            data: properties,
-            idField: "id"
-          }
+          helperText: "Seleccione los predios donde estará disponible esta faena (deje vacío para todos)",
+          options: properties.map(property => ({
+            value: property.id,
+            label: `${property.propertyName} - ${property.region}, ${property.city}`
+          }))
         }
       ],
     }
@@ -406,31 +428,16 @@ const Faenas = () => {
     workType: z.string().min(1, { message: "El tipo de faena es obligatorio" }),
     usageScope: z.string().min(1, { message: "El alcance de uso es obligatorio" }),
     usesCalibrationPerHa: z.boolean().default(false),
-    allowedFarms: z.array(z.any()).optional().default([])
+    assignedProperties: z.array(z.string()).optional().default([])
   });
 
   // Form submit handler
   const handleFormSubmit = (data: Partial<ITaskType>) => {
-    // Extract property IDs from the selected rows
-    const processedData = { ...data };
-    
-    // Check if assignedProperties is an array of objects (from selectableGrid)
-    if (Array.isArray((processedData as any).allowedFarms) && 
-        (processedData as any).allowedFarms.length > 0 && 
-        typeof (processedData as any).allowedFarms[0] === 'object') {
-      // Map to array of property IDs and assign to assignedProperties
-      (processedData as any).assignedProperties = (processedData as any).allowedFarms.map((farm: any) => farm.id);
-      delete (processedData as any).allowedFarms;
-    } else if ((processedData as any).allowedFarms) {
-      // Direct assignment if allowedFarms is already an array of strings
-      (processedData as any).assignedProperties = (processedData as any).allowedFarms;
-      delete (processedData as any).allowedFarms;
-    }
-    
+    // Data is already in the correct format with assignedProperties
     if (isEditMode && selectedFaena && selectedFaena._id) {
-      handleUpdateFaena(selectedFaena._id, processedData);
+      handleUpdateFaena(selectedFaena._id, data);
     } else {
-      handleAddFaena(processedData);
+      handleAddFaena(data);
     }
   };
 
@@ -472,12 +479,15 @@ const Faenas = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className={isModal ? "w-full h-full overflow-hidden" : "container mx-auto py-6"}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Tipos de Faena</h1>
           <p className="text-muted-foreground">
-            Gestione los tipos de faena para su organización
+            {isModal 
+              ? "Gestione los tipos de faena "
+              : "Gestione los tipos de faena para su organización"
+            }
           </p>
         </div>
         <Button
@@ -491,15 +501,18 @@ const Faenas = () => {
         </Button>
       </div>
 
-      <Grid
-        data={faenas}
-        columns={columns}
-        expandableContent={expandableContent}
-        actions={renderActions}
-        gridId="faenas-grid"
-        idField="_id"
-        title="Faenas"
-      />
+      <div className={isModal ? "px-0.5 h-[calc(100vh-200px)] overflow-hidden" : ""}>
+        <Grid
+          data={faenas}
+          columns={columns}
+          expandableContent={expandableContent}
+          actions={renderActions}
+          isLoading={isLoading}
+          gridId="faenas-grid"
+          idField="_id"
+          title=""
+        />
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -520,13 +533,10 @@ const Faenas = () => {
               workType: selectedFaena.workType,
               usageScope: selectedFaena.usageScope,
               usesCalibrationPerHa: selectedFaena.usesCalibrationPerHa,
-              allowedFarms: properties.filter(p => 
-                selectedFaena.allowedFarms && 
-                selectedFaena.allowedFarms.includes(p.id)
-              )
+              assignedProperties: selectedFaena.assignedProperties || []
             } : {
               usesCalibrationPerHa: false,
-              allowedFarms: []
+              assignedProperties: []
             }}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}

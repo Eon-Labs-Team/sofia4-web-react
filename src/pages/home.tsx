@@ -15,6 +15,7 @@ import {
   XCircle,
   Menu,
   Warehouse,
+  Settings,
 } from "lucide-react";
 import { IProperty } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
@@ -39,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import BodegaCentral from "./BodegaCentral";
+import GeneralConfigurationsModal from "@/components/GeneralConfigurationsModal";
 
 interface Permission {
   canView: boolean;
@@ -187,6 +189,7 @@ const HomePage = () => {
   const [properties, setProperties] = useState<IProperty[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [isConfigurationsModalOpen, setIsConfigurationsModalOpen] = useState(false);
   const { toggleSidebar } = React.useContext(SidebarContext);
 
   useEffect(() => {
@@ -251,6 +254,10 @@ const HomePage = () => {
     setIsInventoryModalOpen(true);
   };
 
+  const handleConfigurationsClick = () => {
+    setIsConfigurationsModalOpen(true);
+  };
+
   return (
     <div className="flex-1 h-full overflow-hidden">
       {actionMode && storeActiveAction ? (
@@ -294,6 +301,14 @@ const HomePage = () => {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                onClick={handleConfigurationsClick}
+                variant="outline"
+                className="flex items-center"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Configuraciones Generales
+              </Button>
               <Button
                 onClick={handleInventoryClick}
                 className="flex items-center bg-blue-600 hover:bg-blue-700 text-white"
@@ -340,6 +355,12 @@ const HomePage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* General Configurations Modal */}
+      <GeneralConfigurationsModal
+        isOpen={isConfigurationsModalOpen}
+        onClose={() => setIsConfigurationsModalOpen(false)}
+      />
     </div>
   );
 };

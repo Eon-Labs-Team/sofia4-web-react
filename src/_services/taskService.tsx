@@ -12,7 +12,7 @@ class LaborService {
    */
   async findAll(): Promise<ITask[]> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.base), {
+      const response = await fetch(ENDPOINTS.labores.base, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -40,7 +40,7 @@ class LaborService {
         //state: labor.state !== undefined ? labor.state : true
       };
 
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.base), {
+      const response = await fetch(ENDPOINTS.labores.base, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
@@ -67,7 +67,7 @@ class LaborService {
     try {
       const laborData = { ...labor };
       
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.byId(id)), {
+      const response = await fetch(ENDPOINTS.labores.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(laborData),
@@ -91,7 +91,7 @@ class LaborService {
    */
   async softDeleteLabor(id: string | number): Promise<any> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.changeState(id, false)), {
+      const response = await fetch(ENDPOINTS.labores.changeState(id, false), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });
@@ -114,7 +114,7 @@ class LaborService {
    */
   async findById(id: string | number): Promise<ITask> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.labores.byId(id)), {
+      const response = await fetch(ENDPOINTS.labores.byId(id), {
         headers: authService.getAuthHeaders(),
       });
       
