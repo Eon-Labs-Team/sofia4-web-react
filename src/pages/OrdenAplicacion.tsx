@@ -67,7 +67,7 @@ import faenaService from "@/_services/faenaService";
 import laborService from "@/_services/laborService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import workerListService from "@/_services/workerListService";
-import listaMaquinariasService from "@/_services/listaMaquinariasService";
+import listaMaquinariasService from "@/_services/machineryListService";
 import { IOperationalArea } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
 import MapView from "@/components/MapView/MapView";
@@ -2317,7 +2317,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await machineryService.findAll();
+      const data = await machineryService.findAll(propertyId);
       console.log('All machinery fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -3681,6 +3681,7 @@ const OrdenAplicacion = () => {
                       color: '#666',
                       cursor: 'not-allowed' 
                     }
+
                   },
                   product: {
                     type: 'custom',

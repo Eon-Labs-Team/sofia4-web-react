@@ -13,9 +13,7 @@ class ListaMaquinariasService {
   async findAll(propertyId?: string | number | null): Promise<IMachineryList[]> {
     try {
       // If propertyId is provided, add it as a query parameter
-      const url = propertyId 
-        ? `${ENDPOINTS.listaMaquinarias.base}?propertyId=${propertyId}`
-        : `${ENDPOINTS.listaMaquinarias.base}`;
+      const url = authService.buildUrlWithParams(ENDPOINTS.machineryList.base)
       
       const response = await fetch(url, {
         headers: authService.getAuthHeaders(),
@@ -56,7 +54,7 @@ class ListaMaquinariasService {
         machineryListData.updatedBy = currentUser.id;
       }
 
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaMaquinarias.base), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machineryList.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(machineryListData),
@@ -83,7 +81,7 @@ class ListaMaquinariasService {
     try {
       const updateData = { ...machineryList };          
       
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaMaquinarias.byId(id)), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.machineryList.byId(id)), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(updateData),
@@ -107,7 +105,7 @@ class ListaMaquinariasService {
    */
   async softDeleteMachineryList(id: string | number): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.listaMaquinarias.changeState(id, false), {
+      const response = await fetch(ENDPOINTS.machineryList.changeState(id, false), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });
@@ -130,7 +128,7 @@ class ListaMaquinariasService {
    */
   async findById(id: string | number): Promise<IMachineryList> {
     try {
-      const response = await fetch(ENDPOINTS.listaMaquinarias.byId(id), {
+      const response = await fetch(ENDPOINTS.machineryList.byId(id), {
         headers: authService.getAuthHeaders(),
       });
       

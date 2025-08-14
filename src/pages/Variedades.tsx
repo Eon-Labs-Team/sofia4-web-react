@@ -331,13 +331,15 @@ const Variedades = () => {
             defaultValues={
               isEditMode && selectedVariety
                 ? {
-                    idOrder: selectedVariety.idOrder,
-                    cropName: selectedVariety.cropName,
+                    order: (selectedVariety as any).idOrder || selectedVariety.order,
+                    varietyName: (selectedVariety as any).cropName || selectedVariety.varietyName,
+                    cropTypeId: selectedVariety.cropTypeId,
                     state: selectedVariety.state,
                   }
                 : {
-                    idOrder: 0,
-                    cropName: "",
+                    order: 0,
+                    varietyName: "",
+                    cropTypeId: "",
                     state: true,
                   }
             }

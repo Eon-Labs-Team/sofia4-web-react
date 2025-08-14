@@ -1,18 +1,18 @@
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://apis.sofiagestionagricola.cl/api-cruds'; //'http://localhost:4900';
-export const API_BASE_SOFIA = import.meta.env.VITE_API_CRUD_URL || 'https://apis.sofiagestionagricola.cl/api-sofia'; //'http://localhost:4500'; 
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4900';
+export const API_BASE_SOFIA = import.meta.env.VITE_API_CRUD_URL || 'http://localhost:4500'; 
 // API endpoints
 export const ENDPOINTS = {
   productCategory: {
-    base: `${API_BASE_URL}/wareHouse/productCategory`,
-    byId: (id: string | number) => `${API_BASE_URL}/wareHouse/productCategory/${id}`,
-    byEnterpriseId: `${API_BASE_URL}/wareHouse/productCategory/byEnterpriseId`,
-    fullDelete: (id: string | number) => `${API_BASE_URL}/wareHouse/productCategory/fullDelete/${id}`,
+    base: `${API_BASE_URL}/enterprise/productCategory`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/productCategory/${id}`,
+    byEnterpriseId: `${API_BASE_URL}/enterprise/productCategory/byEnterpriseId`,
+    fullDelete: (id: string | number) => `${API_BASE_URL}/enterprise/productCategory/fullDelete/${id}`,
   },
   subcategoryProduct: {
-    base: `${API_BASE_URL}/wareHouse/subcategoryProduct`,
-    byId: (id: string | number) => `${API_BASE_URL}/wareHouse/subcategoryProduct/${id}`,
-    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/wareHouse/subcategoryProduct/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/subcategoryProduct`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/subcategoryProduct/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/subcategoryProduct/${id}/state/${state}`,
   },
   workers: {
     base: `${API_BASE_URL}/work/workers`,
@@ -28,7 +28,7 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/config/operationalArea/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/operationalArea/${id}/state/${state}`,
   },
-  listaMaquinarias: {
+  machineryList: {
     base: `${API_BASE_URL}/config/machineryList`,
     byId: (id: string | number) => `${API_BASE_URL}/config/machineryList/${id}`,
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/machineryList/${id}/state/${state}`,

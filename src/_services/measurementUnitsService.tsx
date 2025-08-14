@@ -35,8 +35,9 @@ class MeasurementUnitsService {
   async createMeasurementUnit(measurementUnit: Partial<IMeasurementUnits>): Promise<IMeasurementUnits> {
     try {
       const measurementUnitData: Partial<IMeasurementUnits> = {
-        type: measurementUnit.type,
+        measurementUnitName: (measurementUnit as any).type || measurementUnit.measurementUnitName,
         optionalCode: measurementUnit.optionalCode || ' ',
+        order: (measurementUnit as any).order || 0,
         state: measurementUnit.state !== undefined ? measurementUnit.state : true,
       };
 

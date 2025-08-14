@@ -226,7 +226,12 @@ const Faenas = () => {
     setIsLoading(true);
     try {
       const data = await faenaService.findAll();
-      setFaenas(data as FaenaWithId[]);
+      // Map ITaskType to FaenaWithId
+      const mappedData = data.map(task => ({
+        ...task,
+        allowedFarms: task.assignedProperties || []
+      })) as FaenaWithId[];
+      setFaenas(mappedData);
     } catch (error) {
       console.error("Error loading faenas:", error);
       toast({
@@ -409,12 +414,17 @@ const Faenas = () => {
     // Extract property IDs from the selected rows
     const processedData = { ...data };
     
-    // Check if allowedFarms is an array of objects (from selectableGrid)
-    if (Array.isArray(processedData.allowedFarms) && 
-        processedData.allowedFarms.length > 0 && 
-        typeof processedData.allowedFarms[0] === 'object') {
-      // Map to array of property IDs
-      processedData.allowedFarms = processedData.allowedFarms.map((farm: any) => farm.id);
+    // Check if assignedProperties is an array of objects (from selectableGrid)
+    if (Array.isArray((processedData as any).allowedFarms) && 
+        (processedData as any).allowedFarms.length > 0 && 
+        typeof (processedData as any).allowedFarms[0] === 'object') {
+      // Map to array of property IDs and assign to assignedProperties
+      (processedData as any).assignedProperties = (processedData as any).allowedFarms.map((farm: any) => farm.id);
+      delete (processedData as any).allowedFarms;
+    } else if ((processedData as any).allowedFarms) {
+      // Direct assignment if allowedFarms is already an array of strings
+      (processedData as any).assignedProperties = (processedData as any).allowedFarms;
+      delete (processedData as any).allowedFarms;
     }
     
     if (isEditMode && selectedFaena && selectedFaena._id) {

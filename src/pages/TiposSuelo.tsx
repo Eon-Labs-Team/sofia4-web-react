@@ -193,8 +193,8 @@ const TiposSuelo = () => {
   const handleAddSoilType = async (data: Partial<ISoilType>) => {
     try {
       const soilTypeData: Partial<ISoilType> = {
-        idOrder: data.idOrder,
-        description: data.description,
+        order: (data as any).idOrder || (data as any).order || 0,
+        soilTypeName: (data as any).description || data.soilTypeName,
         state: data.state !== undefined ? data.state : true
       };
       
@@ -356,8 +356,8 @@ const TiposSuelo = () => {
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
             defaultValues={isEditMode && selectedSoilType ? {
-              idOrder: selectedSoilType.idOrder,
-              description: selectedSoilType.description,
+              order: (selectedSoilType as any).idOrder || selectedSoilType.order,
+              soilTypeName: (selectedSoilType as any).description || selectedSoilType.soilTypeName,
               state: selectedSoilType.state
             } : { state: true }}
           />

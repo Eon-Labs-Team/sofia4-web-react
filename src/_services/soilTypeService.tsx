@@ -35,8 +35,8 @@ class SoilTypeService {
   async createSoilType(soilType: Partial<ISoilType>): Promise<ISoilType> {
     try {
       const soilTypeData: Partial<ISoilType> = {
-        idOrder: soilType.idOrder,
-        description: soilType.description,
+        order: (soilType as any).idOrder || (soilType as any).order || 0,
+        soilTypeName: (soilType as any).description || soilType.soilTypeName,
         state: soilType.state !== undefined ? soilType.state : true,
       };
 

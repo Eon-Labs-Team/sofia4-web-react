@@ -35,8 +35,9 @@ class SubcategoryProductService {
   async createSubcategoryProduct(subcategory: Partial<ISubCategoryProduct>): Promise<ISubCategoryProduct> {
     try {
       const subcategoryData: Partial<ISubCategoryProduct> = {
-        idOrder: subcategory.idOrder,
-        description: subcategory.description,
+        order: (subcategory as any).idOrder || (subcategory as any).order || 0,
+        subcategoryName: (subcategory as any).description || subcategory.subcategoryName,
+        categoryId: subcategory.categoryId || 0,
         state: subcategory.state !== undefined ? subcategory.state : false,
       };
 

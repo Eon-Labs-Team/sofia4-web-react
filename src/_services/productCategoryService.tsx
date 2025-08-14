@@ -37,10 +37,8 @@ class ProductCategoryService {
       const enterpriseId = "1234"; // todo: manejar session
       
       const productCategoryData: Partial<IProductCategory> = {
-        description: productCategory.description,
-        subCategory: productCategory.subCategory,
-        numberSubCategory: productCategory.numberSubCategory,
-        idOrder: productCategory.idOrder,
+        categoryName: (productCategory as any).description || productCategory.categoryName,
+        order: (productCategory as any).idOrder || (productCategory as any).order || 0,
         state: productCategory.state !== undefined ? productCategory.state : true
       };
 
