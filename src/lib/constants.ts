@@ -1,6 +1,6 @@
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4900';
-export const API_BASE_SOFIA = import.meta.env.VITE_API_CRUD_URL || 'http://localhost:4500'; 
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://apis.sofiagestionagricola.cl/api-cruds'; //'http://localhost:4900';
+export const API_BASE_SOFIA = import.meta.env.VITE_API_CRUD_URL || 'https://apis.sofiagestionagricola.cl/api-sofia'; //'http://localhost:4500'; 
 // API endpoints
 export const ENDPOINTS = {
   productCategory: {
