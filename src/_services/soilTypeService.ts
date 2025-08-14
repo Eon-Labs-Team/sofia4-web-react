@@ -4,15 +4,17 @@ import authService from './authService';
 
 /**
  * Service for managing soil type data
+ * Uses the ISoilType interface from eon-mongoose
  */
 class SoilTypeService {
+  
   /**
    * Get all soil types
    * @returns Promise with all soil types
    */
   async findAll(): Promise<ISoilType[]> {
     try {
-      const response = await fetch(`${ENDPOINTS.soilType.base}`, {
+      const response = await fetch(ENDPOINTS.soilType.base, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -20,7 +22,8 @@ class SoilTypeService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      return data.data || data;
     } catch (error) {
       console.error('Error fetching soil types:', error);
       throw error;
@@ -35,12 +38,13 @@ class SoilTypeService {
   async createSoilType(soilType: Partial<ISoilType>): Promise<ISoilType> {
     try {
       const soilTypeData: Partial<ISoilType> = {
-        order: (soilType as any).idOrder || (soilType as any).order || 0,
-        soilTypeName: (soilType as any).description || soilType.soilTypeName,
+        ...soilType,
         state: soilType.state !== undefined ? soilType.state : true,
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || ''
       };
 
-      const response = await fetch(`${ENDPOINTS.soilType.base}`, {
+      const response = await fetch(ENDPOINTS.soilType.base, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(soilTypeData),
@@ -65,10 +69,15 @@ class SoilTypeService {
    */
   async updateSoilType(id: string | number, soilType: Partial<ISoilType>): Promise<ISoilType> {
     try {
-      const response = await fetch(`${ENDPOINTS.soilType.byId(id)}`, {
+      const soilTypeData = { 
+        ...soilType,
+        updatedBy: authService.getCurrentUser()?.id || ''
+      };
+      
+      const response = await fetch(ENDPOINTS.soilType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
-        body: JSON.stringify(soilType),
+        body: JSON.stringify(soilTypeData),
       });
 
       if (!response.ok) {
@@ -89,9 +98,12 @@ class SoilTypeService {
    */
   async softDeleteSoilType(id: string | number): Promise<any> {
     try {
-      const response = await fetch(`${ENDPOINTS.soilType.setState(id, false)}`, {
+      const stateData = { state: false };
+      
+      const response = await fetch(ENDPOINTS.soilType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
+        body: JSON.stringify(stateData)
       });
 
       if (!response.ok) {
@@ -112,7 +124,7 @@ class SoilTypeService {
    */
   async findById(id: string | number): Promise<ISoilType> {
     try {
-      const response = await fetch(`${ENDPOINTS.soilType.byId(id)}`, {
+      const response = await fetch(ENDPOINTS.soilType.byId(id), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -126,9 +138,33 @@ class SoilTypeService {
       throw error;
     }
   }
+
+  /**
+   * Activate/deactivate a soil type
+   * @param id Soil type ID
+   * @param state New state (true = active, false = inactive)
+   * @returns Promise with operation result
+   */
+  async setState(id: string | number, state: boolean): Promise<any> {
+    try {
+      const response = await fetch(ENDPOINTS.soilType.setState(id, state), {
+        method: 'PATCH',
+        headers: authService.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error setting state for soil type ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
 const soilTypeService = new SoilTypeService();
 
-export default soilTypeService; 
+export default soilTypeService;

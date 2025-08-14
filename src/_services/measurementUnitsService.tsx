@@ -19,8 +19,10 @@ class MeasurementUnitsService {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
+      let measurementsUnitsResponse = await response.json();
       
-      return await response.json();
+      return measurementsUnitsResponse.data || measurementsUnitsResponse
     } catch (error) {
       console.error('Error fetching measurement units:', error);
       throw error;
@@ -39,6 +41,8 @@ class MeasurementUnitsService {
         optionalCode: measurementUnit.optionalCode || ' ',
         order: (measurementUnit as any).order || 0,
         state: measurementUnit.state !== undefined ? measurementUnit.state : true,
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || ''
       };
 
       const response = await fetch(ENDPOINTS.measurementUnits.base, {
@@ -66,10 +70,15 @@ class MeasurementUnitsService {
    */
   async updateMeasurementUnit(id: string | number, measurementUnit: Partial<IMeasurementUnits>): Promise<IMeasurementUnits> {
     try {
+      const measurementUnitData = {
+        ...measurementUnit,
+        updatedBy: authService.getCurrentUser()?.id || ''
+      };
+      
       const response = await fetch(ENDPOINTS.measurementUnits.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
-        body: JSON.stringify(measurementUnit),
+        body: JSON.stringify(measurementUnitData),
       });
 
       if (!response.ok) {
@@ -90,11 +99,12 @@ class MeasurementUnitsService {
    */
   async softDeleteMeasurementUnit(id: string | number): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.measurementUnits.setState(id, false), {
+      const stateData = { state: false };
+      
+      const response = await fetch(ENDPOINTS.measurementUnits.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(stateData)
       });
 
       if (!response.ok) {

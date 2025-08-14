@@ -28,26 +28,47 @@ class ProductCategoryService {
   }
 
   /**
+   * Get all product categories (admin/global, not filtered by enterprise)
+   * @returns Promise with all product categories
+   */
+  async findAll(): Promise<IProductCategory[]> {
+    try {
+      const response = await fetch(ENDPOINTS.productCategory.base, {
+        method: 'GET',
+        headers: authService.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const productCategoryData = await response.json();
+      return productCategoryData.data || productCategoryData;
+    } catch (error) {
+      console.error('Error fetching all product categories:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new product category
    * @param productCategory Product category data
    * @returns Promise with created product category
    */
   async createProductCategory(productCategory: Partial<IProductCategory>): Promise<IProductCategory> {
     try {
-      const enterpriseId = "1234"; // todo: manejar session
       
       const productCategoryData: Partial<IProductCategory> = {
         categoryName: (productCategory as any).description || productCategory.categoryName,
         order: (productCategory as any).idOrder || (productCategory as any).order || 0,
-        state: productCategory.state !== undefined ? productCategory.state : true
+        state: productCategory.state !== undefined ? productCategory.state : true,
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || ''
       };
 
       const response = await fetch(ENDPOINTS.productCategory.base, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'enterpriseId': enterpriseId
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(productCategoryData),
       });
 
@@ -70,15 +91,17 @@ class ProductCategoryService {
    */
   async updateProductCategory(id: string, productCategory: Partial<IProductCategory>): Promise<IProductCategory> {
     try {
-      const enterpriseId = "1234"; // todo: manejar session
+
+      
+      const productCategoryData = {
+        ...productCategory,
+        updatedBy: authService.getCurrentUser()?.id || ''
+      };
       
       const response = await fetch(ENDPOINTS.productCategory.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'enterpriseId': enterpriseId
-        },
-        body: JSON.stringify(productCategory),
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(productCategoryData),
       });
 
       if (!response.ok) {
@@ -99,14 +122,13 @@ class ProductCategoryService {
    */
   async softDeleteProductCategory(id: string): Promise<any> {
     try {
-      const enterpriseId = "1234"; // todo: manejar session
+
+      const stateData = { state: false };
       
-      const response = await fetch(ENDPOINTS.productCategory.fullDelete(id), {
+      const response = await fetch(ENDPOINTS.productCategory.byId(id), {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'enterpriseId': enterpriseId
-        }
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(stateData)
       });
 
       if (!response.ok) {
@@ -127,13 +149,10 @@ class ProductCategoryService {
    */
   async findById(id: string): Promise<IProductCategory> {
     try {
-      const enterpriseId = "1234"; // todo: manejar session
+
       
       const response = await fetch(ENDPOINTS.productCategory.byId(id), {
-        headers: {
-          'Content-Type': 'application/json',
-          'enterpriseId': enterpriseId
-        },
+        headers: authService.getAuthHeaders(),
       });
       
       if (!response.ok) {

@@ -20,7 +20,8 @@ class CropTypeService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const cropTypeData = await response.json();
+      return cropTypeData.data || cropTypeData;
     } catch (error) {
       console.error('Error fetching crop types:', error);
       throw error;
@@ -40,6 +41,8 @@ class CropTypeService {
         mapColor: cropType.mapColor,
         cropListState: cropType.cropListState,
         state: cropType.state !== undefined ? cropType.state : true,
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || ''
       };
 
       const response = await fetch(ENDPOINTS.cropType.base, {
@@ -67,10 +70,15 @@ class CropTypeService {
    */
   async updateCropType(id: string | number, cropType: Partial<ICropType>): Promise<ICropType> {
     try {
+      const cropTypeData = {
+        ...cropType,
+        updatedBy: authService.getCurrentUser()?.id || ''
+      };
+      
       const response = await fetch(ENDPOINTS.cropType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
-        body: JSON.stringify(cropType),
+        body: JSON.stringify(cropTypeData),
       });
 
       if (!response.ok) {
@@ -91,9 +99,12 @@ class CropTypeService {
    */
   async softDeleteCropType(id: string | number): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.cropType.changeState(id, false), {
+      const stateData = { state: false };
+      
+      const response = await fetch(ENDPOINTS.cropType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
+        body: JSON.stringify(stateData)
       });
 
       if (!response.ok) {
