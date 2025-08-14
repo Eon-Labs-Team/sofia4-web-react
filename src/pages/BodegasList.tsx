@@ -254,15 +254,6 @@ const BodegasList = () => {
     setMovementsHistory([]);
   };
 
-  // Function to fetch all lots (needed for movements history)
-  const fetchAllLots = async () => {
-    try {
-      const lots = await inventoryLotService.findAll();
-      setAllLots(lots);
-    } catch (error) {
-      console.error("Error fetching lots:", error);
-    }
-  };
 
   // Column configuration for products grid with lots
   const productsColumns: Column[] = [
@@ -640,7 +631,6 @@ const BodegasList = () => {
     if (propertyId) {
       fetchBodegas();
       fetchAllProducts(); // Load products for movements history
-      fetchAllLots(); // Load lots for movements history
     } else {
       console.log('⚠️ No propertyId available, skipping fetch');
       setBodegas([]);
