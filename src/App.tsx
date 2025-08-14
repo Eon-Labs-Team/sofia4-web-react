@@ -58,12 +58,8 @@ import HygieneSanitation from "./pages/HygieneSanitation";
 import Calicata from "./pages/calicata";
 import ChlorineRegistration from "./pages/ChlorineRegistration";
 import WaterChlorination from "./pages/WaterChlorination";
-import UnidadesMedida from "./pages/unidadesMedida";
 import ProductCategories from "./pages/ProductCategories";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
-import TipoCultivo from "./pages/TipoCultivo";
-import Variedades from "./pages/Variedades";
-import TiposSuelo from "./pages/TiposSuelo";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/OrdenAplicacion";
 import WizardExample from "./components/Wizard/WizardExample";
@@ -260,18 +256,6 @@ function App() {
           }
         />
         
-        <Route
-          path="/variedades"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <Variedades />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
         
         <Route
           path="/monitoreo-estado-fenologico"
@@ -665,19 +649,6 @@ function App() {
         />
         
         <Route
-          path="/unidades-medida"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <UnidadesMedida />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
           path="/product-categories"
           element={
             <ProtectedRoute>
@@ -703,18 +674,6 @@ function App() {
           }
         />
         
-        <Route
-          path="/tipo-cultivo"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <TipoCultivo />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
         
         <Route
           path="/trabajos-realizados"
@@ -723,19 +682,6 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <TrabajosRealizados />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/tipos-suelo"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <TiposSuelo />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>

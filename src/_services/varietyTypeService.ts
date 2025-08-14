@@ -3,9 +3,11 @@ import { IVarietyType } from '@eon-lib/eon-mongoose';
 import authService from './authService';
 
 /**
- * Service for managing variety types
+ * Service for managing variety type data
+ * Uses the IVarietyType interface from eon-mongoose
  */
 class VarietyTypeService {
+  
   /**
    * Get all variety types
    * @returns Promise with all variety types
@@ -20,7 +22,8 @@ class VarietyTypeService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      return data.data || data;
     } catch (error) {
       console.error('Error fetching variety types:', error);
       throw error;
@@ -29,22 +32,22 @@ class VarietyTypeService {
 
   /**
    * Create a new variety type
-   * @param variety Variety type data
+   * @param varietyType Variety type data
    * @returns Promise with created variety type
    */
-  async createVariety(variety: Partial<IVarietyType>): Promise<IVarietyType> {
+  async createVarietyType(varietyType: Partial<IVarietyType>): Promise<IVarietyType> {
     try {
-      const varietyData: Partial<IVarietyType> = {
-        order: (variety as any).idOrder || (variety as any).order || 0,
-        varietyName: (variety as any).cropName || variety.varietyName,
-        cropTypeId: variety.cropTypeId || '',
-        state: variety.state !== undefined ? variety.state : true,
+      const varietyTypeData: Partial<IVarietyType> = {
+        ...varietyType,
+        state: varietyType.state !== undefined ? varietyType.state : true,
+        createdBy: authService.getCurrentUser()?.id || '',
+        updatedBy: authService.getCurrentUser()?.id || ''
       };
 
       const response = await fetch(ENDPOINTS.varietyType.base, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
-        body: JSON.stringify(varietyData),
+        body: JSON.stringify(varietyTypeData),
       });
 
       if (!response.ok) {
@@ -61,15 +64,20 @@ class VarietyTypeService {
   /**
    * Update an existing variety type
    * @param id Variety type ID
-   * @param variety Updated variety type data
+   * @param varietyType Updated variety type data
    * @returns Promise with updated variety type
    */
-  async updateVariety(id: string | number, variety: Partial<IVarietyType>): Promise<IVarietyType> {
+  async updateVarietyType(id: string | number, varietyType: Partial<IVarietyType>): Promise<IVarietyType> {
     try {
+      const varietyTypeData = { 
+        ...varietyType,
+        updatedBy: authService.getCurrentUser()?.id || ''
+      };
+      
       const response = await fetch(ENDPOINTS.varietyType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
-        body: JSON.stringify(variety),
+        body: JSON.stringify(varietyTypeData),
       });
 
       if (!response.ok) {
@@ -88,11 +96,14 @@ class VarietyTypeService {
    * @param id Variety type ID
    * @returns Promise with operation result
    */
-  async softDeleteVariety(id: string | number): Promise<any> {
+  async softDeleteVarietyType(id: string | number): Promise<any> {
     try {
-      const response = await fetch(ENDPOINTS.varietyType.setState(id, false), {
+      const stateData = { state: false };
+      
+      const response = await fetch(ENDPOINTS.varietyType.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
+        body: JSON.stringify(stateData)
       });
 
       if (!response.ok) {
@@ -127,9 +138,33 @@ class VarietyTypeService {
       throw error;
     }
   }
+
+  /**
+   * Activate/deactivate a variety type
+   * @param id Variety type ID
+   * @param state New state (true = active, false = inactive)
+   * @returns Promise with operation result
+   */
+  async setState(id: string | number, state: boolean): Promise<any> {
+    try {
+      const response = await fetch(ENDPOINTS.varietyType.setState(id, state), {
+        method: 'PATCH',
+        headers: authService.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error setting state for variety type ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
 const varietyTypeService = new VarietyTypeService();
 
-export default varietyTypeService; 
+export default varietyTypeService;

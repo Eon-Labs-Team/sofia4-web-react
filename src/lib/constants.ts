@@ -7,7 +7,7 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/enterprise/productCategory`,
     byId: (id: string | number) => `${API_BASE_URL}/enterprise/productCategory/${id}`,
     byEnterpriseId: `${API_BASE_URL}/enterprise/productCategory/byEnterpriseId`,
-    fullDelete: (id: string | number) => `${API_BASE_URL}/enterprise/productCategory/fullDelete/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/measurementUnits/${id}/state/${state}`,
   },
   subcategoryProduct: {
     base: `${API_BASE_URL}/enterprise/subcategoryProduct`,
@@ -34,9 +34,9 @@ export const ENDPOINTS = {
     changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/machineryList/${id}/state/${state}`,
   },
   measurementUnits: {
-    base: `${API_BASE_URL}/config/measurementUnits`,
-    byId: (id: string | number) => `${API_BASE_URL}/config/measurementUnits/${id}`,
-    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/measurementUnits/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/measurementUnits`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/measurementUnits/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/measurementUnits/${id}/state/${state}`,
   },
   facilityCleaning: {
     base: `${API_BASE_URL}/controlRecord/facilityCleaningRecord`,
@@ -199,19 +199,70 @@ export const ENDPOINTS = {
     changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/calicata/${id}/state/false`,
   },
   cropType: {
-    base: `${API_BASE_URL}/config/cropType`,
-    byId: (id: string | number) => `${API_BASE_URL}/config/cropType/${id}`,
-    changeState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/cropType/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/cropType`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/cropType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/cropType/${id}/state/${state}`,
   },
   varietyType: {
-    base: `${API_BASE_URL}/config/varietyType`,
-    byId: (id: string | number) => `${API_BASE_URL}/config/varietyType/${id}`,
-    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/varietyType/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/varietyType`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/varietyType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/varietyType/${id}/state/${state}`,
   },
   soilType: {
-    base: `${API_BASE_URL}/config/soilType`,
-    byId: (id: string | number) => `${API_BASE_URL}/config/soilType/${id}`,
-    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/config/soilType/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/soilType`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/soilType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/soilType/${id}/state/${state}`,
+  },
+  // Additional enterprise entities
+  costClassification: {
+    base: `${API_BASE_URL}/enterprise/costClassification`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/costClassification/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/costClassification/${id}/state/${state}`,
+  },
+  costSubclassification: {
+    base: `${API_BASE_URL}/enterprise/costSubclassification`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/costSubclassification/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/costSubclassification/${id}/state/${state}`,
+  },
+  machineryBrand: {
+    base: `${API_BASE_URL}/enterprise/machineryBrand`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/machineryBrand/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/machineryBrand/${id}/state/${state}`,
+  },
+  machineryType: {
+    base: `${API_BASE_URL}/enterprise/machineryType`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/machineryType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/machineryType/${id}/state/${state}`,
+  },
+  maritalStatus: {
+    base: `${API_BASE_URL}/enterprise/maritalStatus`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/maritalStatus/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/maritalStatus/${id}/state/${state}`,
+  },
+  pressureUnit: {
+    base: `${API_BASE_URL}/enterprise/pressureUnit`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/pressureUnit/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/pressureUnit/${id}/state/${state}`,
+  },
+  temperatureUnit: {
+    base: `${API_BASE_URL}/enterprise/temperatureUnit`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/temperatureUnit/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/temperatureUnit/${id}/state/${state}`,
+  },
+  wasteType: {
+    base: `${API_BASE_URL}/enterprise/wasteType`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/wasteType/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/wasteType/${id}/state/${state}`,
+  },
+  weatherConditions: {
+    base: `${API_BASE_URL}/enterprise/weatherCondition`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/weatherCondition/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/weatherCondition/${id}/state/${state}`,
+  },
+  windConditions: {
+    base: `${API_BASE_URL}/enterprise/windCondition`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/windCondition/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/windCondition/${id}/state/${state}`,
   },
   work: {
     base: `${API_BASE_URL}/work/work`,
