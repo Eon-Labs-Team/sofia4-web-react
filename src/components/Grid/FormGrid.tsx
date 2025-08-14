@@ -71,13 +71,16 @@ interface FormGridProps {
   // Field configurations
   fieldConfigurations?: {
     [columnId: string]: {
-      type?: 'text' | 'number' | 'email' | 'select' | 'checkbox' | 'date' | 'time' | 'datetime-local';
+      type?: 'text' | 'number' | 'email' | 'select' | 'checkbox' | 'date' | 'time' | 'datetime-local' | 'custom';
       placeholder?: string;
       options?: { value: string; label: string }[];
       min?: number;
       max?: number;
       step?: number;
       style?: React.CSSProperties;
+      disabled?: boolean;
+      readonly?: boolean;
+      customRender?: (field: any, config: any, handleChange: (value: any) => void) => React.ReactNode;
     };
   };
   // Field rules system
@@ -324,7 +327,7 @@ const FormGridComponent: React.FC<FormGridProps> = ({
   };
 
   const renderDefaultField = (field: any, config: any, formState: any, columnAccessor?: string, mode?: 'edit' | 'add') => {
-    const { type = 'text', placeholder, options, min, max, step, style } = config;
+    const { type = 'text', placeholder, options, min, max, step, style, disabled = false, readonly = false, customRender } = config;
     
     // Helper function to handle field changes and execute rules
     const handleFieldChange = (value: any) => {
@@ -345,17 +348,21 @@ const FormGridComponent: React.FC<FormGridProps> = ({
     };
     
     switch (type) {
+      case 'custom':
+        return customRender ? customRender(field, config, handleFieldChange) : null;
+      
       case 'select':
         return (
           <Select
             value={field.value || ""}
-            onValueChange={handleFieldChange}
+            onValueChange={disabled || readonly ? undefined : handleFieldChange}
+            disabled={disabled}
           >
             <SelectTrigger className="h-8 text-xs" style={style}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {options?.map((option: any) => (
+              {options?.filter((option: any) => option.value && option.value !== "").map((option: any) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -369,7 +376,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <input
             type="checkbox"
             checked={field.value || false}
-            onChange={(e) => handleFieldChange(e.target.checked)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.checked)}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-4 w-4"
             style={style}
           />
@@ -380,11 +389,13 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="number"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
             min={min}
             max={max}
             step={step}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
@@ -395,7 +406,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="date"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
@@ -406,7 +419,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="time"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
@@ -417,7 +432,9 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="datetime-local"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
@@ -428,8 +445,10 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="email"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
@@ -440,8 +459,10 @@ const FormGridComponent: React.FC<FormGridProps> = ({
           <Input
             type="text"
             value={field.value || ""}
-            onChange={(e) => handleFieldChange(e.target.value)}
+            onChange={disabled || readonly ? undefined : (e) => handleFieldChange(e.target.value)}
             placeholder={placeholder}
+            disabled={disabled}
+            readOnly={readonly}
             className="h-8 text-xs"
             style={style}
           />
