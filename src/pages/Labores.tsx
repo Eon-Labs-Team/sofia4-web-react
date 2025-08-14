@@ -24,9 +24,9 @@ import DynamicForm, {
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
 import { ITask, AssociatedProductsType } from "@eon-lib/eon-mongoose";
-import laborService from "@/_services/laborService";
+import laborService from "@/_services/taskService";
 import { toast } from "@/components/ui/use-toast";
-import faenaService from "@/_services/faenaService";
+import faenaService from "@/_services/taskTypeService";
 import { ITaskType } from "@eon-lib/eon-mongoose";
 import { z } from "zod";
 
@@ -205,7 +205,11 @@ const expandableContent = (row: any) => (
   </div>
 );
 
-const Labores = () => {
+interface LaboresProps {
+  isModal?: boolean;
+}
+
+const Labores = ({ isModal = false }: LaboresProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [labores, setLabores] = useState<ITaskWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -364,26 +368,27 @@ const Labores = () => {
   });
   
   // Fetch labores and task types on component mount
-  // Get propertyId from AuthStore
+  // Get propertyId from AuthStore (only used for validation when not in modal)
   const { propertyId } = useAuthStore();
   
-  // Redirect to homepage if no propertyId is available
+  // Redirect to homepage if no propertyId is available and not in modal mode
   useEffect(() => {
-    if (!propertyId) {
+    if (!isModal && !propertyId) {
       toast({
         title: "Error",
         description: "No hay un predio seleccionado. Por favor, seleccione un predio desde la página principal.",
         variant: "destructive",
       });
     }
-  }, [propertyId]);
+  }, [propertyId, isModal]);
   
   useEffect(() => {
-    if (propertyId) {
+    // In modal mode, always fetch. In page mode, only fetch if propertyId exists
+    if (isModal || propertyId) {
       fetchLabores();
       fetchTaskTypes();
     }
-  }, [propertyId]);
+  }, [propertyId, isModal]);
   
   // Function to fetch labores data
   const fetchLabores = async () => {
@@ -516,12 +521,15 @@ const Labores = () => {
   };
   
   return (
-    <div className="container mx-auto p-4">
+    <div className={isModal ? "w-full h-full overflow-hidden" : "container mx-auto p-4"}>
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Labores</h1>
           <p className="text-muted-foreground">
-            Gestiona las labores disponibles en el sistema
+            {isModal 
+              ? "Gestione las labores asociadas a las faenas"
+              : "Gestiona las labores disponibles en el sistema"
+            }
           </p>
         </div>
         <Button 
@@ -536,15 +544,18 @@ const Labores = () => {
         </Button>
       </div>
       
-      <Grid 
-        data={labores}
-        columns={columns}
-        gridId="labores"
-        title="Labores"
-        expandableContent={expandableContent}
-        actions={renderActions}
-        idField="_id"
-      />
+      <div className={isModal ? "px-0.5 h-[calc(100vh-200px)] overflow-hidden" : ""}>
+        <Grid 
+          data={labores}
+          columns={columns}
+          gridId="labores"
+          title=""
+          expandableContent={expandableContent}
+          actions={renderActions}
+          idField="_id"
+          isLoading={isLoading}
+        />
+      </div>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">

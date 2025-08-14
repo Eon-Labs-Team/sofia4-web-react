@@ -38,8 +38,8 @@ import workService from "@/_services/workService";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
 import productService from "@/_services/productService";
-import faenaService from "@/_services/faenaService";
-import laborService from "@/_services/laborService";
+import faenaService from "@/_services/taskTypeService";
+import laborService from "@/_services/taskService";
 import { toast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import {

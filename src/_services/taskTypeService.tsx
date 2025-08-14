@@ -6,13 +6,14 @@ import authService from './authService';
  * Service for managing faena (task type) data
  */
 class FaenaService {
+
   /**
    * Get all faenas
    * @returns Promise with all faenas
    */
   async findAll(): Promise<ITaskType[]> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.base), {
+      const response = await fetch(ENDPOINTS.faenas.base, {
         headers: authService.getAuthHeaders(),
       });
       
@@ -40,7 +41,7 @@ class FaenaService {
         //state: faena.state !== undefined ? faena.state : true
       };
 
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.base), {
+      const response = await fetch(ENDPOINTS.faenas.base, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
@@ -67,7 +68,7 @@ class FaenaService {
     try {
       const faenaData = { ...faena };
       
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.byId(id)), {
+      const response = await fetch(ENDPOINTS.faenas.byId(id), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(faenaData),
@@ -91,7 +92,7 @@ class FaenaService {
    */
   async softDeleteFaena(id: string | number): Promise<any> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.changeState(id, false)), {
+      const response = await fetch(ENDPOINTS.faenas.changeState(id, false), {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });
@@ -114,7 +115,7 @@ class FaenaService {
    */
   async findById(id: string | number): Promise<ITaskType> {
     try {
-      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.faenas.byId(id)), {
+      const response = await fetch(ENDPOINTS.faenas.byId(id), {
         headers: authService.getAuthHeaders(),
       });
       

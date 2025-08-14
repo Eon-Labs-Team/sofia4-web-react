@@ -170,6 +170,55 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
           />
         );
 
+      case "checkboxGroup":
+        return (
+          <HookFormField
+            control={control}
+            name={field.name}
+            render={({ field: formField }) => (
+              <FormItem>
+                <FormLabel>{field.label}</FormLabel>
+                <div className="space-y-2">
+                  {field.options?.map((option) => (
+                    <FormItem
+                      key={option.value}
+                      className="flex flex-row items-start space-x-3 space-y-0"
+                    >
+                      <FormControl>
+                        <Checkbox
+                          checked={formField.value?.includes?.(option.value) || false}
+                          onCheckedChange={(checked) => {
+                            const currentValue = formField.value || [];
+                            if (checked) {
+                              // Add value to array
+                              formField.onChange([...currentValue, option.value]);
+                            } else {
+                              // Remove value from array
+                              formField.onChange(
+                                currentValue.filter((val: string) => val !== option.value)
+                              );
+                            }
+                          }}
+                          disabled={field.disabled}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="font-normal">
+                          {option.label}
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  ))}
+                </div>
+                {field.helperText && (
+                  <FormDescription>{field.helperText}</FormDescription>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        );
+
       case "radio":
         return (
           <HookFormField

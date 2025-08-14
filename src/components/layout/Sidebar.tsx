@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,13 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
-  LayoutDashboard,
-  Settings,
   Users,
   BarChart3,
   FileText,
   Building2,
-  UserPlus,
   ChevronDown,
   Beaker,
   Droplets,
@@ -31,12 +28,7 @@ import {
   Calculator,
   UserCheck,
   Presentation,
-  Zap,
-  Shovel,
-  Ruler,
-  Tag,
   Briefcase,
-  FileSpreadsheet,
   CheckCircle,
   Award,
   PieChart,
@@ -53,12 +45,10 @@ interface SidebarProps {
   collapsed?: boolean;
   onToggle?: () => void;
   hidden?: boolean;
-  onToggleVisibility?: () => void;
 }
 
 // Función para generar menús específicos según el tipo de acción
-const generateMenuForAction = (actionId: string, propertyId: string | number): NavItem[] => {  
-    
+const generateMenuForAction = (actionId: string): NavItem[] => {
   
   switch (actionId) {
     case "good-practices":
@@ -111,7 +101,6 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
           { icon: <Wrench size={16} />, label: "Lista Maquinarias", path: "/lista-maquinarias" },
           { icon: <Users size={16} />, label: "Lista Trabajadores", path: "/lista-trabajadores" },
           { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
-          { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
         ] },
 
       ];
@@ -124,7 +113,6 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
             { icon: <BarChart3 size={16} />, label: "Indicadores", path: "/indicadores" },
             { icon: <Users size={16} />, label: "Personal", path: "/personal" },
             { icon: <PieChart size={16} />, label: "Recursos", path: "/recursos" },
-            { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
           ],
           isExpanded: true
         }
@@ -137,8 +125,6 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
           children: [
             { icon: <Wheat size={16} />, label: "Registro de Cosecha", path: "/cosecha" },
             { icon: <BarChart3 size={16} />, label: "Estadísticas", path: "/estadisticas-cosecha" },
-            { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
-            { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
           ],
           isExpanded: true
         }
@@ -164,8 +150,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
 const Sidebar = ({ 
   collapsed = false, 
   onToggle = () => {},
-  hidden = true, // Por defecto, el sidebar está oculto
-  onToggleVisibility = () => {}
+  hidden = true // Por defecto, el sidebar está oculto
 }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(collapsed);
   const [isHidden, setIsHidden] = useState(hidden);
@@ -204,23 +189,13 @@ const Sidebar = ({
   // Si estamos en modo acción, reemplazamos los ítems de navegación con los específicos para esa acción
   useEffect(() => {
     if (actionMode && activeAction) {
-      const specificNavItems = generateMenuForAction(activeAction.actionId, activeAction.propertyId);
+      const specificNavItems = generateMenuForAction(activeAction.actionId);
       setLocalNavItems(specificNavItems);
     } else {
       // Restaurar ítems originales
       setLocalNavItems([
         { icon: <Home size={20} />, label: "Inicio", path: "/" },
         { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
-        { 
-          icon: <Briefcase size={20} />, 
-          label: "Faenas", 
-          path: "/faenas"
-        },
-        { 
-          icon: <Briefcase size={20} />, 
-          label: "Labores", 
-          path: "/labores"
-        },
       ]);
     }
   }, [actionMode, activeAction]);
