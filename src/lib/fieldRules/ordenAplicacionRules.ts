@@ -9,39 +9,134 @@ import { FormGridRules } from "@/lib/validationSchemas";
 
 export const ordenAplicacionRules: FormGridRules = {
   rules: [
-    // Regla 1: Cuando se selecciona un cuartel, actualizar la especie
+    // Regla 1: Cuando se selecciona un cuartel, actualizar la especie (buscar nombre del cropType)
     {
       trigger: { 
         field: 'barracks',
         condition: (value) => value !== null && value !== undefined && value !== ''
       },
       action: {
-        type: 'lookup',
-        source: 'list',
-        listKey: 'cuartelesOptions',
-        lookupField: '_id',
+        type: 'calculate',
         targetField: 'species',
-        mappingField: 'varietySpecies'
+        calculate: (formData, _parentData, externalData) => {
+          const barracksId = formData.barracks;
+          
+          // Buscar el cuartel seleccionado
+          const selectedCuartel = externalData?.cuartelesOptions?.find((cuartel: any) => 
+            cuartel._id === barracksId
+          );
+          
+          if (!selectedCuartel?.varietySpecies) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 No varietySpecies found for selected cuartel:', barracksId);
+            }
+            return '';
+          }
+          
+          // Buscar el nombre del cropType usando el varietySpecies ID
+          const cropType = externalData?.cropTypesOptions?.find((crop: any) => 
+            crop._id === selectedCuartel.varietySpecies
+          );
+          
+          const speciesName = cropType?.cropName || selectedCuartel.varietySpecies;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🌱 Species lookup result:', {
+              barracksId,
+              varietySpeciesId: selectedCuartel.varietySpecies,
+              speciesName
+            });
+          }
+          
+          return speciesName;
+        }
       }
     },
     
-    // Regla 2: Cuando se selecciona un cuartel, actualizar la variedad
+    // Regla 2: Cuando se selecciona un cuartel, actualizar la variedad (buscar nombre del varietyType)
     {
       trigger: { 
         field: 'barracks',
         condition: (value) => value !== null && value !== undefined && value !== ''
       },
       action: {
-        type: 'lookup',
-        source: 'list',
-        listKey: 'cuartelesOptions',
-        lookupField: '_id',
+        type: 'calculate',
         targetField: 'variety',
-        mappingField: 'variety'
+        calculate: (formData, _parentData, externalData) => {
+          const barracksId = formData.barracks;
+          
+          // Buscar el cuartel seleccionado
+          const selectedCuartel = externalData?.cuartelesOptions?.find((cuartel: any) => 
+            cuartel._id === barracksId
+          );
+          
+          if (!selectedCuartel?.variety) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 No variety found for selected cuartel:', barracksId);
+            }
+            return '';
+          }
+          
+          // Buscar el nombre del varietyType usando el variety ID
+          const varietyType = externalData?.varietyTypesOptions?.find((variety: any) => 
+            variety._id === selectedCuartel.variety
+          );
+          
+          const varietyName = varietyType?.varietyName || selectedCuartel.variety;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🍇 Variety lookup result:', {
+              barracksId,
+              varietyId: selectedCuartel.variety,
+              varietyName
+            });
+          }
+          
+          return varietyName;
+        }
       }
     },
 
-    // Regla 3: Limpiar especie y variedad cuando se deselecciona el cuartel
+    // Regla 3: Cuando se selecciona un cuartel, autocompletar hectares con totalHa del cuartel
+    {
+      trigger: { 
+        field: 'barracks',
+        condition: (value) => value !== null && value !== undefined && value !== ''
+      },
+      action: {
+        type: 'calculate',
+        targetField: 'hectares',
+        calculate: (formData, _parentData, externalData) => {
+          const barracksId = formData.barracks;
+          
+          // Buscar el cuartel seleccionado
+          const selectedCuartel = externalData?.cuartelesOptions?.find((cuartel: any) => 
+            cuartel._id === barracksId
+          );
+          
+          if (!selectedCuartel?.totalHa) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 No totalHa found for selected cuartel:', barracksId);
+            }
+            return 1;
+          }
+          
+          const totalHectares = parseInt(selectedCuartel.totalHa) || 0;
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('📏 Hectares lookup result:', {
+              barracksId,
+              totalHa: selectedCuartel.totalHa,
+              hectaresValue: totalHectares
+            });
+          }
+          
+          return totalHectares;
+        }
+      }
+    },
+
+    // Regla 4: Limpiar especie cuando se deselecciona el cuartel
     {
       trigger: {
         field: 'barracks',
@@ -54,7 +149,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 4: Limpiar variedad cuando se deselecciona el cuartel
+    // Regla 5: Limpiar variedad cuando se deselecciona el cuartel
     {
       trigger: {
         field: 'barracks',
@@ -67,7 +162,20 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 5: Autocompletar taskType basado en la tarea seleccionada
+    // Regla 6: Limpiar hectares cuando se deselecciona el cuartel
+    {
+      trigger: {
+        field: 'barracks',
+        condition: (value) => value === null || value === undefined || value === ''
+      },
+      action: {
+        type: 'preset',
+        targetField: 'hectares',
+        preset: () => 0
+      }
+    },
+
+    // Regla 7: Autocompletar taskType basado en la tarea seleccionada
     {
       trigger: { 
         field: 'task',
@@ -83,7 +191,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 6: Calcular hectáreas aplicadas basado en cobertura (con debouncing)
+    // Regla 8: Calcular hectáreas aplicadas basado en cobertura (con debouncing)
     {
       trigger: { 
         field: 'coverage',
@@ -100,7 +208,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 7: Calcular hectáreas aplicadas basado en hectáreas totales (con debouncing)
+    // Regla 9: Calcular hectáreas aplicadas basado en hectáreas totales (con debouncing)
     {
       trigger: { 
         field: 'hectares',
@@ -121,7 +229,7 @@ export const ordenAplicacionRules: FormGridRules = {
     // REGLAS PARA TASKTYPE Y TASK
     // =====================================
 
-    // Regla 8: Cuando cambia taskType, filtrar tasks disponibles y limpiar selección actual si no aplica
+    // Regla 10: Cuando cambia taskType, filtrar tasks disponibles y limpiar selección actual si no aplica
     {
       trigger: { 
         field: 'taskType',
@@ -194,7 +302,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 9: Cuando se selecciona task, establecer automáticamente su taskType
+    // Regla 11: Cuando se selecciona task, establecer automáticamente su taskType
     {
       trigger: { 
         field: 'task',
@@ -210,7 +318,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 10: Limpiar taskType cuando se deselecciona task (opcional)
+    // Regla 12: Limpiar taskType cuando se deselecciona task (opcional)
     {
       trigger: {
         field: 'task',
@@ -227,7 +335,7 @@ export const ordenAplicacionRules: FormGridRules = {
     // REGLAS PARA RESPONSIBLES
     // =====================================
 
-    // Regla 11: Supervisor - establecer name cuando cambia userId
+    // Regla 13: Supervisor - establecer name cuando cambia userId
     {
       trigger: { field: 'responsibles.supervisor.userId' },
       action: {
@@ -240,7 +348,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 12: Planner - establecer name cuando cambia userId
+    // Regla 14: Planner - establecer name cuando cambia userId
     {
       trigger: { field: 'responsibles.planner.userId' },
       action: {
@@ -253,7 +361,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 13: Technical Verifier - establecer name cuando cambia userId
+    // Regla 15: Technical Verifier - establecer name cuando cambia userId
     {
       trigger: { field: 'responsibles.technicalVerifier.userId' },
       action: {
@@ -266,7 +374,7 @@ export const ordenAplicacionRules: FormGridRules = {
       }
     },
 
-    // Regla 14: Applicator - establecer name cuando cambia userId
+    // Regla 16: Applicator - establecer name cuando cambia userId
     {
       trigger: { field: 'responsibles.applicators.0.userId' },
       action: {
@@ -285,7 +393,9 @@ export const ordenAplicacionRules: FormGridRules = {
     cuartelesOptions: [], // Array de cuarteles con _id, varietySpecies, variety
     taskOptions: [],     // Array de tareas con _id, taskTypeId, taskName
     taskTypeOptions: [], // Array de tipos de tarea
-    workerOptions: []    // Array de workers con _id, fullName
+    workerOptions: [],   // Array de workers con _id, fullName
+    cropTypesOptions: [], // Array de crop types con _id, cropName
+    varietyTypesOptions: [] // Array de variety types con _id, varietyName
   }
 };
 
@@ -297,6 +407,8 @@ export const createOrdenAplicacionRules = (externalData: {
   taskOptions?: any[];
   taskTypeOptions?: any[];
   workerOptions?: any[];
+  cropTypesOptions?: any[];
+  varietyTypesOptions?: any[];
 }): FormGridRules => {
   return {
     ...ordenAplicacionRules,

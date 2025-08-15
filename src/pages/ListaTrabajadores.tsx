@@ -249,19 +249,10 @@ const formValidationSchema = z.object({
 // Form configuration for adding new Lista Trabajadores
 const formSections: SectionConfig[] = [
   {
-    id: "personal-info",
-    title: "Información Personal",
-    description: "Ingrese los datos personales del trabajador",
+    id: "required-info",
+    title: "Información Requerida",
+    description: "Complete todos los campos obligatorios del trabajador",
     fields: [
-      {
-        id: "rut",
-        type: "text",
-        label: "RUT",
-        name: "rut",
-        placeholder: "Ej: 12345678-9",
-        required: true,
-        helperText: "RUT del trabajador"
-      },
       {
         id: "rutDniNationality",
         type: "text",
@@ -270,6 +261,15 @@ const formSections: SectionConfig[] = [
         placeholder: "Ingrese RUT/DNI según nacionalidad",
         required: true,
         helperText: "Documento de identidad según nacionalidad"
+      },
+      {
+        id: "rut",
+        type: "text",
+        label: "RUT",
+        name: "rut",
+        placeholder: "Ej: 12345678-9",
+        required: true,
+        helperText: "RUT del trabajador"
       },
       {
         id: "names",
@@ -311,6 +311,55 @@ const formSections: SectionConfig[] = [
         ],
         helperText: "Sexo del trabajador"
       },
+      {
+        id: "startDate",
+        type: "date",
+        label: "Fecha de Inicio",
+        name: "startDate",
+        required: true,
+        helperText: "Fecha de inicio del trabajador"
+      },
+      {
+        id: "provision",
+        type: "text",
+        label: "Previsión",
+        name: "provision",
+        placeholder: "Institución de previsión",
+        required: true,
+        helperText: "Institución de previsión del trabajador"
+      },
+      {
+        id: "provisionalRegime",
+        type: "checkbox",
+        label: "Régimen Provisional",
+        name: "provisionalRegime",
+        required: true,
+        helperText: "Indica si está en régimen provisional"
+      },
+      {
+        id: "socialSecurity",
+        type: "text",
+        label: "Seguridad Social",
+        name: "socialSecurity",
+        placeholder: "Institución de seguridad social",
+        required: true,
+        helperText: "Institución de seguridad social"
+      },
+      {
+        id: "state",
+        type: "checkbox",
+        label: "Estado Activo",
+        name: "state",
+        required: true,
+        helperText: "Indica si el trabajador está activo"
+      }
+    ]
+  },
+  {
+    id: "personal-info",
+    title: "Información Personal Adicional",
+    description: "Ingrese datos personales adicionales (opcionales)",
+    fields: [
       {
         id: "workerNationality",
         type: "text",
@@ -412,14 +461,6 @@ const formSections: SectionConfig[] = [
     description: "Ingrese los datos laborales del trabajador",
     fields: [
       {
-        id: "startDate",
-        type: "date",
-        label: "Fecha de Inicio",
-        name: "startDate",
-        required: true,
-        helperText: "Fecha de inicio del trabajador"
-      },
-      {
         id: "endDate",
         type: "date",
         label: "Fecha de Fin",
@@ -497,35 +538,9 @@ const formSections: SectionConfig[] = [
   },
   {
     id: "provision-info",
-    title: "Previsión y Salud",
-    description: "Ingrese los datos de previsión y salud",
+    title: "Previsión y Salud Adicional",
+    description: "Ingrese datos adicionales de previsión y salud",
     fields: [
-      {
-        id: "provision",
-        type: "text",
-        label: "Previsión",
-        name: "provision",
-        placeholder: "Institución de previsión",
-        required: true,
-        helperText: "Institución de previsión del trabajador"
-      },
-      {
-        id: "provisionalRegime",
-        type: "checkbox",
-        label: "Régimen Provisional",
-        name: "provisionalRegime",
-        required: true,
-        helperText: "Indica si está en régimen provisional"
-      },
-      {
-        id: "socialSecurity",
-        type: "text",
-        label: "Seguridad Social",
-        name: "socialSecurity",
-        placeholder: "Institución de seguridad social",
-        required: true,
-        helperText: "Institución de seguridad social"
-      },
       {
         id: "health",
         type: "text",
@@ -604,21 +619,6 @@ const formSections: SectionConfig[] = [
         name: "workerEmail",
         placeholder: "email@ejemplo.com",
         helperText: "Email para notificaciones de pago"
-      }
-    ]
-  },
-  {
-    id: "status-info",
-    title: "Estado",
-    description: "Configure el estado del trabajador",
-    fields: [
-      {
-        id: "state",
-        type: "checkbox",
-        label: "Estado Activo",
-        name: "state",
-        required: true,
-        helperText: "Indica si el trabajador está activo"
       }
     ]
   }

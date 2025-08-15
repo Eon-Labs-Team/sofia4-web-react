@@ -202,7 +202,7 @@ class ListaCuartelesService {
       }
 
       const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaCuarteles.byId(id)), {
-        method: 'PUT',
+        method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(barracksListData),
       });

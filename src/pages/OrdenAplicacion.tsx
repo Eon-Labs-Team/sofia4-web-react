@@ -55,8 +55,12 @@ import { IProducts } from "@eon-lib/eon-mongoose";
 import { IProductCategory } from "@eon-lib/eon-mongoose";
 // @ts-ignore
 import { IWarehouseProduct } from "@eon-lib/eon-mongoose";
-import { ITaskType } from "@eon-lib/eon-mongoose";
+import { ITaskType, WorkType } from "@eon-lib/eon-mongoose";
 import { ITask } from "@eon-lib/eon-mongoose";
+import { IWeatherCondition } from "@eon-lib/eon-mongoose";
+import { IWindCondition } from "@eon-lib/eon-mongoose";
+import { ICropType } from "@eon-lib/eon-mongoose";
+import { IVarietyType } from "@eon-lib/eon-mongoose";
 import workService from "@/_services/workService";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
@@ -67,6 +71,10 @@ import faenaService from "@/_services/taskTypeService";
 import laborService from "@/_services/taskService";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import workerListService from "@/_services/workerListService";
+import weatherConditionService from "@/_services/weatherConditionService";
+import windConditionService from "@/_services/windConditionService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
 import listaMaquinariasService from "@/_services/machineryListService";
 import { IOperationalArea } from "@eon-lib/eon-mongoose";
 import { toast } from "@/components/ui/use-toast";
@@ -136,106 +144,6 @@ const renderWorkState = (value: string) => {
   return value;
 };
 
-
-
-// Expandable content for each row
-const expandableContent = (row: any) => (
-  <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">Orden: {row.orderNumber}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <p><strong>Cuartel:</strong> {row.barracks}</p>
-        <p><strong>Especie:</strong> {row.species}</p>
-        <p><strong>Variedad:</strong> {row.variety}</p>
-        <p><strong>Estado Fenológico:</strong> {row.phenologicalState}</p>
-      </div>
-      <div>
-        <p><strong>Hectáreas:</strong> {row.hectares}</p>
-        <p><strong>Hectáreas Aplicadas:</strong> {row.appliedHectares}</p>
-        <p><strong>Cobertura:</strong> {row.coverage}</p>
-        <p><strong>Objetivo General:</strong> {row.generalObjective}</p>
-      </div>
-      <div>
-        <p><strong>Observación:</strong> {row.observation}</p>
-        <p><strong>Fecha de Inicio:</strong> {row.startDate} {row.hourStartDate}</p>
-        <p><strong>Fecha de Fin:</strong> {row.endDate} {row.hourEndDate}</p>
-        <p><strong>Sincronización con App:</strong> {row.syncApp ? 'Sí' : 'No'}</p>
-      </div>
-    </div>
-    
-    {/* Responsables */}
-    {row.responsibles && (
-      <div className="mt-4">
-        <h4 className="font-semibold mb-2">Responsables</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {row.responsibles.supervisor && (
-            <div>
-              <p><strong>Supervisor:</strong> {row.responsibles.supervisor.name || row.responsibles.supervisor.userId}</p>
-            </div>
-          )}
-          {row.responsibles.planner && (
-            <div>
-              <p><strong>Planificador:</strong> {row.responsibles.planner.name || row.responsibles.planner.userId}</p>
-            </div>
-          )}
-          {row.responsibles.technicalVerifier && (
-            <div>
-              <p><strong>Verificador Técnico:</strong> {row.responsibles.technicalVerifier.name || row.responsibles.technicalVerifier.userId}</p>
-            </div>
-          )}
-        </div>
-        {row.responsibles.applicators && row.responsibles.applicators.length > 0 && (
-          <div className="mt-2">
-            <p><strong>Aplicadores:</strong></p>
-            <ul className="list-disc pl-5">
-              {row.responsibles.applicators.map((applicator: any, index: number) => (
-                <li key={index}>{applicator.name || applicator.userId}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    )}
-    
-    {/* Equipo de Protección Personal */}
-    {row.ppe && (
-      <div className="mt-4">
-        <h4 className="font-semibold mb-2">Equipo de Protección Personal</h4>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <p><strong>Guantes:</strong> {row.ppe.gloves ? 'Sí' : 'No'}</p>
-          <p><strong>Traje de Aplicador:</strong> {row.ppe.applicatorSuit ? 'Sí' : 'No'}</p>
-          <p><strong>Respirador:</strong> {row.ppe.respirator ? 'Sí' : 'No'}</p>
-          <p><strong>Protector Facial:</strong> {row.ppe.faceShield ? 'Sí' : 'No'}</p>
-          <p><strong>Delantal:</strong> {row.ppe.apron ? 'Sí' : 'No'}</p>
-          <p><strong>Botas:</strong> {row.ppe.boots ? 'Sí' : 'No'}</p>
-          <p><strong>Protector Nariz-Boca:</strong> {row.ppe.noseMouthProtector ? 'Sí' : 'No'}</p>
-        </div>
-        {row.ppe.others && (
-          <p className="mt-2"><strong>Otros:</strong> {row.ppe.others}</p>
-        )}
-      </div>
-    )}
-    
-    {/* Protocolo de Lavado */}
-    {row.washing && (
-      <div className="mt-4">
-        <h4 className="font-semibold mb-2">Protocolo de Lavado</h4>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-          <p><strong>Traje 1:</strong> {row.washing.suit1 ? 'Sí' : 'No'}</p>
-          <p><strong>Traje 2:</strong> {row.washing.suit2 ? 'Sí' : 'No'}</p>
-          <p><strong>Traje 3:</strong> {row.washing.suit3 ? 'Sí' : 'No'}</p>
-          <p><strong>Porta Filtro 1:</strong> {row.washing.filterHolder1 ? 'Sí' : 'No'}</p>
-          <p><strong>Porta Filtro 2:</strong> {row.washing.filterHolder2 ? 'Sí' : 'No'}</p>
-          <p><strong>Porta Filtro 3:</strong> {row.washing.filterHolder3 ? 'Sí' : 'No'}</p>
-          <p><strong>Triple Lavado:</strong> {row.washing.tripleWash ? 'Sí' : 'No'}</p>
-          <p><strong>Maquinaria:</strong> {row.washing.machinery ? 'Sí' : 'No'}</p>
-          <p><strong>Sobrantes:</strong> {row.washing.leftovers ? 'Sí' : 'No'}</p>
-          <p><strong>Observación de Sobrantes:</strong> {row.washing.leftoverObservation ? 'Sí' : 'No'}</p>
-        </div>
-      </div>
-    )}
-  </div>
-);
 
 // Form configuration for adding new orden de aplicación
 const formSections: SectionConfig[] = [
@@ -328,6 +236,13 @@ const formSections: SectionConfig[] = [
         required: true
       },
       {
+        id: "calibrationPerHectare",
+        type: "number",
+        label: "Mojamiento x HA",
+        name: "calibrationPerHectare",
+        placeholder: "Mojamiento por hectárea"
+      },
+      {
         id: "observation",
         type: "textarea",
         label: "Observación",
@@ -371,11 +286,16 @@ const formSections: SectionConfig[] = [
         placeholder: "Tarea personalizada"
       },
       {
-        id: "calibrationPerHectare",
-        type: "number",
-        label: "Calibración por Hectárea",
-        name: "calibrationPerHectare",
-        placeholder: "Calibración por hectárea"
+        id: "workState",
+        type: "select",
+        label: "Estado de la Faena",
+        name: "workState",
+        options: [
+          { value: "confirmed", label: "Confirmada" },
+          { value: "pending", label: "Pendiente" },
+          { value: "void", label: "Nula" },
+          { value: "blocked", label: "Bloqueada" }
+        ]
       },
     ],
   },
@@ -474,17 +394,19 @@ const formSections: SectionConfig[] = [
     fields: [
       {
         id: "climateConditions",
-        type: "text",
+        type: "select",
         label: "Condiciones Climáticas",
         name: "climateConditions",
-        placeholder: "Ej: Soleado, Nublado, Lluvioso"
+        placeholder: "Seleccione condición climática",
+        // options will be set dynamically in the component
       },
       {
         id: "windSpeed",
-        type: "text",
+        type: "select",
         label: "Velocidad del Viento",
         name: "windSpeed",
-        placeholder: "Velocidad del viento"
+        placeholder: "Seleccione velocidad del viento",
+        // options will be set dynamically in the component
       },
       {
         id: "temperature",
@@ -518,18 +440,6 @@ const formSections: SectionConfig[] = [
         label: "Usuario App",
         name: "appUser",
         placeholder: "Usuario de la app"
-      },
-      {
-        id: "workState",
-        type: "select",
-        label: "Estado de la Faena",
-        name: "workState",
-        options: [
-          { value: "confirmed", label: "Confirmada" },
-          { value: "pending", label: "Pendiente" },
-          { value: "void", label: "Nula" },
-          { value: "blocked", label: "Bloqueada" }
-        ]
       },
     ],
   },
@@ -904,6 +814,14 @@ const OrdenAplicacion = () => {
   const [filteredTasks, setFilteredTasks] = useState<ITask[]>([]);
   const [selectedTaskType, setSelectedTaskType] = useState<string>("");
   
+  // State for weather and wind conditions
+  const [weatherConditions, setWeatherConditions] = useState<IWeatherCondition[]>([]);
+  const [windConditions, setWindConditions] = useState<IWindCondition[]>([]);
+  
+  // State for crop types and variety types (for species/variety lookup)
+  const [cropTypes, setCropTypes] = useState<ICropType[]>([]);
+  const [varietyTypes, setVarietyTypes] = useState<IVarietyType[]>([]);
+  
   // Cuarteles state
   const [cuarteles, setCuarteles] = useState<IOperationalArea[]>([]);
   const [selectedCuartel, setSelectedCuartel] = useState<IOperationalArea | null>(null);
@@ -1032,9 +950,11 @@ const OrdenAplicacion = () => {
       workerOptions: workerList.map(worker => ({
         ...worker,
         fullName: `${worker.names} ${worker.lastName}`
-      }))
+      })),
+      cropTypesOptions: cropTypes,
+      varietyTypesOptions: varietyTypes
     });
-  }, [cuarteles, allTasks, taskTypes, workerList]);
+  }, [cuarteles, allTasks, taskTypes, workerList, cropTypes, varietyTypes]);
 
   // ====================================
   // FIELD RULES FOR WORKERS GRID
@@ -1451,6 +1371,10 @@ const OrdenAplicacion = () => {
       fetchProductCategories();
       fetchWarehouseProducts();
       fetchWorkerList();
+      fetchWeatherConditions();
+      fetchWindConditions();
+      fetchCropTypes();
+      fetchVarietyTypes();
       fetchMachineryList();
     }
   }, [propertyId]);
@@ -1500,7 +1424,12 @@ const OrdenAplicacion = () => {
     try {
       const data = await faenaService.findAll();
       console.log('Fetched task types:', data);
-      setTaskTypes(data);
+      
+      // Filtrar solo las faenas que están marcadas como Aplicación (workType = 'A')
+      const applicationTaskTypes = data.filter((taskType: ITaskType) => taskType.workType === ('A' as WorkType));
+      console.log('Filtered application task types:', applicationTaskTypes);
+      
+      setTaskTypes(applicationTaskTypes);
     } catch (error) {
       console.error("Error loading task types:", error);
       toast({
@@ -1521,6 +1450,70 @@ const OrdenAplicacion = () => {
       toast({
         title: "Error",
         description: "No se pudieron cargar las labores",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch weather conditions from service
+  const fetchWeatherConditions = async () => {
+    try {
+      const data = await weatherConditionService.findAll();
+      console.log('Fetched weather conditions:', data);
+      setWeatherConditions(data);
+    } catch (error) {
+      console.error("Error loading weather conditions:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las condiciones climáticas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch wind conditions from service
+  const fetchWindConditions = async () => {
+    try {
+      const data = await windConditionService.findAll();
+      console.log('Fetched wind conditions:', data);
+      setWindConditions(data);
+    } catch (error) {
+      console.error("Error loading wind conditions:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las condiciones de viento",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch crop types from service
+  const fetchCropTypes = async () => {
+    try {
+      const data = await cropTypeService.findAll();
+      console.log('Fetched crop types:', data);
+      setCropTypes(data);
+    } catch (error) {
+      console.error("Error loading crop types:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los tipos de cultivo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch variety types from service
+  const fetchVarietyTypes = async () => {
+    try {
+      const data = await varietyTypeService.findAll();
+      console.log('Fetched variety types:', data);
+      setVarietyTypes(data);
+    } catch (error) {
+      console.error("Error loading variety types:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los tipos de variedad",
         variant: "destructive",
       });
     }
@@ -2318,36 +2311,6 @@ const OrdenAplicacion = () => {
     }
   };
 
-  // Function to handle responsible change
-  // const handleResponsibleChange = (responsibleType: string, workerId: string, formSetValue: any) => {
-  //   console.log(`${responsibleType} changed to:`, workerId);
-    
-  //   // Find the selected worker
-  //   const selectedWorker = workerList.find(worker => worker._id === workerId);
-    
-  //   if (selectedWorker && formSetValue) {
-  //     const workerName = `${selectedWorker.names} ${selectedWorker.lastName}`;
-      
-  //     // Update both userId and name fields
-  //     if (responsibleType === 'supervisor') {
-  //       formSetValue('responsibles.supervisor.userId', workerId);
-  //       formSetValue('responsibles.supervisor.name', workerName);
-  //     } else if (responsibleType === 'planner') {
-  //       formSetValue('responsibles.planner.userId', workerId);
-  //       formSetValue('responsibles.planner.name', workerName);
-  //     } else if (responsibleType === 'technicalVerifier') {
-  //       formSetValue('responsibles.technicalVerifier.userId', workerId);
-  //       formSetValue('responsibles.technicalVerifier.name', workerName);
-  //     } else if (responsibleType === 'applicator') {
-  //       formSetValue('responsibles.applicators.0.userId', workerId);
-  //       formSetValue('responsibles.applicators.0.name', workerName);
-  //     }
-      
-  //     console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
-  //   }
-  // };
-
-  // Function to fetch worker list for selectable dropdown
   const fetchWorkerList = async () => {
     try {
       console.log('Fetching worker list for selectable dropdown...');
@@ -2386,6 +2349,36 @@ const OrdenAplicacion = () => {
       });
     }
   };
+
+  // Function to handle responsible change
+  // const handleResponsibleChange = (responsibleType: string, workerId: string, formSetValue: any) => {
+  //   console.log(`${responsibleType} changed to:`, workerId);
+    
+  //   // Find the selected worker
+  //   const selectedWorker = workerList.find(worker => worker._id === workerId);
+    
+  //   if (selectedWorker && formSetValue) {
+  //     const workerName = `${selectedWorker.names} ${selectedWorker.lastName}`;
+      
+  //     // Update both userId and name fields
+  //     if (responsibleType === 'supervisor') {
+  //       formSetValue('responsibles.supervisor.userId', workerId);
+  //       formSetValue('responsibles.supervisor.name', workerName);
+  //     } else if (responsibleType === 'planner') {
+  //       formSetValue('responsibles.planner.userId', workerId);
+  //       formSetValue('responsibles.planner.name', workerName);
+  //     } else if (responsibleType === 'technicalVerifier') {
+  //       formSetValue('responsibles.technicalVerifier.userId', workerId);
+  //       formSetValue('responsibles.technicalVerifier.name', workerName);
+  //     } else if (responsibleType === 'applicator') {
+  //       formSetValue('responsibles.applicators.0.userId', workerId);
+  //       formSetValue('responsibles.applicators.0.name', workerName);
+  //     }
+      
+  //     console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
+  //   }
+  // };
+  
 
   // Render action buttons for each row
   const renderActions = (row: IWork) => {
@@ -2881,6 +2874,15 @@ const OrdenAplicacion = () => {
                 onCancel={() => setIsDialogOpen(false)}
                 defaultValues={{
                   workType: "A", // Default to Application type
+                  coverage: 100, // Cobertura siempre preseleccionado en 100
+                  paymentMethodToWorkers: "trato", // Método de pago preseleccionado en "trato"
+                  workState: "pending", // Estado de la faena preseleccionado en pendiente
+                  // Fechas y horas por defecto
+                  startDate: new Date().toISOString().split('T')[0], // Fecha de inicio setear a la actual
+                  endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
+                  hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
+                  hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
+                  reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
                   ppe: {
                     gloves: true,
                     applicatorSuit: true,
@@ -2897,7 +2899,6 @@ const OrdenAplicacion = () => {
                   observationApp: "",
                   syncApp: false,
                   appUser: "",
-                  workState: "pending",
                   responsibles: {
                     supervisor: { userId: "" },
                     planner: { userId: "" },
@@ -2910,12 +2911,16 @@ const OrdenAplicacion = () => {
                 allTasks={allTasks}
                 taskTypes={taskTypes}
                 workerList={workerList}
+                weatherConditions={weatherConditions}
+                windConditions={windConditions}
+                cropTypes={cropTypes}
+                varietyTypes={varietyTypes}
                 // Keep legacy options for backward compatibility
                 {...getWizardOptions()}
               />
             ) : (
               <DynamicForm
-              enabledButtons={false}
+              enabledButtons={true}
               fieldRules={mainFormRules}
               sections={formSections.map(section => {
               if (section.id === "orden-info-basic") {
@@ -3014,6 +3019,28 @@ const OrdenAplicacion = () => {
                   })
                 };
               }
+              if (section.id === "orden-info-climate") {
+                return {
+                  ...section,
+                  fields: section.fields.map(field => {
+                    if (field.id === "climateConditions") {
+                      const weatherOptions = weatherConditions.map(condition => ({
+                        value: condition._id || (condition as any).id,
+                        label: (condition as any).name || (condition as any).description || condition._id
+                      }));
+                      return { ...field, options: weatherOptions };
+                    }
+                    if (field.id === "windSpeed") {
+                      const windOptions = windConditions.map(condition => ({
+                        value: condition._id || (condition as any).id,
+                        label: (condition as any).windConditionName || (condition as any).windConditionName || condition._id
+                      }));
+                      return { ...field, options: windOptions };
+                    }
+                    return field;
+                  })
+                };
+              }
               return section;
             })}
             validationSchema={orderFormValidationSchema}
@@ -3028,6 +3055,15 @@ const OrdenAplicacion = () => {
                 } 
               : {
                   workType: "A", // Default to Application type
+                  coverage: 100, // Cobertura siempre preseleccionado en 100
+                  paymentMethodToWorkers: "trato", // Método de pago preseleccionado en "trato"
+                  workState: "pending", // Estado de la faena preseleccionado en pendiente
+                  // Fechas y horas por defecto
+                  startDate: new Date().toISOString().split('T')[0], // Fecha de inicio setear a la actual
+                  endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
+                  hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
+                  hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
+                  reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
                   ppe: {
                     gloves: true,
                     applicatorSuit: true,
@@ -3792,6 +3828,7 @@ const OrdenAplicacion = () => {
               <Button 
                 type="submit" 
                 form="dynamic-form"
+                onClick={handleFormSubmit}
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 {isEditMode ? "Actualizar" : "Crear"}
