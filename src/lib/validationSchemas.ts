@@ -72,7 +72,7 @@ export interface FieldRule {
   
   // Qué acción realizar
   action: {
-    type: 'preset' | 'calculate' | 'lookup';
+    type: 'preset' | 'calculate' | 'lookup' | 'filterOptions';
     targetField: string;
     source?: 'parent' | 'selected' | 'external' | 'custom' | 'list';
     sourceField?: string;
@@ -82,6 +82,10 @@ export interface FieldRule {
     mappingField?: string; // campo a extraer del objeto encontrado
     calculate?: (formData: any, parentData?: any, externalData?: any) => any;
     preset?: (formData: any, parentData?: any, externalData?: any) => any;
+    // Para filterOptions action - filtrar opciones de un select dinámicamente
+    filterListKey?: string;     // Key en externalData para la lista a filtrar
+    filterByField?: string;     // Campo por el cual filtrar
+    filterFunction?: (items: any[], filterValue: any, formData?: any) => any[]; // Función custom de filtrado
   };
 }
 
@@ -101,6 +105,9 @@ export class FieldRulesEngine {
   // Performance optimizations
   private rulesByTrigger: Map<string, FieldRule[]> = new Map();
   private debouncedExecutions: Map<string, NodeJS.Timeout> = new Map();
+  
+  // Callbacks para manejar filtrado de opciones
+  private optionFilterCallbacks: Map<string, (filteredOptions: any[]) => void> = new Map();
 
   constructor(rules: FormGridRules, debug: boolean = false) {
     this.rules = rules.rules || [];
@@ -207,6 +214,10 @@ export class FieldRulesEngine {
     } else if (rule.action.type === 'lookup' && rule.action.source === 'list') {
       // Buscar valor en una lista externa
       newValue = this.performListLookup(rule.action, triggerValue);
+    } else if (rule.action.type === 'filterOptions') {
+      // Filtrar opciones de un select
+      this.performOptionsFiltering(rule.action, triggerValue, currentFormData);
+      return; // No necesitamos setValue para esta acción
     }
 
     // Aplicar el nuevo valor solo si es diferente del actual para evitar bucles
@@ -229,6 +240,21 @@ export class FieldRulesEngine {
         const newValue = this.getNestedValue(this.parentData, rule.action.sourceField);
         if (newValue !== undefined && newValue !== null) {
           setValue(rule.action.targetField, newValue);
+        }
+      }
+      
+      // También ejecutar reglas de filtrado que dependan de valores iniciales
+      if (rule.action.type === 'filterOptions') {
+        const triggerFieldValue = this.getNestedValue(currentFormData, rule.trigger.field);
+        if (triggerFieldValue) {
+          // Verificar condición si existe
+          const shouldExecute = rule.trigger.condition 
+            ? rule.trigger.condition(triggerFieldValue, currentFormData, this.parentData)
+            : true;
+            
+          if (shouldExecute) {
+            this.performOptionsFiltering(rule.action, triggerFieldValue, currentFormData);
+          }
         }
       }
     }
@@ -273,6 +299,61 @@ export class FieldRulesEngine {
     return mappedValue;
   }
 
+  // Realizar filtrado de opciones para un select
+  private performOptionsFiltering(action: FieldRule['action'], filterValue: any, formData: any): void {
+    if (!action.filterListKey || !action.targetField) {
+      if (this.debug) {
+        console.warn('performOptionsFiltering: Missing required fields (filterListKey, targetField)');
+      }
+      return;
+    }
+
+    const sourceList = this.externalData?.[action.filterListKey];
+    if (!Array.isArray(sourceList)) {
+      if (this.debug) {
+        console.warn(`performOptionsFiltering: List '${action.filterListKey}' not found or is not an array`);
+      }
+      return;
+    }
+
+    let filteredOptions: any[];
+
+    if (action.filterFunction) {
+      // Usar función custom de filtrado
+      filteredOptions = action.filterFunction(sourceList, filterValue, formData);
+    } else if (action.filterByField) {
+      // Filtrado estándar por campo
+      if (filterValue && filterValue !== '') {
+        filteredOptions = sourceList.filter((item: any) => {
+          const itemValue = this.getNestedValue(item, action.filterByField!);
+          return itemValue === filterValue;
+        });
+      } else {
+        // Si no hay valor de filtro, mostrar lista vacía o completa según configuración
+        filteredOptions = [];
+      }
+    } else {
+      // Sin filtrado específico, devolver la lista completa
+      filteredOptions = [...sourceList];
+    }
+
+    if (this.debug) {
+      console.log(`performOptionsFiltering: Filtered ${action.filterListKey} from ${sourceList.length} to ${filteredOptions.length} items for ${action.targetField}`);
+    }
+
+    // Llamar al callback para actualizar las opciones en el componente
+    const callback = this.optionFilterCallbacks.get(action.targetField);
+    if (callback) {
+      callback(filteredOptions);
+    }
+
+    // También guardar en externalData para referencia
+    const filteredKey = `${action.targetField}Filtered`;
+    if (this.externalData) {
+      this.externalData[filteredKey] = filteredOptions;
+    }
+  }
+
   // Utilidad para acceder a propiedades anidadas
   private getNestedValue(obj: any, path: string): any {
     if (!obj || !path) return undefined;
@@ -290,6 +371,22 @@ export class FieldRulesEngine {
   // Actualizar datos externos (útil cuando las listas cambian)
   updateExternalData(newExternalData: { [key: string]: any }): void {
     this.externalData = { ...this.externalData, ...newExternalData };
+  }
+
+  // Registrar callback para filtrado de opciones
+  registerOptionFilterCallback(fieldName: string, callback: (filteredOptions: any[]) => void): void {
+    this.optionFilterCallbacks.set(fieldName, callback);
+  }
+
+  // Desregistrar callback
+  unregisterOptionFilterCallback(fieldName: string): void {
+    this.optionFilterCallbacks.delete(fieldName);
+  }
+
+  // Obtener opciones filtradas para un campo
+  getFilteredOptions(fieldName: string): any[] {
+    const filteredKey = `${fieldName}Filtered`;
+    return this.externalData?.[filteredKey] || [];
   }
 
   // Obtener lista de campos que necesitan ser observados (para watch selectivo)

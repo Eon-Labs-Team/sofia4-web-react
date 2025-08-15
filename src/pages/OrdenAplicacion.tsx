@@ -1472,28 +1472,28 @@ const OrdenAplicacion = () => {
   }, [isEditMode, selectedOrden, cuarteles]);
   
   // Filter tasks when taskType changes
-  useEffect(() => {
-    // Log data for debugging
-    console.log('📋 Filtering tasks - Selected taskType:', selectedTaskType, typeof selectedTaskType);
-    console.log('📋 All available tasks:', allTasks.length);
-    console.log('📋 AllTasks array:', allTasks);
+  // useEffect(() => {
+  //   // Log data for debugging
+  //   console.log('📋 Filtering tasks - Selected taskType:', selectedTaskType, typeof selectedTaskType);
+  //   console.log('📋 All available tasks:', allTasks.length);
+  //   console.log('📋 AllTasks array:', allTasks);
     
-    if (selectedTaskType && selectedTaskType !== '' && selectedTaskType !== null && selectedTaskType !== undefined) {
-      // Filter tasks by selected taskType (faena) - even if result is empty
-      const tasksForType = allTasks.filter(task => task.taskTypeId === selectedTaskType);
-      console.log('🔍 Filtered tasks for taskType:', tasksForType.length, tasksForType);
-      if (tasksForType.length === 0) {
-        console.log('⚠️ No labores found for selected faena - showing empty list');
-      }
-      setFilteredTasks(tasksForType); // This could be an empty array, and that's correct
-    } else {
-      // Show all tasks ONLY when no taskType is selected (empty string, null, or undefined)
-      console.log('📂 Showing all tasks (no faena selected):', allTasks.length);
-      setFilteredTasks([...allTasks]); // Create a copy to force re-render
-    }
+  //   if (selectedTaskType && selectedTaskType !== '' && selectedTaskType !== null && selectedTaskType !== undefined) {
+  //     // Filter tasks by selected taskType (faena) - even if result is empty
+  //     const tasksForType = allTasks.filter(task => task.taskTypeId === selectedTaskType);
+  //     console.log('🔍 Filtered tasks for taskType:', tasksForType.length, tasksForType);
+  //     if (tasksForType.length === 0) {
+  //       console.log('⚠️ No labores found for selected faena - showing empty list');
+  //     }
+  //     setFilteredTasks(tasksForType); // This could be an empty array, and that's correct
+  //   } else {
+  //     // Show all tasks ONLY when no taskType is selected (empty string, null, or undefined)
+  //     console.log('📂 Showing all tasks (no faena selected):', allTasks.length);
+  //     setFilteredTasks([...allTasks]); // Create a copy to force re-render
+  //   }
     
-    console.log('📋 FilteredTasks after update:', filteredTasks.length);
-  }, [selectedTaskType, allTasks]);
+  //   console.log('📋 FilteredTasks after update:', filteredTasks.length);
+  // }, [selectedTaskType, allTasks]);
   
   // Fetch task types and tasks from services
   const fetchTaskTypes = async () => {
@@ -1582,125 +1582,59 @@ const OrdenAplicacion = () => {
   };
   
   // Function to filter warehouse products by category
-  const filterWarehouseProductsByCategory = (categoryDescription: string) => {
-    if (!categoryDescription || categoryDescription === '') {
-      setFilteredWarehouseProducts(warehouseProducts);
-    } else {
-      const filtered = warehouseProducts.filter(product => 
-        product.category === categoryDescription
-      );
-      setFilteredWarehouseProducts(filtered);
-    }
-  };
+  // const filterWarehouseProductsByCategory = (categoryDescription: string) => {
+  //   if (!categoryDescription || categoryDescription === '') {
+  //     setFilteredWarehouseProducts(warehouseProducts);
+  //   } else {
+  //     const filtered = warehouseProducts.filter(product => 
+  //       product.category === categoryDescription
+  //     );
+  //     setFilteredWarehouseProducts(filtered);
+  //   }
+  // };
 
   // Function to handle taskType change
-  const handleTaskTypeChange = (taskTypeId: string, formSetValue?: any, formGetValues?: any) => {
-    console.log('🏷️ TaskType (Faena) changed to:', taskTypeId);
-    setSelectedTaskType(taskTypeId);
+  // const handleTaskTypeChange = (taskTypeId: string, formSetValue?: any, formGetValues?: any) => {
+  //   console.log('🏷️ TaskType (Faena) changed to:', taskTypeId);
+  //   setSelectedTaskType(taskTypeId);
     
-    // Check if there's a currently selected task and if it belongs to the new taskType
-    if (formSetValue && formGetValues) {
-      const currentTaskId = formGetValues('task');
+  //   // Check if there's a currently selected task and if it belongs to the new taskType
+  //   if (formSetValue && formGetValues) {
+  //     const currentTaskId = formGetValues('task');
       
-      if (currentTaskId) {
-        // Find the currently selected task
-        const currentTask = allTasks.find(task => 
-          (task as any)._id === currentTaskId || (task as any).id === currentTaskId
-        );
+  //     if (currentTaskId) {
+  //       // Find the currently selected task
+  //       const currentTask = allTasks.find(task => 
+  //         (task as any)._id === currentTaskId || (task as any).id === currentTaskId
+  //       );
         
-        if (currentTask) {
-          // Check if the current task belongs to the new taskType
-          if (currentTask.taskTypeId !== taskTypeId) {
-            // Clear task selection if it doesn't belong to the new taskType
-            formSetValue('task', '');
-            console.log('🚨 Task cleared - it belonged to different faena:', {
-              taskName: currentTask.taskName,
-              oldTaskTypeId: currentTask.taskTypeId,
-              newTaskTypeId: taskTypeId
-            });
-          } else {
-            console.log('✅ Task maintained - it belongs to selected faena:', {
-              taskName: currentTask.taskName,
-              taskTypeId: taskTypeId
-            });
-          }
-        } else {
-          // If task not found, clear it to be safe
-          formSetValue('task', '');
-          console.log('⚠️ Task cleared - could not find task in allTasks');
-        }
-      } else {
-        console.log('ℹ️ No task currently selected, nothing to clear');
-      }
-    }
-  };
+  //       if (currentTask) {
+  //         // Check if the current task belongs to the new taskType
+  //         if (currentTask.taskTypeId !== taskTypeId) {
+  //           // Clear task selection if it doesn't belong to the new taskType
+  //           formSetValue('task', '');
+  //           console.log('🚨 Task cleared - it belonged to different faena:', {
+  //             taskName: currentTask.taskName,
+  //             oldTaskTypeId: currentTask.taskTypeId,
+  //             newTaskTypeId: taskTypeId
+  //           });
+  //         } else {
+  //           console.log('✅ Task maintained - it belongs to selected faena:', {
+  //             taskName: currentTask.taskName,
+  //             taskTypeId: taskTypeId
+  //           });
+  //         }
+  //       } else {
+  //         // If task not found, clear it to be safe
+  //         formSetValue('task', '');
+  //         console.log('⚠️ Task cleared - could not find task in allTasks');
+  //       }
+  //     } else {
+  //       console.log('ℹ️ No task currently selected, nothing to clear');
+  //     }
+  //   }
+  // };
 
-  // Function to handle task change
-  const handleTaskChange = (taskId: string, formSetValue?: any) => {
-    console.log('🔧 Task (Labor) changed to:', taskId);
-    
-    if (!taskId) {
-      // If no task selected, don't change taskType - show all tasks
-      return;
-    }
-    
-    // Find the selected task
-    const selectedTask = allTasks.find(task => (task as any)._id === taskId || (task as any).id === taskId);
-    
-    if (selectedTask) {
-      // Automatically set the corresponding taskType (faena)
-      const correspondingTaskType = selectedTask.taskTypeId;
-      
-      console.log('🎯 Setting corresponding taskType:', {
-        taskId: taskId,
-        taskName: selectedTask.taskName,
-        taskTypeId: correspondingTaskType
-      });
-      
-      // Update both state and form
-      setSelectedTaskType(correspondingTaskType);
-      
-      if (formSetValue) {
-        formSetValue('taskType', correspondingTaskType);
-        console.log('✅ TaskType automatically set to:', correspondingTaskType);
-      }
-    } else {
-      console.log('❌ No task found for ID:', taskId);
-    }
-  };
-
-  // Function to handle cuartel change
-  const handleCuartelChange = (cuartelId: string, formSetValue?: any) => {
-    const cuartel = cuarteles.find(c => c._id === cuartelId);
-    if (cuartel) {
-      setSelectedCuartel(cuartel);
-      console.log('🏠 Cuartel selected:', {
-        id: cuartel._id,
-        name: cuartel.areaName,
-        species: cuartel.varietySpecies,
-        variety: cuartel.variety
-      });
-      
-      // Update form values if setValue function is provided
-      if (formSetValue) {
-        formSetValue('species', cuartel.varietySpecies || '');
-        formSetValue('variety', cuartel.variety || '');
-        console.log('✅ Form values updated:', {
-          species: cuartel.varietySpecies,
-          variety: cuartel.variety
-        });
-      }
-    } else {
-      setSelectedCuartel(null);
-      console.log('❌ No cuartel found for ID:', cuartelId);
-      
-      // Clear form values if setValue function is provided
-      if (formSetValue) {
-        formSetValue('species', '');
-        formSetValue('variety', '');
-      }
-    }
-  };
   
   // Function to fetch ordenes data
   const fetchOrdenesAplicacion = async () => {
@@ -2385,33 +2319,33 @@ const OrdenAplicacion = () => {
   };
 
   // Function to handle responsible change
-  const handleResponsibleChange = (responsibleType: string, workerId: string, formSetValue: any) => {
-    console.log(`${responsibleType} changed to:`, workerId);
+  // const handleResponsibleChange = (responsibleType: string, workerId: string, formSetValue: any) => {
+  //   console.log(`${responsibleType} changed to:`, workerId);
     
-    // Find the selected worker
-    const selectedWorker = workerList.find(worker => worker._id === workerId);
+  //   // Find the selected worker
+  //   const selectedWorker = workerList.find(worker => worker._id === workerId);
     
-    if (selectedWorker && formSetValue) {
-      const workerName = `${selectedWorker.names} ${selectedWorker.lastName}`;
+  //   if (selectedWorker && formSetValue) {
+  //     const workerName = `${selectedWorker.names} ${selectedWorker.lastName}`;
       
-      // Update both userId and name fields
-      if (responsibleType === 'supervisor') {
-        formSetValue('responsibles.supervisor.userId', workerId);
-        formSetValue('responsibles.supervisor.name', workerName);
-      } else if (responsibleType === 'planner') {
-        formSetValue('responsibles.planner.userId', workerId);
-        formSetValue('responsibles.planner.name', workerName);
-      } else if (responsibleType === 'technicalVerifier') {
-        formSetValue('responsibles.technicalVerifier.userId', workerId);
-        formSetValue('responsibles.technicalVerifier.name', workerName);
-      } else if (responsibleType === 'applicator') {
-        formSetValue('responsibles.applicators.0.userId', workerId);
-        formSetValue('responsibles.applicators.0.name', workerName);
-      }
+  //     // Update both userId and name fields
+  //     if (responsibleType === 'supervisor') {
+  //       formSetValue('responsibles.supervisor.userId', workerId);
+  //       formSetValue('responsibles.supervisor.name', workerName);
+  //     } else if (responsibleType === 'planner') {
+  //       formSetValue('responsibles.planner.userId', workerId);
+  //       formSetValue('responsibles.planner.name', workerName);
+  //     } else if (responsibleType === 'technicalVerifier') {
+  //       formSetValue('responsibles.technicalVerifier.userId', workerId);
+  //       formSetValue('responsibles.technicalVerifier.name', workerName);
+  //     } else if (responsibleType === 'applicator') {
+  //       formSetValue('responsibles.applicators.0.userId', workerId);
+  //       formSetValue('responsibles.applicators.0.name', workerName);
+  //     }
       
-      console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
-    }
-  };
+  //     console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
+  //   }
+  // };
 
   // Function to fetch worker list for selectable dropdown
   const fetchWorkerList = async () => {

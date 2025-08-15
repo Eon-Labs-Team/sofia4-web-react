@@ -87,6 +87,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 }) => {
   const [formSections, setFormSections] = useState<SectionConfig[]>(sections);
   const rulesEngineRef = useRef<FieldRulesEngine | null>(null);
+  
+  // Estado para manejar opciones dinámicas filtradas
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, { value: string; label: string }[]>>({});
 
   // Initialize rules engine
   useEffect(() => {
@@ -95,7 +98,41 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         fieldRules, 
         process.env.NODE_ENV === 'development' // debug solo en desarrollo
       );
+      
+      // Registrar callbacks para filtrado de opciones
+      fieldRules.rules?.forEach(rule => {
+        if (rule.action.type === 'filterOptions' && rule.action.targetField) {
+          const fieldName = rule.action.targetField;
+          
+          rulesEngineRef.current?.registerOptionFilterCallback(
+            fieldName,
+            (filteredOptions: any[]) => {
+              // Convertir a formato de opciones para el select
+              const selectOptions = filteredOptions.map(item => ({
+                value: item._id || item.id || item.value,
+                label: item.name || item.taskName || item.varietyName || item.cropName || item.label || item._id
+              }));
+              
+              setDynamicOptions(prev => ({
+                ...prev,
+                [fieldName]: selectOptions
+              }));
+            }
+          );
+        }
+      });
     }
+    
+    return () => {
+      // Cleanup callbacks
+      if (rulesEngineRef.current && fieldRules?.rules) {
+        fieldRules.rules.forEach(rule => {
+          if (rule.action.type === 'filterOptions' && rule.action.targetField) {
+            rulesEngineRef.current?.unregisterOptionFilterCallback(rule.action.targetField);
+          }
+        });
+      }
+    };
   }, [fieldRules]);
 
   // Create form methods with optional schema validation
@@ -157,6 +194,25 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       rulesEngineRef.current.executeInitializationRules(getValues(), setValue);
     }
   }, [setValue, getValues]);
+
+  // Update sections when props change or dynamic options change
+  useEffect(() => {
+    const updatedSections = sections.map(section => ({
+      ...section,
+      fields: section.fields.map(field => {
+        // Si hay opciones dinámicas para este campo, usarlas
+        if (dynamicOptions[field.name] && field.type === 'select') {
+          return {
+            ...field,
+            options: dynamicOptions[field.name]
+          };
+        }
+        return field;
+      })
+    }));
+    
+    setFormSections(updatedSections);
+  }, [sections, dynamicOptions]);
 
   const handleSubmit = formMethods.handleSubmit((data) => {
     // Process any selectableGrid data to ensure it's properly formatted
