@@ -13,6 +13,10 @@ interface WizardOrdenAplicacionProps {
   allTasks?: any[];
   taskTypes?: any[];
   workerList?: any[];
+  weatherConditions?: any[];
+  windConditions?: any[];
+  cropTypes?: any[];
+  varietyTypes?: any[];
   // Legacy prop support (optional)
   cuartelesOptions?: { value: string; label: string }[];
   taskTypeOptions?: { value: string; label: string }[];
@@ -32,6 +36,10 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
   allTasks = [],
   taskTypes = [],
   workerList = [],
+  weatherConditions = [],
+  windConditions = [],
+  cropTypes = [],
+  varietyTypes = [],
   // Legacy options (fallback)
   cuartelesOptions = [],
   taskTypeOptions = [],
@@ -86,9 +94,11 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
       cuartelesOptions: cuartelesData,
       taskOptions: tasksData,
       taskTypeOptions: taskTypesData,
-      workerOptions: workersData
+      workerOptions: workersData,
+      cropTypesOptions: cropTypes,
+      varietyTypesOptions: varietyTypes
     });
-  }, [cuarteles, allTasks, taskTypes, workerList, cuartelesOptions, taskOptions, taskTypeOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
+  }, [cuarteles, allTasks, taskTypes, workerList, cropTypes, varietyTypes, cuartelesOptions, taskOptions, taskTypeOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
 
   // Generate options for form fields - prioritize raw data arrays
   const getFormOptions = useMemo(() => {
@@ -125,14 +135,26 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
             }
             return acc;
           }, []);
+
+    const weatherConditionsFormOptions = weatherConditions.map(condition => ({
+      value: condition._id || condition.id,
+      label: condition.name || condition.description
+    }));
+
+    const windConditionsFormOptions = windConditions.map(condition => ({
+      value: condition._id || condition.id,
+      label: condition.name || condition.description
+    }));
     
     return {
       cuarteles: cuartelesFormOptions,
       taskTypes: taskTypeFormOptions,
       tasks: taskFormOptions,
-      workers: workerFormOptions
+      workers: workerFormOptions,
+      weatherConditions: weatherConditionsFormOptions,
+      windConditions: windConditionsFormOptions
     };
-  }, [cuarteles, allTasks, taskTypes, workerList, cuartelesOptions, taskTypeOptions, taskOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
+  }, [cuarteles, allTasks, taskTypes, workerList, weatherConditions, windConditions, cuartelesOptions, taskTypeOptions, taskOptions, supervisorOptions, plannerOptions, verifierOptions, applicatorOptions]);
 
   // Paso 1: Información Básica y Ubicación
   const step1Sections: SectionConfig[] = [
@@ -230,6 +252,13 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           name: "generalObjective",
           placeholder: "Objetivo de la aplicación",
           required: true
+        },
+        {
+          id: "calibrationPerHectare",
+          type: "number",
+          label: "Mojamiento x HA",
+          name: "calibrationPerHectare",
+          placeholder: "Mojamiento por hectárea"
         }
       ]
     },
@@ -262,11 +291,16 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           placeholder: "Tarea personalizada"
         },
         {
-          id: "calibrationPerHectare",
-          type: "number",
-          label: "Calibración por Hectárea",
-          name: "calibrationPerHectare",
-          placeholder: "Calibración por hectárea"
+          id: "workState",
+          type: "select",
+          label: "Estado de la Faena",
+          name: "workState",
+          options: [
+            { value: "confirmed", label: "Confirmada" },
+            { value: "pending", label: "Pendiente" },
+            { value: "void", label: "Nula" },
+            { value: "blocked", label: "Bloqueada" }
+          ]
         }
       ]
     }
@@ -418,17 +452,19 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
       fields: [
         {
           id: "climateConditions",
-          type: "text",
+          type: "select",
           label: "Condiciones Climáticas",
           name: "climateConditions",
-          placeholder: "Ej: Soleado, Nublado, Lluvioso"
+          placeholder: "Seleccione condición climática",
+          options: getFormOptions.weatherConditions
         },
         {
           id: "windSpeed",
-          type: "text",
+          type: "select",
           label: "Velocidad del Viento",
           name: "windSpeed",
-          placeholder: "Velocidad del viento"
+          placeholder: "Seleccione velocidad del viento",
+          options: getFormOptions.windConditions
         },
         {
           id: "temperature",
@@ -467,18 +503,6 @@ const WizardOrdenAplicacion: React.FC<WizardOrdenAplicacionProps> = ({
           label: "Usuario App",
           name: "appUser",
           placeholder: "Usuario de la app"
-        },
-        {
-          id: "workState",
-          type: "select",
-          label: "Estado de la Faena",
-          name: "workState",
-          options: [
-            { value: "confirmed", label: "Confirmada" },
-            { value: "pending", label: "Pendiente" },
-            { value: "void", label: "Nula" },
-            { value: "blocked", label: "Bloqueada" }
-          ]
         }
       ]
     },

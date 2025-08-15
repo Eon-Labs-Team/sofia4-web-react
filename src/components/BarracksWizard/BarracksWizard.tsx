@@ -171,6 +171,8 @@ const createProductiveFormSections = (
   }));
 
   // Opciones para variety types filtradas
+  // En modo de edición, incluir todas las opciones que corresponden al selectedCropTypeId
+  // para asegurar que el valor por defecto esté disponible
   const varietyTypeOptions = selectedCropTypeId 
     ? varietyTypes
         .filter(vt => vt.cropTypeId === selectedCropTypeId)
@@ -737,8 +739,25 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
   }
 
   if (step === 1 && isProductive !== null) {
+    // En modo de edición, priorizar el defaultValues?.varietySpecies para asegurar que las opciones se filtren correctamente
+    const currentVarietySpecies = isEditMode && defaultValues?.varietySpecies 
+      ? defaultValues.varietySpecies 
+      : selectedVarietySpecies || defaultValues?.varietySpecies;
+    
+    if (process.env.NODE_ENV === 'development' && isEditMode) {
+      console.log('🔧 BarracksWizard Edit Mode Debug:', {
+        isEditMode,
+        defaultVarietySpecies: defaultValues?.varietySpecies,
+        defaultVariety: defaultValues?.variety,
+        currentVarietySpecies,
+        selectedVarietySpecies,
+        cropTypesCount: cropTypes.length,
+        varietyTypesCount: varietyTypes.length
+      });
+    }
+      
     const sections = isProductive 
-      ? createProductiveFormSections(cropTypes, varietyTypes, selectedVarietySpecies || defaultValues?.varietySpecies) 
+      ? createProductiveFormSections(cropTypes, varietyTypes, currentVarietySpecies) 
       : nonProductiveFormSections;
     const validationSchema = isProductive ? productiveValidationSchema : nonProductiveValidationSchema;
     

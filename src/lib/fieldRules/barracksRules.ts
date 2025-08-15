@@ -23,7 +23,7 @@ export const barracksRules: FormGridRules = {
       }
     },
 
-    // Regla 1b: Limpiar variety actual cuando cambie varietySpecies
+    // Regla 1b: Limpiar variety actual cuando cambie varietySpecies (solo si la variety actual no pertenece al nuevo varietySpecies)
     {
       trigger: { 
         field: 'varietySpecies',
@@ -32,9 +32,31 @@ export const barracksRules: FormGridRules = {
       action: {
         type: 'preset',
         targetField: 'variety',
-        preset: (formData) => {
+        preset: (formData, _parentData, externalData) => {
+          const varietySpeciesId = formData.varietySpecies;
+          const currentVarietyId = formData.variety;
+          
+          if (!currentVarietyId) {
+            // Si no hay variety seleccionado, mantener vacío
+            return currentVarietyId;
+          }
+          
+          // Verificar si la variety actual pertenece al varietySpecies seleccionado
+          const currentVariety = externalData?.varietyTypesOptions?.find(
+            (variety: any) => variety._id === currentVarietyId
+          );
+          
+          // Si la variety actual pertenece al varietySpecies seleccionado, mantenerla
+          if (currentVariety && (currentVariety.cropTypeId === varietySpeciesId || currentVariety.cropType === varietySpeciesId)) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔄 FieldRules: Keeping variety field - it belongs to selected varietySpecies:', currentVarietyId);
+            }
+            return currentVarietyId;
+          }
+          
+          // Si no pertenece, limpiar
           if (process.env.NODE_ENV === 'development') {
-            console.log('🔄 FieldRules: Cleaning variety field due to varietySpecies change:', formData.varietySpecies);
+            console.log('🔄 FieldRules: Cleaning variety field due to varietySpecies change:', varietySpeciesId);
           }
           return '';
         }

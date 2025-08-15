@@ -167,7 +167,7 @@ class AuthService {
   getQueryParams(): URLSearchParams {
     const params = new URLSearchParams();
     const propertyId = this.getPropertyId();
-    console.log('propertyId', propertyId);
+    console.log('getQueryParams propertyId', propertyId);
 
     if (propertyId) {
       params.append('propertyId', propertyId);
