@@ -121,7 +121,21 @@ export const ordenAplicacionRules: FormGridRules = {
     // REGLAS PARA TASKTYPE Y TASK
     // =====================================
 
-    // Regla 8: Cuando cambia taskType, limpiar task si no pertenece al nuevo taskType
+    // Regla 8: Cuando cambia taskType, filtrar tasks disponibles y limpiar selección actual si no aplica
+    {
+      trigger: { 
+        field: 'taskType',
+        condition: (value) => value !== null && value !== undefined && value !== ''
+      },
+      action: {
+        type: 'filterOptions',
+        targetField: 'task',
+        filterListKey: 'taskOptions',
+        filterByField: 'taskTypeId',
+      }
+    },
+
+    // Regla 8b: Limpiar task actual si no pertenece al nuevo taskType
     {
       trigger: { 
         field: 'taskType',
@@ -130,7 +144,7 @@ export const ordenAplicacionRules: FormGridRules = {
       action: {
         type: 'preset',
         targetField: 'task',
-        preset: (formData, parentData, externalData) => {
+        preset: (formData, _parentData, externalData) => {
           const taskTypeId = formData.taskType;
           const currentTaskId = formData.task;
           
@@ -156,6 +170,26 @@ export const ordenAplicacionRules: FormGridRules = {
           
           // Mantener la task actual si pertenece al taskType
           return formData.task;
+        }
+      }
+    },
+
+    // Regla 8c: Cuando se deselecciona taskType, mostrar todas las tasks
+    {
+      trigger: { 
+        field: 'taskType',
+        condition: (value) => value === null || value === undefined || value === ''
+      },
+      action: {
+        type: 'filterOptions',
+        targetField: 'task',
+        filterListKey: 'taskOptions',
+        filterFunction: (allTasks) => {
+          // Cuando no hay taskType seleccionado, mostrar todas las tasks
+          if (process.env.NODE_ENV === 'development') {
+            console.log('📂 Showing all tasks (no faena selected):', allTasks.length);
+          }
+          return [...allTasks];
         }
       }
     },

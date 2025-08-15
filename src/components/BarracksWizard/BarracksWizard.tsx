@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { Sprout, Building2, ArrowLeft, ArrowRight } from "lucide-react";
+import { Sprout, Building2, ArrowLeft } from "lucide-react";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import { createBarracksRules } from "@/lib/fieldRules/barracksRules";
+import type { ICropType, IVarietyType } from '@eon-lib/eon-mongoose';
 
 interface BarracksWizardProps {
   onSubmit: (data: any) => void;
@@ -154,8 +158,29 @@ const nonProductiveFormSections: SectionConfig[] = [
   }
 ];
 
-// Configuración del formulario completo para cuarteles productivos
-const productiveFormSections: SectionConfig[] = [
+// Función para crear configuración del formulario con datos dinámicos
+const createProductiveFormSections = (
+  cropTypes: ICropType[], 
+  varietyTypes: IVarietyType[], 
+  selectedCropTypeId?: string
+): SectionConfig[] => {
+  // Opciones para crop types
+  const cropTypeOptions = cropTypes.map(ct => ({
+    value: ct._id,
+    label: ct.cropName
+  }));
+
+  // Opciones para variety types filtradas
+  const varietyTypeOptions = selectedCropTypeId 
+    ? varietyTypes
+        .filter(vt => vt.cropTypeId === selectedCropTypeId)
+        .map(vt => ({
+          value: vt._id,
+          label: vt.varietyName
+        }))
+    : [];
+
+  return [
   {
     id: "general-info",
     title: "Información General",
@@ -198,21 +223,23 @@ const productiveFormSections: SectionConfig[] = [
       },
       {
         id: "varietySpecies",
-        type: "text",
+        type: "select",
         label: "Especie de Variedad",
         name: "varietySpecies",
-        placeholder: "Ingrese la especie",
+        placeholder: "Seleccione la especie",
         required: true,
-        helperText: "Tipo de especie"
+        helperText: "Tipo de especie",
+        options: cropTypeOptions
       },
       {
         id: "variety",
-        type: "text",
+        type: "select",
         label: "Variedad",
         name: "variety",
-        placeholder: "Ingrese la variedad",
+        placeholder: "Seleccione la variedad",
         required: true,
-        helperText: "Variedad específica del cultivo"
+        helperText: "Variedad específica del cultivo",
+        options: varietyTypeOptions
       },
       {
         id: "qualityType",
@@ -550,7 +577,8 @@ const productiveFormSections: SectionConfig[] = [
       }
     ]
   }
-];
+  ];
+};
 
 const BarracksWizard: React.FC<BarracksWizardProps> = ({ 
   onSubmit, 
@@ -563,6 +591,30 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
       ? defaultValues.isProductive 
       : null
   );
+  const [cropTypes, setCropTypes] = useState<ICropType[]>([]);
+  const [varietyTypes, setVarietyTypes] = useState<IVarietyType[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        const [cropTypesData, varietyTypesData] = await Promise.all([
+          cropTypeService.findAll(),
+          varietyTypeService.findAll()
+        ]);
+        setCropTypes(cropTypesData);
+        setVarietyTypes(varietyTypesData);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []);
 
   // Si estamos en modo edición, saltamos el paso de selección y vamos directo al formulario
   React.useEffect(() => {
@@ -570,6 +622,44 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
       setStep(1);
     }
   }, [isEditMode, defaultValues]);
+
+  // Estado para el valor seleccionado de varietySpecies (para filtrado dinámico)
+  const [selectedVarietySpecies] = useState<string>('');
+
+  // Crear reglas de campo con datos cargados
+  const fieldRules = useMemo(() => {
+    if (!isProductive || cropTypes.length === 0 || varietyTypes.length === 0) {
+      return undefined;
+    }
+
+    const cropTypesOptions = cropTypes.map(ct => ({
+      _id: ct._id,
+      cropName: ct.cropName,
+      mapColor: ct.mapColor,
+      cropListState: ct.cropListState,
+      state: ct.state
+    }));
+
+    const varietyTypesOptions = varietyTypes.map(vt => ({
+      _id: vt._id,
+      varietyName: vt.varietyName,
+      cropTypeId: vt.cropTypeId,
+      state: vt.state
+    }));
+
+    return createBarracksRules({
+      cropTypesOptions,
+      varietyTypesOptions
+    });
+  }, [isProductive, cropTypes, varietyTypes]);
+
+  // Función para obtener variety types filtrados
+  const getFilteredVarietyTypes = (selectedCropTypeId: string) => {
+    if (!selectedCropTypeId) return [];
+    return varietyTypes.filter(vt => 
+      vt.cropTypeId === selectedCropTypeId
+    );
+  };
 
   const handleProductiveSelection = (productive: boolean) => {
     setIsProductive(productive);
@@ -647,7 +737,9 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
   }
 
   if (step === 1 && isProductive !== null) {
-    const sections = isProductive ? productiveFormSections : nonProductiveFormSections;
+    const sections = isProductive 
+      ? createProductiveFormSections(cropTypes, varietyTypes, selectedVarietySpecies || defaultValues?.varietySpecies) 
+      : nonProductiveFormSections;
     const validationSchema = isProductive ? productiveValidationSchema : nonProductiveValidationSchema;
     
     // Preparar valores por defecto
@@ -689,12 +781,21 @@ const BarracksWizard: React.FC<BarracksWizardProps> = ({
           </div>
         )}
         
-        <DynamicForm
-          sections={sections}
-          onSubmit={handleFormSubmit}
-          validationSchema={validationSchema}
-          defaultValues={formDefaultValues}
-        />
+        {loading && (
+          <div className="flex items-center justify-center p-4">
+            <div className="text-sm text-muted-foreground">Cargando datos...</div>
+          </div>
+        )}
+        
+        {!loading && (
+          <DynamicForm
+            sections={sections}
+            onSubmit={handleFormSubmit}
+            validationSchema={validationSchema}
+            defaultValues={formDefaultValues}
+            fieldRules={fieldRules}
+          />
+        )}
       </div>
     );
   }

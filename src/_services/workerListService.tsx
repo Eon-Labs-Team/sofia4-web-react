@@ -54,10 +54,11 @@ class WorkerListService {
         // @ts-ignore - Adding a property that might not be in the interface but required by API
         workerListData.propertyId = propertyId;
       }
+      const url = authService.buildUrlWithParams(ENDPOINTS.workerList.base);
 
       console.log("workerlistData to insert in service", workerListData);
 
-      const response = await fetch(ENDPOINTS.workerList.base, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(workerListData),
@@ -84,7 +85,7 @@ class WorkerListService {
     try {
       // Get propertyId first
       const propertyId = authService.getPropertyId();
-      
+      const url = authService.buildUrlWithParams(ENDPOINTS.workerList.byId(id));
       // Apply fallbacks for required fields if they are being updated
       const updateData: Partial<IWorkerList> = {
         ...workerList,
@@ -108,7 +109,7 @@ class WorkerListService {
         updateData.propertyId = propertyId;
       }
 
-      const response = await fetch(ENDPOINTS.workerList.byId(id), {
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(updateData),
@@ -132,7 +133,10 @@ class WorkerListService {
    */
   async softDeleteWorkerList(id: string | number): Promise<IWorkerList> {
     try {
-      const response = await fetch(ENDPOINTS.workerList.changeState(id, false), {
+      const url = authService.buildUrlWithParams(ENDPOINTS.workerList.changeState(id, false));
+
+
+      const response = await fetch(url, {
         method: 'PATCH',
         headers: authService.getAuthHeaders(),
       });

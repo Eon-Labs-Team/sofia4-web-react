@@ -201,7 +201,7 @@ class ListaCuartelesService {
         barracksListData.updatedBy = currentUser.id;
       }
 
-      const response = await fetch(ENDPOINTS.listaCuarteles.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.listaCuarteles.byId(id)), {
         method: 'PUT',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(barracksListData),

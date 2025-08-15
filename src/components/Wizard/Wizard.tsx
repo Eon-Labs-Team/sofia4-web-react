@@ -33,10 +33,35 @@ const Wizard: React.FC<WizardProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const rulesEngineRef = useRef<FieldRulesEngine | null>(null);
+  
+  // Estado para manejar opciones dinámicas filtradas
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, { value: string; label: string }[]>>({});
 
   const currentStep = steps[currentStepIndex];
   const isFirst = currentStepIndex === 0;
   const isLast = currentStepIndex === steps.length - 1;
+
+  // Actualizar currentStep con opciones dinámicas
+  const currentStepWithDynamicOptions = useMemo(() => {
+    if (!currentStep || Object.keys(dynamicOptions).length === 0) return currentStep;
+    
+    return {
+      ...currentStep,
+      sections: currentStep.sections.map(section => ({
+        ...section,
+        fields: section.fields.map(field => {
+          // Si hay opciones dinámicas para este campo, usarlas
+          if (dynamicOptions[field.name] && field.type === 'select') {
+            return {
+              ...field,
+              options: dynamicOptions[field.name]
+            };
+          }
+          return field;
+        })
+      }))
+    };
+  }, [currentStep, dynamicOptions]);
 
   // Create combined validation schema for all steps
   const combinedSchema = React.useMemo(() => {
@@ -69,7 +94,41 @@ const Wizard: React.FC<WizardProps> = ({
         fieldRules, 
         process.env.NODE_ENV === 'development' // debug solo en desarrollo
       );
+      
+      // Registrar callbacks para filtrado de opciones
+      fieldRules.rules?.forEach(rule => {
+        if (rule.action.type === 'filterOptions' && rule.action.targetField) {
+          const fieldName = rule.action.targetField;
+          
+          rulesEngineRef.current?.registerOptionFilterCallback(
+            fieldName,
+            (filteredOptions: any[]) => {
+              // Convertir a formato de opciones para el select
+              const selectOptions = filteredOptions.map(item => ({
+                value: item._id || item.id || item.value,
+                label: item.name || item.taskName || item.varietyName || item.cropName || item.label || item._id
+              }));
+              
+              setDynamicOptions(prev => ({
+                ...prev,
+                [fieldName]: selectOptions
+              }));
+            }
+          );
+        }
+      });
     }
+    
+    return () => {
+      // Cleanup callbacks
+      if (rulesEngineRef.current && fieldRules?.rules) {
+        fieldRules.rules.forEach(rule => {
+          if (rule.action.type === 'filterOptions' && rule.action.targetField) {
+            rulesEngineRef.current?.unregisterOptionFilterCallback(rule.action.targetField);
+          }
+        });
+      }
+    };
   }, [fieldRules]);
 
   // Obtener campos que necesitan watch (solo los que tienen reglas)
@@ -299,15 +358,15 @@ const Wizard: React.FC<WizardProps> = ({
           <FormProvider {...formMethods}>
             <div className="space-y-6">
               <div className="mb-4">
-                <h3 className="text-lg font-semibold">{currentStep.title}</h3>
-                {currentStep.description && (
+                <h3 className="text-lg font-semibold">{currentStepWithDynamicOptions.title}</h3>
+                {currentStepWithDynamicOptions.description && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    {currentStep.description}
+                    {currentStepWithDynamicOptions.description}
                   </p>
                 )}
               </div>
 
-              {currentStep.sections.map((section) => (
+              {currentStepWithDynamicOptions.sections.map((section) => (
                 <div key={section.id} className="space-y-4">
                   {section.title && (
                     <div>
