@@ -70,13 +70,7 @@ class InventoryProductService {
   /**
    * Create a new inventory product
    */
-  async createProduct(productData: {
-    name: string;
-    description?: string;
-    category?: string;
-    structureType: 'unit' | 'series';
-    unit: string;
-  }): Promise<IInventoryProduct> {
+  async createProduct(productData): Promise<IInventoryProduct> {
     try {
       const requestData = {
         name: productData.name,
@@ -85,6 +79,8 @@ class InventoryProductService {
         structureType: productData.structureType,
         unit: productData.unit,
         isDeleted: false,
+        warehouseId: productData.warehouseId,
+        quantity: productData.quantity
       };
 
       const response = await fetch(ENDPOINTS.inventoryProduct.base, {

@@ -73,6 +73,27 @@ class InventoryWarehouseService {
   }
 
   /**
+   * Get warehouses by specific property ID
+   */
+  async getWarehousesByPropertyId(propertyId: string): Promise<IInventoryWarehouse[]> {
+    try {
+      const response = await fetch(ENDPOINTS.inventoryWarehouse.byPropertyId(propertyId), {
+        headers: authService.getAuthHeaders(),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const warehouses = await response.json();
+      return warehouses.data || warehouses;
+    } catch (error) {
+      console.error(`Error fetching warehouses for property ${propertyId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get a single warehouse by ID
    */
   async findById(id: string): Promise<IInventoryWarehouse> {
@@ -107,8 +128,12 @@ class InventoryWarehouseService {
     try {
       const cleanWarehouseData = {
         ...warehouseData,
+        isDeleted: false
         //state: warehouseData.state !== undefined ? warehouseData.state : true
       };
+
+
+      console.log(cleanWarehouseData)
 
       const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryWarehouse.base), {
         method: 'POST',
@@ -126,6 +151,47 @@ class InventoryWarehouseService {
       throw error;
     }
   }
+
+
+    /**
+   * Create a new inventory CENTRAL warehouse
+   */
+    async createCentralWarehouse(warehouseData: {
+      name: string;
+      propertyId: string;
+      location: {
+        name: string;
+        capacity?: number;
+      };
+      status?: boolean;
+    }): Promise<IInventoryWarehouse> {
+      try {
+        const cleanWarehouseData = {
+          ...warehouseData,
+          isDeleted: false
+          //state: warehouseData.state !== undefined ? warehouseData.state : true
+        };
+  
+  
+        console.log(cleanWarehouseData)
+  
+        const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.inventoryWarehouse.central), {
+          method: 'POST',
+          headers: authService.getAuthHeaders(),
+          body: JSON.stringify(cleanWarehouseData),
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        return await response.json();
+      } catch (error) {
+        console.error('Error creating inventory warehouse:', error);
+        throw error;
+      }
+    }
+  
 
   /**
    * Update an existing inventory warehouse

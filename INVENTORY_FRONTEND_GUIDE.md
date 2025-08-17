@@ -27,7 +27,6 @@ interface IInventoryProduct {
   quantity?: number; // Campo legacy, no usar
   unit: string;
   isDeleted: boolean;
-  propertyId: string; // ID de la propiedad/empresa
   createdAt: Date;
   updatedAt: Date;
 }
