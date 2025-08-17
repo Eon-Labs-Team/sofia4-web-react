@@ -33,6 +33,7 @@ import {
   Award,
   PieChart,
   Wheat,
+  Bot,
 } from "lucide-react";
 import UserMenu from "./UserMenu";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -40,6 +41,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { useSidebarStore, NavItem } from "@/lib/store/sidebarStore";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useSofiaChat } from "@/hooks/useSofiaChat";
+import SofiaChat from "@/components/SofiaChat/SofiaChat";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -157,6 +160,7 @@ const Sidebar = ({
   const { actionMode, activeAction, resetActiveAction } = useSidebarStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const { isChatOpen, isChatMinimized, openChat, closeChat, toggleChatSize } = useSofiaChat();
   
   // Estado local para los items de navegación
   const [localNavItems, setLocalNavItems] = useState<NavItem[]>([
@@ -171,6 +175,12 @@ const Sidebar = ({
       icon: <Briefcase size={20} />, 
       label: "Labores", 
       path: "/labores"
+    },
+    { 
+      icon: <Bot size={20} />, 
+      label: "sofIA Chat", 
+      path: undefined,
+      onClick: openChat
     },
     /*
     // Commented items omitted for brevity
@@ -190,15 +200,30 @@ const Sidebar = ({
   useEffect(() => {
     if (actionMode && activeAction) {
       const specificNavItems = generateMenuForAction(activeAction.actionId);
-      setLocalNavItems(specificNavItems);
+      // Agregar el botón de sofIA Chat al final de los items específicos
+      setLocalNavItems([
+        ...specificNavItems,
+        { 
+          icon: <Bot size={20} />, 
+          label: "sofIA Chat", 
+          path: undefined,
+          onClick: openChat
+        }
+      ]);
     } else {
       // Restaurar ítems originales
       setLocalNavItems([
         { icon: <Home size={20} />, label: "Inicio", path: "/" },
         { icon: <Building2 size={20} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
+        { 
+          icon: <Bot size={20} />, 
+          label: "sofIA Chat", 
+          path: undefined,
+          onClick: openChat
+        }
       ]);
     }
-  }, [actionMode, activeAction]);
+  }, [actionMode, activeAction, openChat]);
 
   const handleToggle = () => {
     setIsCollapsed(!isCollapsed);
@@ -265,6 +290,20 @@ const Sidebar = ({
             {!isCollapsed && <span className="ml-3">{item.label}</span>}
           </div>
         </Link>
+      ) : item.onClick ? (
+        <button
+          onClick={item.onClick}
+          className={cn(
+            "flex items-center justify-between h-10 w-full rounded-md px-3 text-sm font-medium",
+            "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+            isCollapsed ? "justify-center" : ""
+          )}
+        >
+          <div className="flex items-center">
+            {item.icon}
+            {!isCollapsed && <span className="ml-3">{item.label}</span>}
+          </div>
+        </button>
       ) : (
         <div
           className={cn(
@@ -408,6 +447,25 @@ const Sidebar = ({
         {/* Separator si no está colapsado */}
         {!isCollapsed && <Separator />}
         
+        {/* sofIA Chat Button */}
+        <div className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openChat}
+            className={cn(
+              "w-full",
+              isCollapsed ? "w-10 h-10 p-0" : "justify-start"
+            )}
+          >
+            <Bot className={cn("h-4 w-4", isCollapsed ? "" : "mr-2")} />
+            {!isCollapsed && <span>sofIA Chat</span>}
+          </Button>
+        </div>
+        
+        {/* Separator si no está colapsado */}
+        {!isCollapsed && <Separator />}
+        
         {/* User Menu */}
         <div className={cn("flex items-center", isCollapsed ? "justify-center" : "")}>
           <UserMenu variant="sidebar" />
@@ -418,6 +476,14 @@ const Sidebar = ({
           )}
         </div>
       </div>
+      
+      {/* sofIA Chat */}
+      <SofiaChat
+        isOpen={isChatOpen}
+        onClose={closeChat}
+        onToggleSize={toggleChatSize}
+        isMinimized={isChatMinimized}
+      />
     </div>
   );
 };
