@@ -3,9 +3,9 @@ import { z } from "zod";
 // Esquema de validación para trabajadores
 export const workerFormSchema = z.object({
   worker: z.string().min(1, "Debe seleccionar un trabajador"),
-  classification: z.string().min(1, "La clasificación es requerida"),
+  classification: z.string().optional(),
   quadrille: z.string().optional(),
-  workingDay: z.string().optional(),
+  workingDay: z.coerce.number().min(0, "Las jornadas debe ser mayor o igual a 0"),
   paymentMethod: z.string().optional(),
   contractor: z.string().optional(),
   date: z.string().min(1, "La fecha es requerida"),
@@ -30,8 +30,8 @@ export const workerFormSchema = z.object({
 // Esquema de validación para maquinaria
 export const machineryFormSchema = z.object({
   machinery: z.string().min(1, "El nombre de la maquinaria es requerido"),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
+  startTime: z.string().min(1, "La hora de inicio es requerida"),
+  endTime: z.string().min(1, "La hora de fin es requerida"),
   finalHours: z.string().optional(),
   timeValue: z.coerce.number().min(0, "El valor tiempo debe ser mayor o igual a 0"),
   totalValue: z.coerce.number().min(0, "El valor total debe ser mayor o igual a 0"),

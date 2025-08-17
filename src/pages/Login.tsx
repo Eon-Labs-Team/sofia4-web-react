@@ -120,12 +120,7 @@ const Login: React.FC = () => {
           </form>
         </CardContent>
         
-        <CardFooter className="flex justify-center text-sm text-gray-600">
-          <div>
-            <p>Usuario de prueba: user / user123</p>
-            <p>Admin de prueba: admin / admin123</p>
-          </div>
-        </CardFooter>
+
       </Card>
     </div>
   );

@@ -339,8 +339,8 @@ const HomePage = () => {
 
       {/* Inventory Central Modal */}
       <Dialog open={isInventoryModalOpen} onOpenChange={setIsInventoryModalOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden">
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center">
               <Warehouse className="mr-2 h-5 w-5" />
               Inventario Central
@@ -350,7 +350,7 @@ const HomePage = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             <BodegaCentral isModal={true} onClose={() => setIsInventoryModalOpen(false)} />
           </div>
         </DialogContent>

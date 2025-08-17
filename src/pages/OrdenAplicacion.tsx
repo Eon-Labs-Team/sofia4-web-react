@@ -3352,7 +3352,7 @@ const OrdenAplicacion = () => {
                   classification: "",
                   worker: "",
                   quadrille: "",
-                  workingDay: "",
+                  workingDay: 1,
                   paymentMethod: "",
                   contractor: "",
                   date: new Date().toISOString().split('T')[0],
@@ -3502,7 +3502,7 @@ const OrdenAplicacion = () => {
                     type: 'time'
                   },
                   finalHours: {
-                    type: 'text',
+                    type: 'number',
                     placeholder: "Horas finales"
                   },
                   timeValue: {
@@ -3521,9 +3521,7 @@ const OrdenAplicacion = () => {
                     console.log('Saving machinery edit:', { originalRow, updatedRow });
                     // Convert numeric fields to strings as expected by IMachinery interface
                     const machineryData = {
-                      ...updatedRow,
-                      timeValue: String(updatedRow.timeValue || 0),
-                      totalValue: String(updatedRow.totalValue || 0),
+                      ...updatedRow
                     };
                     await machineryService.updateMachinery((originalRow as any)._id, machineryData);
                     await fetchMachinery();
@@ -3562,8 +3560,6 @@ const OrdenAplicacion = () => {
                     const machineryData = {
                       ...newMachinery,
                       workId: String(workId),
-                      timeValue: String(newMachinery.timeValue || 0),
-                      totalValue: String(newMachinery.totalValue || 0),
                     };
                     
                     console.log('Adding new machinery:', machineryData);
