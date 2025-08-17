@@ -37,6 +37,14 @@ export const getInventoryProductFormSections = (): SectionConfig[] => [
         required: false,
       },
       {
+        id: "quantity",
+        name: "quantity",
+        label: "Cantidad",
+        type: "number",
+        placeholder: "Cantidad de producto inicial",
+        required: true,
+      },
+      {
         id: "structureType",
         name: "structureType",
         label: "Tipo de Estructura",
@@ -168,6 +176,7 @@ export const getDefaultProductValues = (product?: any) => ({
   category: product?.category || "",
   structureType: product?.structureType || "unit",
   unit: product?.unit || "",
+  isDeleted:  product?.isDeleted || false,
 });
 
 export const getDefaultWarehouseValues = (warehouse?: any) => ({
@@ -193,6 +202,7 @@ export const processProductFormData = (data: any) => ({
   category: data.category,
   structureType: data.structureType,
   unit: data.unit,
+  quantity: data.quantity
 });
 
 export const processWarehouseFormData = (data: any) => ({
