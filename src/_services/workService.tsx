@@ -116,7 +116,7 @@ class WorkService {
       
       console.log('Updating with data:', JSON.stringify(workData));
 
-      const response = await fetch(ENDPOINTS.work?.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.work?.byId(id)), {
         method: 'PUT',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(workData),

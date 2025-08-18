@@ -84,13 +84,6 @@ const ProductSubcategory = ({ isModal = false }: ProductSubcategoryProps) => {
       },
     },
     {
-      id: "description",
-      header: "Descripción",
-      accessor: "description",
-      visible: true,
-      sortable: true,
-    },
-    {
       id: "state",
       header: "Estado",
       accessor: "state",
@@ -276,15 +269,6 @@ const ProductSubcategory = ({ isModal = false }: ProductSubcategoryProps) => {
           }))
         },
         {
-          id: "description",
-          type: "textarea",
-          label: "Descripción",
-          name: "description",
-          placeholder: "Descripción de la subcategoría",
-          required: false,
-          helperText: "Descripción opcional de la subcategoría"
-        },
-        {
           id: "state",
           type: "checkbox",
           label: "Activo",
@@ -300,7 +284,6 @@ const ProductSubcategory = ({ isModal = false }: ProductSubcategoryProps) => {
   const formValidationSchema = z.object({
     subcategoryName: z.string().min(1, { message: "El nombre es obligatorio" }),
     categoryId: z.string().min(1, { message: "La categoría padre es obligatoria" }),
-    description: z.string().optional(),
     state: z.boolean().default(true)
   });
 
@@ -402,7 +385,6 @@ const ProductSubcategory = ({ isModal = false }: ProductSubcategoryProps) => {
             defaultValues={isEditMode && selectedProductSubcategory ? {
               subcategoryName: selectedProductSubcategory.subcategoryName,
               categoryId: selectedProductSubcategory.categoryId,
-              description: selectedProductSubcategory.description,
               state: selectedProductSubcategory.state
             } : {
               state: true
