@@ -786,6 +786,7 @@ const OrdenAplicacion = () => {
   const HOURS_PER_WORKDAY = 8; // 1 jornada = 8 horas
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [submitFormFunction, setSubmitFormFunction] = useState<(() => void) | null>(null);
   const [isWizardDialogOpen, setIsWizardDialogOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [currentProductField, setCurrentProductField] = useState<any>(null);
@@ -2863,8 +2864,9 @@ const OrdenAplicacion = () => {
 
           <div className="w-full max-w-full overflow-hidden">
             <DynamicForm
-              enabledButtons={true}
               fieldRules={mainFormRules}
+              hideSubmitButtons={true}
+              onFormReady={(submitFn) => setSubmitFormFunction(() => submitFn)}
               sections={formSections.map(section => {
               if (section.id === "orden-info-basic") {
                 return {
@@ -3763,9 +3765,12 @@ const OrdenAplicacion = () => {
                 Cancelar
               </Button>
               <Button 
-                type="submit" 
-                form="dynamic-form"
-                onClick={handleFormSubmit}
+                onClick={() => {
+                  if (submitFormFunction) {
+                    submitFormFunction();
+                  }
+                }}
+                disabled={!submitFormFunction}
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 {isEditMode ? "Actualizar" : "Crear"}
