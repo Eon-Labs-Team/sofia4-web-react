@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import FormSection from "./FormSection";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { FormGridRules, FieldRulesEngine } from "@/lib/validationSchemas";
 
 export type FieldType =
@@ -270,35 +268,25 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     formMethods.reset(defaultValues);
   };
 
-  const moveSection = (dragIndex: number, hoverIndex: number) => {
-    const draggedSection = formSections[dragIndex];
-    const newSections = [...formSections];
-    newSections.splice(dragIndex, 1);
-    newSections.splice(hoverIndex, 0, draggedSection);
-    setFormSections(newSections);
-  };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <FormProvider {...formMethods}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {formSections.map((section, index) => (
-            <FormSection
-              key={section.id}
-              section={section}
-              index={index}
-              moveSection={moveSection}
-            />
-          ))}
-          {!hideSubmitButtons && (<div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleReset}>
-              Reset
-            </Button>
-            <Button type="submit">Submit</Button>
-          </div>)}
-        </form>
-      </FormProvider>
-    </DndProvider>
+    <FormProvider {...formMethods}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {formSections.map((section, index) => (
+          <FormSection
+            key={section.id}
+            section={section}
+            index={index}
+          />
+        ))}
+        {!hideSubmitButtons && (<div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button type="submit">Submit</Button>
+        </div>)}
+      </form>
+    </FormProvider>
   );
 };
 
