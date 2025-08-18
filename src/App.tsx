@@ -58,7 +58,6 @@ import HygieneSanitation from "./pages/HygieneSanitation";
 import Calicata from "./pages/calicata";
 import ChlorineRegistration from "./pages/ChlorineRegistration";
 import WaterChlorination from "./pages/WaterChlorination";
-import ProductCategories from "./pages/ProductCategories";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/OrdenAplicacion";
@@ -642,19 +641,6 @@ function App() {
               <PropertyRoute>
                 <AuthenticatedLayout>
                   <WaterChlorination />
-                </AuthenticatedLayout>
-              </PropertyRoute>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/product-categories"
-          element={
-            <ProtectedRoute>
-              <PropertyRoute>
-                <AuthenticatedLayout>
-                  <ProductCategories />
                 </AuthenticatedLayout>
               </PropertyRoute>
             </ProtectedRoute>

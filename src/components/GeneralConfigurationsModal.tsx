@@ -8,12 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Briefcase, Building2, Users, ArrowLeft, Package, DollarSign, Ruler, Leaf, Mountain, Thermometer, Wind, Gauge, Users2, AlertTriangle, FileText } from "lucide-react";
+import { Settings, Briefcase, Building2, Users, ArrowLeft, Package, Package2, DollarSign, Coins, Ruler, Leaf, Mountain, Thermometer, Wind, Gauge, Users2, AlertTriangle, FileText,TestTubeDiagonal } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Faenas from "@/pages/Faenas";
 import Labores from "@/pages/Labores";
 import ProductCategory from "@/pages/ProductCategory";
+import ProductSubcategory from "@/pages/ProductSubcategory";
 import CostClassification from "@/pages/CostClassification";
+import CostSubclassification from "@/pages/CostSubclassification";
+import GenericTreatment from "@/pages/GenericTreatment";
 import MeasurementUnits from "@/pages/MeasurementUnits";
 import CropType from "@/pages/CropType";
 import VarietyType from "@/pages/VarietyType";
@@ -82,11 +85,32 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
           viewId: "productCategory",
         },
         {
+          id: "productSubcategory",
+          title: "Subcategorías de Productos",
+          description: "Gestionar subcategorías de productos",
+          icon: <Package2 className="h-5 w-5" />,
+          viewId: "productSubcategory",
+        },
+        {
           id: "costClassification",
           title: "Clasificaciones de Costos",
           description: "Gestionar clasificaciones de costos",
           icon: <DollarSign className="h-5 w-5" />,
           viewId: "costClassification",
+        },
+        {
+          id: "costSubclassification",
+          title: "Subclasificaciones de Costos",
+          description: "Gestionar subclasificaciones de costos",
+          icon: <Coins className="h-5 w-5" />,
+          viewId: "costSubclassification",
+        },
+        {
+          id: "genericTreatment",
+          title: "Tratamientos Genéricos",
+          description: "Gestionar tratamientos genéricos",
+          icon: <TestTubeDiagonal className="h-5 w-5" />,
+          viewId: "genericTreatment",
         },
       ],
     },
@@ -178,14 +202,7 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
           description: "Gestionar tipos de maquinaria",
           icon: <Building2 className="h-5 w-5" />,
           viewId: "machineryType",
-        },
-        {
-          id: "maritalStatus",
-          title: "Estados Civiles",
-          description: "Gestionar estados civiles",
-          icon: <Users2 className="h-5 w-5" />,
-          viewId: "maritalStatus",
-        },
+        }
       ],
     },
     {
@@ -206,6 +223,13 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
           description: "Gestión de usuarios del sistema",
           icon: <Users className="h-5 w-5" />,
           viewId: "usuarios",
+        },
+        {
+          id: "maritalStatus",
+          title: "Estados Civiles",
+          description: "Gestionar estados civiles",
+          icon: <Users2 className="h-5 w-5" />,
+          viewId: "maritalStatus",
         },
       ],
     },
@@ -335,6 +359,23 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
     </>
   );
 
+  const renderProductSubcategoryView = () => (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center">
+          <Button variant="outline" size="default" onClick={handleBackToMain} className="mr-2">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
+          </Button>
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="flex-1 overflow-hidden">
+        <ProductSubcategory isModal={true} />
+      </div>
+    </>
+  );
+
   const renderCostClassificationView = () => (
     <>
       <DialogHeader>
@@ -348,6 +389,40 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
 
       <div className="flex-1 overflow-hidden">
         <CostClassification isModal={true} />
+      </div>
+    </>
+  );
+
+  const renderCostSubclassificationView = () => (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center">
+          <Button variant="outline" size="default" onClick={handleBackToMain} className="mr-2">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
+          </Button>
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="flex-1 overflow-hidden">
+        <CostSubclassification isModal={true} />
+      </div>
+    </>
+  );
+
+  const renderGenericTreatmentView = () => (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center">
+          <Button variant="outline" size="default" onClick={handleBackToMain} className="mr-2">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Volver
+          </Button>
+        </DialogTitle>
+      </DialogHeader>
+
+      <div className="flex-1 overflow-hidden">
+        <GenericTreatment isModal={true} />
       </div>
     </>
   );
@@ -567,8 +642,14 @@ const GeneralConfigurationsModal = ({ isOpen, onClose }: GeneralConfigurationsMo
         return renderTaskView();
       case "productCategory":
         return renderProductCategoryView();
+      case "productSubcategory":
+        return renderProductSubcategoryView();
       case "costClassification":
         return renderCostClassificationView();
+      case "costSubclassification":
+        return renderCostSubclassificationView();
+      case "genericTreatment":
+        return renderGenericTreatmentView();
       case "measurementUnits":
         return renderMeasurementUnitsView();
       case "cropType":

@@ -23,6 +23,7 @@ import DynamicForm, {
 import { z } from "zod";
 import { ICostClassification } from "@eon-lib/eon-mongoose";
 import costClassificationService from "@/_services/costClassificationService";
+import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";
 
 // Extended interface for CostClassification with MongoDB _id
@@ -49,7 +50,25 @@ const renderBoolean = (value: boolean) => {
   );
 };
 
-// Column configuration for the grid
+
+
+
+
+const CostClassification = ({ isModal = false }: CostClassificationProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [costClassifications, setCostClassifications] = useState<CostClassificationWithId[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedCostClassification, setSelectedCostClassification] = useState<CostClassificationWithId | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // Fetch costClassifications on component mount
+  useEffect(() => {
+    fetchCostClassifications();
+    fetchProperties();
+  }, []);
+
+  // Column configuration for the grid
 const columns: Column[] = [
   {
     id: "id",
@@ -71,7 +90,18 @@ const columns: Column[] = [
     header: "Predios Asignados",
     accessor: "assignedProperties",
     visible: true,
-    render: (value: string[]) => value && value.length > 0 ? `${value.length} predios` : 'Todos',
+    render: (value: string[], row: any) => {
+      if (!value || value.length === 0) return 'Todos';
+      if (!Array.isArray(value)) return 'Todos';
+      if (typeof properties === "undefined" || !Array.isArray(properties)) return value.join(", ");
+      const names = value
+        .map((id) => {
+          const prop = properties.find((p) => p.id === id);
+          return prop ? prop.propertyName : id;
+        })
+        .filter(Boolean);
+      return names.length > 0 ? names.join(", ") : 'Todos';
+    },
   },
   {
     id: "state",
@@ -94,7 +124,18 @@ const expandableContent = (row: CostClassificationWithId) => (
           <strong>Estado:</strong> {row.state ? 'Activo' : 'Inactivo'}
         </p>
         <p>
-          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? row.assignedProperties.join(", ") : 'Todos'}
+          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? 
+            properties.length > 0 ? 
+              row.assignedProperties
+                .map((id) => {
+                  const prop = properties.find((p) => p.id === id);
+                  return prop ? prop.propertyName : id;
+                })
+                .filter(Boolean)
+                .join(", ") || 'Todos'
+              : row.assignedProperties.join(", ")
+            : 'Todos'
+          }
         </p>
       </div>
       <div>
@@ -111,18 +152,6 @@ const expandableContent = (row: CostClassificationWithId) => (
     </div>
   </div>
 );
-
-const CostClassification = ({ isModal = false }: CostClassificationProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [costClassifications, setCostClassifications] = useState<CostClassificationWithId[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCostClassification, setSelectedCostClassification] = useState<CostClassificationWithId | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  
-  // Fetch costClassifications on component mount
-  useEffect(() => {
-    fetchCostClassifications();
-  }, []);
   
   // Function to fetch costClassifications data
   const fetchCostClassifications = async () => {
@@ -139,6 +168,28 @@ const CostClassification = ({ isModal = false }: CostClassificationProps) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Function to fetch properties data
+  const fetchProperties = async () => {
+    try {
+      const data = await propertyService.findAll();
+      // Format properties for the selectable grid
+      const formattedProperties = data.map((property: any) => ({
+        id: property._id,
+        propertyName: property.propertyName,
+        region: property.region,
+        city: property.city
+      }));
+      setProperties(formattedProperties);
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los predios. Intente nuevamente.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -239,10 +290,22 @@ const CostClassification = ({ isModal = false }: CostClassificationProps) => {
           name: "state",
           required: false,
           helperText: "Indica si la clasificación está activa"
+        },
+        {
+          id: "assignedProperties",
+          type: "checkboxGroup",
+          label: "Predios Asignados",
+          name: "assignedProperties",
+          required: false,
+          helperText: "Seleccione los predios donde estará disponible esta clasificación (deje vacío para todos)",
+          options: properties.map(property => ({
+            value: property.id,
+            label: `${property.propertyName} - ${property.region}, ${property.city}`
+          }))
         }
       ],
     }
-  ], []);
+  ], [properties]);
 
   // Form validation schema
   const formValidationSchema = z.object({
