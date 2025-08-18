@@ -32,10 +32,10 @@ export const machineryFormSchema = z.object({
   machinery: z.string().min(1, "El nombre de la maquinaria es requerido"),
   startTime: z.string().min(1, "La hora de inicio es requerida"),
   endTime: z.string().min(1, "La hora de fin es requerida"),
-  finalHours: z.string().optional(),
+  finalHours: z.coerce.number().min(0, "El valor de tiempo final debe ser mayor o igual a 0"),
   timeValue: z.coerce.number().min(0, "El valor tiempo debe ser mayor o igual a 0"),
   totalValue: z.coerce.number().min(0, "El valor total debe ser mayor o igual a 0"),
-  workId: z.string().optional(),
+  workId: z.string().min(1,"El id de trabajo es un campo requerido"),
 });
 
 // Esquema de validación para productos

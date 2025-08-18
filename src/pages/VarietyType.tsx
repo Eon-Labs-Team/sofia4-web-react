@@ -25,6 +25,7 @@ import { toast } from "@/components/ui/use-toast";
 import { IVarietyType, ICropType } from "@eon-lib/eon-mongoose";
 import varietyTypeService from "@/_services/varietyTypeService";
 import cropTypeService from "@/_services/cropTypeService";
+import propertyService from "@/_services/propertyService";
 
 interface VarietyTypeProps {
   isModal?: boolean;
@@ -54,6 +55,7 @@ const VarietyType = ({ isModal = false }: VarietyTypeProps) => {
   const [selectedVarietyType, setSelectedVarietyType] = useState<IVarietyType | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [cropTypes, setCropTypes] = useState<ICropType[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
   
   // Helper function to get crop type name by ID
   const getCropTypeName = (cropTypeId: string) => {
@@ -89,7 +91,18 @@ const expandableContent = (row: IVarietyType) => (
           <strong>Actualizado:</strong> {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'N/A'}
         </p>
         <p>
-          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? row.assignedProperties.join(", ") : 'Todos'}
+          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? 
+            properties.length > 0 ? 
+              row.assignedProperties
+                .map((id) => {
+                  const prop = properties.find((p) => p.id === id);
+                  return prop ? prop.propertyName : id;
+                })
+                .filter(Boolean)
+                .join(", ") || 'Todos'
+              : row.assignedProperties.join(", ")
+            : 'Todos'
+          }
         </p>
       </div>
     </div>
@@ -123,6 +136,24 @@ const expandableContent = (row: IVarietyType) => (
       render: (value: string) => getCropTypeName(value),
     },
     {
+      id: "assignedProperties",
+      header: "Predios Asignados",
+      accessor: "assignedProperties",
+      visible: true,
+      render: (value: string[], row: any) => {
+        if (!value || value.length === 0) return 'Todos';
+        if (!Array.isArray(value)) return 'Todos';
+        if (typeof properties === "undefined" || !Array.isArray(properties)) return value.join(", ");
+        const names = value
+          .map((id) => {
+            const prop = properties.find((p) => p.id === id);
+            return prop ? prop.propertyName : id;
+          })
+          .filter(Boolean);
+        return names.length > 0 ? names.join(", ") : 'Todos';
+      },
+    },
+    {
       id: "order",
       header: "Orden",
       accessor: "order",
@@ -144,6 +175,7 @@ const expandableContent = (row: IVarietyType) => (
   useEffect(() => {
     fetchVarietyTypes();
     fetchCropTypes();
+    fetchProperties();
   }, []);
   
   // Function to fetch varietyTypes data
@@ -171,6 +203,28 @@ const expandableContent = (row: IVarietyType) => (
       setCropTypes(data);
     } catch (error) {
       console.error("Error loading crop types:", error);
+    }
+  };
+
+  // Function to fetch properties data
+  const fetchProperties = async () => {
+    try {
+      const data = await propertyService.findAll();
+      // Format properties for the selectable grid
+      const formattedProperties = data.map((property: any) => ({
+        id: property._id,
+        propertyName: property.propertyName,
+        region: property.region,
+        city: property.city
+      }));
+      setProperties(formattedProperties);
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los predios. Intente nuevamente.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -293,10 +347,22 @@ const expandableContent = (row: IVarietyType) => (
           name: "state",
           required: false,
           helperText: "Indica si el tipo de variedad está activo"
+        },
+        {
+          id: "assignedProperties",
+          type: "checkboxGroup",
+          label: "Predios Asignados",
+          name: "assignedProperties",
+          required: false,
+          helperText: "Seleccione los predios donde estará disponible este tipo de variedad (deje vacío para todos)",
+          options: properties.map(property => ({
+            value: property.id,
+            label: `${property.propertyName} - ${property.region}, ${property.city}`
+          }))
         }
       ],
     }
-  ], [cropTypes]);
+  ], [cropTypes, properties]);
 
   // Form validation schema
   const formValidationSchema = z.object({
