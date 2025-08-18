@@ -70,18 +70,33 @@ class InventoryProductService {
   /**
    * Create a new inventory product
    */
-  async createProduct(productData): Promise<IInventoryProduct> {
+  async createProduct(productData: Partial<IInventoryProduct>): Promise<IInventoryProduct> {
     try {
       const requestData = {
         name: productData.name,
         description: productData.description,
         category: productData.category,
+        subcategory: productData.subcategory,
         structureType: productData.structureType,
+        quantity: productData.quantity,
         unit: productData.unit,
-        isDeleted: false,
-        warehouseId: productData.warehouseId,
-        quantity: productData.quantity
+        measurementUnit: productData.measurementUnit,
+        hitlistCode: productData.hitlistCode,
+        minimumQuantity: productData.minimumQuantity,
+        minimumUsageQuantity: productData.minimumUsageQuantity,
+        maximumUsageQuantity: productData.maximumUsageQuantity,
+        carenceDays: productData.carenceDays,
+        reentryHours: productData.reentryHours,
+        minimumDose: productData.minimumDose,
+        maximumDose: productData.maximumDose,
+        treatments: productData.treatments,
+        costClassification: productData.costClassification,
+        costSubclassification: productData.costSubclassification,
+        isDeleted: productData.isDeleted || false,
+        warehouseId: productData.warehouseId
       };
+
+      console.log('Creating product with data:', requestData);
 
       const response = await fetch(ENDPOINTS.inventoryProduct.base, {
         method: 'POST',
