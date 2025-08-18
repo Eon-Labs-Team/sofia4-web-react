@@ -374,14 +374,14 @@ export const getDefaultProductValues = (product?: any) => ({
   quantity: product?.quantity || 0,
   unit: product?.unit || "",
   measurementUnit: product?.measurementUnit || "",
-  hitlistCode: product?.hitlistCode || "",
-  minimumQuantity: product?.minimumQuantity || "",
-  minimumUsageQuantity: product?.minimumUsageQuantity || "",
-  maximumUsageQuantity: product?.maximumUsageQuantity || "",
-  carenceDays: product?.carenceDays || "",
-  reentryHours: product?.reentryHours || "",
-  minimumDose: product?.minimumDose || "",
-  maximumDose: product?.maximumDose || "",
+  hitlistCode: product?.hitlistCode !== undefined ? product.hitlistCode : 0,
+  minimumQuantity: product?.minimumQuantity !== undefined ? product.minimumQuantity : 0,
+  minimumUsageQuantity: product?.minimumUsageQuantity !== undefined ? product.minimumUsageQuantity : 0,
+  maximumUsageQuantity: product?.maximumUsageQuantity !== undefined ? product.maximumUsageQuantity : 0,
+  carenceDays: product?.carenceDays !== undefined ? product.carenceDays : 0,
+  reentryHours: product?.reentryHours !== undefined ? product.reentryHours : 0,
+  minimumDose: product?.minimumDose !== undefined ? product.minimumDose : 0,
+  maximumDose: product?.maximumDose !== undefined ? product.maximumDose : 0,
   treatments: product?.treatments || [],
   costClassification: product?.costClassification || "",
   costSubclassification: product?.costSubclassification || "",
@@ -406,25 +406,26 @@ export const getDefaultLotValues = (lot?: any) => ({
 
 // Form submission handlers for consistent data processing
 export const processProductFormData = (data: any) => ({
-  name: data.name,
-  description: data.description,
-  category: data.category,
-  subcategory: data.subcategory,
-  structureType: data.structureType,
-  quantity: data.quantity ? Number(data.quantity) : undefined,
-  unit: data.unit,
-  measurementUnit: data.measurementUnit,
-  hitlistCode: data.hitlistCode !== "" ? Number(data.hitlistCode) : undefined,
-  minimumQuantity: data.minimumQuantity ? Number(data.minimumQuantity) : undefined,
-  minimumUsageQuantity: data.minimumUsageQuantity ? Number(data.minimumUsageQuantity) : undefined,
-  maximumUsageQuantity: data.maximumUsageQuantity ? Number(data.maximumUsageQuantity) : undefined,
-  carenceDays: data.carenceDays ? Number(data.carenceDays) : undefined,
-  reentryHours: data.reentryHours ? Number(data.reentryHours) : undefined,
-  minimumDose: data.minimumDose ? Number(data.minimumDose) : undefined,
-  maximumDose: data.maximumDose ? Number(data.maximumDose) : undefined,
-  treatments: data.treatments || [],
-  costClassification: data.costClassification,
-  costSubclassification: data.costSubclassification,
+  name: data.name, // string (required)
+  description: data.description || undefined, // string? (optional)
+  category: data.category || undefined, // string? (optional)
+  subcategory: data.subcategory || undefined, // string? (optional)
+  structureType: data.structureType, // 'unit' | 'series' (required)
+  quantity: data.quantity ? Number(data.quantity) : undefined, // number? (optional)
+  unit: data.unit, // string (required)
+  measurementUnit: data.measurementUnit, // string (required)
+  hitlistCode: data.hitlistCode !== "" ? Number(data.hitlistCode) : 0, // number (required, default 0)
+  minimumQuantity: data.minimumQuantity ? Number(data.minimumQuantity) : 0, // number (required, default 0)
+  minimumUsageQuantity: data.minimumUsageQuantity ? Number(data.minimumUsageQuantity) : 0, // number (required, default 0)
+  maximumUsageQuantity: data.maximumUsageQuantity ? Number(data.maximumUsageQuantity) : 0, // number (required, default 0)
+  carenceDays: data.carenceDays ? Number(data.carenceDays) : 0, // number (required, default 0)
+  reentryHours: data.reentryHours ? Number(data.reentryHours) : 0, // number (required, default 0)
+  minimumDose: data.minimumDose ? Number(data.minimumDose) : 0, // number (required, default 0)
+  maximumDose: data.maximumDose ? Number(data.maximumDose) : 0, // number (required, default 0)
+  treatments: data.treatments || [], // string[] (required, default empty array)
+  costClassification: data.costClassification, // string (required)
+  costSubclassification: data.costSubclassification, // string (required)
+  isDeleted: false, // boolean (required, always false for new products)
 });
 
 export const processWarehouseFormData = (data: any) => ({
