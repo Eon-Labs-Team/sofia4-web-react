@@ -30,6 +30,7 @@ import {
   Award,
   PieChart,
   Wheat,
+  Bot,
   TestTubeDiagonal,
   TrendingUp,
 } from "lucide-react"
@@ -69,6 +70,8 @@ import {
 import { useAuthStore } from "@/lib/store/authStore"
 import { useSidebarStore, NavItem } from "@/lib/store/sidebarStore"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { useSofiaChat } from "@/hooks/useSofiaChat"
+import SofiaChat from "@/components/SofiaChat/SofiaChat"
 
 // Esta es la configuración de menús específicos según el tipo de acción
 const generateMenuForAction = (actionId: string, propertyId: string | number): NavItem[] => {
@@ -188,6 +191,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { actionMode, activeAction, resetActiveAction } = useSidebarStore()
+  const { isChatOpen, isChatMinimized, openChat, closeChat, toggleChatSize } = useSofiaChat()
 
   // Menús por defecto cuando no hay acción específica
   const defaultNavItems: NavItem[] = [
@@ -316,6 +320,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       
       <SidebarFooter>
         <SidebarMenu>
+          {/* sofIA Chat Button */}
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={openChat} tooltip="sofIA Chat">
+              <Bot className="size-4" />
+              <span>sofIA Chat</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <div className="flex items-center">
@@ -372,6 +384,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      
+      {/* sofIA Chat */}
+      <SofiaChat
+        isOpen={isChatOpen}
+        onClose={closeChat}
+        onToggleSize={toggleChatSize}
+        isMinimized={isChatMinimized}
+      />
     </Sidebar>
   )
 }

@@ -9,6 +9,7 @@ export interface NavItem {
   children?: NavItem[];
   isExpanded?: boolean;
   requiredRole?: string;
+  onClick?: () => void;
 }
 
 // Interfaz para el estado del store
