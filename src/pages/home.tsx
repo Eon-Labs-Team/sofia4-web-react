@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -177,6 +178,7 @@ export const SidebarContext = React.createContext<{
 }>({});
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const { 
     toggleActionMode, 
     setActiveAction, 
@@ -235,6 +237,11 @@ const HomePage = () => {
     if (toggleSidebar) {
       toggleSidebar();
     }
+
+    // Navegar automáticamente al dashboard como primera página
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 100);
   };
 
   const handleBackToHome = () => {

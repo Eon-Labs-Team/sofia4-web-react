@@ -204,6 +204,75 @@ class InventoryProductService {
       throw error;
     }
   }
+
+  /**
+   * Get products that have active lots for a specific property
+   * This method combines products with their lot information to show products with active lots
+   * (regardless of stock amount - includes 0 or negative stock for consumption scenarios)
+   */
+  async getProductsWithStockByPropertyId(propertyId: string): Promise<any[]> {
+    try {
+      // First, get all inventory products
+      const allProducts = await this.findAll();
+      
+      // Then, for each product, check if it has active lots with stock in the property
+      const productsWithStock = await Promise.all(
+        allProducts.map(async (product) => {
+          try {
+            // Get active lots for this product and property
+            const response = await fetch(ENDPOINTS.inventoryLot.activeByProductIdAndPropertyId(product._id, propertyId), {
+              headers: authService.getAuthHeaders(),
+            });
+            
+            if (!response.ok) {
+              // If we can't get lots for this product, skip it
+              return null;
+            }
+            
+            const lots = await response.json();
+            const lotsData = lots.data || lots || [];
+            
+            // Calculate total stock for this product in this property
+            const totalStock = lotsData.reduce((sum: number, lot: any) => {
+              return sum + (lot.quantity || 0);
+            }, 0);
+            
+            // Return all products that have active lots in this property (regardless of stock amount)
+            // This allows for products with 0 or negative stock to be selected for consumption
+            if (lotsData.length > 0) {
+              return {
+                ...product,
+                availableStock: totalStock,
+                activeLots: lotsData.length,
+                // Add properties to make it compatible with existing ProductSelectionModal
+                name: product.name,
+                category: product.category,
+                description: product.description,
+                unitOfMeasurement: product.unit || product.measurementUnit,
+                brand: (product as any).brand || '',
+                code: product.hitlistCode || '',
+              };
+            }
+            
+            return null;
+          } catch (error) {
+            console.warn(`Error checking stock for product ${product._id}:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out null values (products without stock)
+      const filteredProducts = productsWithStock.filter(product => product !== null);
+      
+      console.log(`Found ${filteredProducts.length} products with stock for property ${propertyId}`);
+      return filteredProducts;
+      
+    } catch (error) {
+      console.error(`Error fetching products with stock for property ${propertyId}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
