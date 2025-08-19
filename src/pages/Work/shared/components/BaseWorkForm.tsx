@@ -18,8 +18,12 @@ import type { Column } from "@/lib/store/gridStore";
 import workerService from "@/_services/workerService";
 import machineryService from "@/_services/machineryService";
 import productService from "@/_services/productService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import inventoryMovementService from "@/_services/inventoryMovementService";
+import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
 import { toast } from "@/components/ui/use-toast";
 import ProductSelectionModal from "@/components/ProductSelectionModal";
+import { useAuthStore } from "@/lib/store/authStore";
 
 interface BaseWorkFormProps {
   workType: WorkType;
@@ -72,6 +76,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   customFooter,
   isSubmitting = false,
 }) => {
+  const { propertyId } = useAuthStore();
   const [submitFormFunction, setSubmitFormFunction] = useState<(() => void) | null>(null);
   const [isInternalSubmitting, setIsInternalSubmitting] = useState(false);
 
@@ -85,6 +90,8 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [currentProductField, setCurrentProductField] = useState<any>(null);
   const [currentFormType, setCurrentFormType] = useState<'add' | 'edit' | null>(null);
+  const [availableInventoryProducts, setAvailableInventoryProducts] = useState<any[]>([]);
+  const [propertyWarehouses, setPropertyWarehouses] = useState<any[]>([]);
 
   // Calcular valores por defecto del formulario
   const formDefaultValues = React.useMemo(() => {
@@ -718,7 +725,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     unitOfMeasurement: {
       type: 'text' as const,
       placeholder: "Unidad de medida",
-      readonly: true,
+      readonly: false,
       style: { 
         backgroundColor: '#f5f5f5', 
         color: '#666',
@@ -1282,6 +1289,116 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   };
 
   // =======================================
+  // FUNCIONES PARA CARGAR PRODUCTOS DE INVENTARIO
+  // =======================================
+
+  const fetchAvailableInventoryProducts = async () => {
+    if (!propertyId) {
+      console.log('No propertyId available, skipping inventory products fetch');
+      return;
+    }
+
+    try {
+      console.log(`Loading inventory products with stock for property ${propertyId}`);
+      const productsWithStock = await inventoryProductService.getProductsWithStockByPropertyId(propertyId);
+      setAvailableInventoryProducts(productsWithStock);
+      console.log(`Loaded ${productsWithStock.length} inventory products with stock`);
+    } catch (error) {
+      console.error('Error fetching inventory products with stock:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los productos de inventario",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchPropertyWarehouses = async () => {
+    if (!propertyId) {
+      console.log('No propertyId available, skipping warehouses fetch');
+      return;
+    }
+
+    try {
+      console.log(`Loading warehouses for property ${propertyId}`);
+      const warehouses = await inventoryWarehouseService.getWarehousesByPropertyId(propertyId);
+      setPropertyWarehouses(warehouses);
+      console.log(`Loaded ${warehouses.length} warehouses for property`);
+    } catch (error) {
+      console.error('Error fetching property warehouses:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las bodegas del predio",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // =======================================
+  // FUNCIONES PARA CONSUMO DE PRODUCTOS
+  // =======================================
+
+  const consumeInventoryProduct = async (productData: any) => {
+    if (!propertyId || propertyWarehouses.length === 0) {
+      console.warn('Cannot consume product: no propertyId or warehouses available');
+      return;
+    }
+
+    try {
+      // Find the inventory product by name
+      const inventoryProduct = availableInventoryProducts.find(
+        product => product.name === productData.product
+      );
+
+      if (!inventoryProduct) {
+        console.warn(`Inventory product not found: ${productData.product}`);
+        return;
+      }
+
+      // Use the first available warehouse for this property (could be enhanced to let user choose)
+      const targetWarehouse = propertyWarehouses[0];
+      if (!targetWarehouse) {
+        console.warn('No warehouse available for product consumption');
+        return;
+      }
+
+      // Calculate consumption quantity
+      const consumptionQuantity = parseFloat(productData.amount) || 0;
+      
+      if (consumptionQuantity <= 0) {
+        console.warn('Invalid consumption quantity:', consumptionQuantity);
+        return;
+      }
+
+      console.log(`Consuming ${consumptionQuantity} units of product ${inventoryProduct.name} from warehouse ${targetWarehouse.name}`);
+
+      // Execute consumption
+      await inventoryMovementService.consumeProduct({
+        productId: inventoryProduct._id,
+        quantity: consumptionQuantity,
+        warehouseId: targetWarehouse._id,
+        propertyId: propertyId,
+        allowNegativeStock: true, // Allow negative stock as per business requirements
+        comments: `Consumo por orden de trabajo ${workType} - ${selectedWork?.orderNumber || 'Nueva orden'}`
+      });
+
+      console.log(`Successfully consumed ${consumptionQuantity} units of ${inventoryProduct.name}`);
+
+      // Refresh available products to reflect updated stock
+      await fetchAvailableInventoryProducts();
+
+    } catch (error) {
+      console.error('Error consuming inventory product:', error);
+      toast({
+        title: "Error en consumo de inventario",
+        description: `No se pudo descontar ${productData.product} del inventario: ${error.message}`,
+        variant: "destructive",
+      });
+      // Don't throw error to avoid blocking the main save operation
+    }
+  };
+
+  // =======================================
   // FUNCIONES PARA MODAL DE PRODUCTOS
   // =======================================
 
@@ -1326,12 +1443,22 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     }
   }, [isEditMode, selectedWork, isOpen]);
 
+  // Cargar productos de inventario y bodegas cuando se abre el modal
+  useEffect(() => {
+    if (isOpen && propertyId) {
+      fetchAvailableInventoryProducts();
+      fetchPropertyWarehouses();
+    }
+  }, [isOpen, propertyId]);
+
   // Limpiar datos cuando se cierra el modal
   useEffect(() => {
     if (!isOpen) {
       setWorkers([]);
       setMachinery([]);
       setProducts([]);
+      setAvailableInventoryProducts([]);
+      setPropertyWarehouses([]);
     }
   }, [isOpen]);
 
@@ -1712,7 +1839,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                     _id: (product as any)._id || (product as any).id || `product-${index}-${Date.now()}`
                   }))}
                   idField="_id"
-                  enableInlineEdit={true}
+                  enableInlineEdit={false}
                   enableInlineAdd={true}
                   fieldConfigurations={productsFieldConfigurations}
                   defaultNewRow={{
@@ -1730,10 +1857,6 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                     workId: selectedWork ? String(selectedWork.id || (selectedWork as any)._id) : "",
                   }}
                   addableColumns={[
-                    "category", "product", "unitOfMeasurement", "amountPerHour", 
-                    "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
-                  ]}
-                  editableColumns={[
                     "category", "product", "unitOfMeasurement", "amountPerHour", 
                     "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
                   ]}
@@ -1768,25 +1891,6 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   )}
-                  onEditSave={async (originalRow, updatedRow) => {
-                    try {
-                      console.log('Saving product edit:', { originalRow, updatedRow });
-                      // Convertir campos numéricos a strings como espera la interfaz IProducts
-                      const productData = {
-                        ...updatedRow,
-                        amount: String(updatedRow.amount || 0),
-                        netUnitValue: String(updatedRow.netUnitValue || 0),
-                        totalValue: String(updatedRow.totalValue || 0),
-                        amountPerHour: String(updatedRow.amountPerHour || 0),
-                        return: String(updatedRow.return || 0),
-                      };
-                      await productService.updateProduct((originalRow as any)._id, productData);
-                      await fetchProducts();
-                    } catch (error) {
-                      console.error('Error updating product:', error);
-                      throw error; // Dejar que FormGrid maneje la notificación de error
-                    }
-                  }}
                   onInlineAdd={async (newProduct: ProductFormData) => {
                     try {
                       if (!selectedWork) {
@@ -1807,6 +1911,10 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       
                       console.log('Adding new product:', productData);
                       await productService.createProduct(productData);
+                      
+                      // Consume product from inventory
+                      await consumeInventoryProduct(newProduct);
+                      
                       await fetchProducts();
                     } catch (error) {
                       console.error('Error adding product:', error);
@@ -1850,9 +1958,9 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
         setCurrentFormType(null);
       }}
       onSelect={handleProductSelect}
-      products={masterData.warehouseProducts || []}
+      products={availableInventoryProducts}
       title="Seleccionar Producto"
-      description="Busca y selecciona un producto para agregar al registro"
+      description={`Busca y selecciona un producto del inventario del predio (${availableInventoryProducts.length} productos con lotes activos)`}
     />
   </>
   );

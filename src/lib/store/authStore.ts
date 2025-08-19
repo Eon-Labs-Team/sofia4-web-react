@@ -11,13 +11,11 @@ const savePropertyIdToStorage = (id: string | number): void => {
   localStorage.setItem(PROPERTY_ID_KEY, id.toString());
 };
 
-const getPropertyIdFromStorage = (): string | number | null => {
+const getPropertyIdFromStorage = (): string | null => {
   const stored = localStorage.getItem(PROPERTY_ID_KEY);
   if (!stored) return null;
   
-  // Try to parse as number, if it fails return as string
-  const asNumber = Number(stored);
-  return isNaN(asNumber) ? stored : asNumber;
+  return stored
 };
 
 const removePropertyIdFromStorage = (): void => {
@@ -31,7 +29,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   enterpriseId: string | null;
-  propertyId: string | number | null;
+  propertyId: string | null;
   
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -91,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   // Set the current property ID and save to localStorage
-  setPropertyId: (id: string | number) => {
+  setPropertyId: (id: string ) => {
     savePropertyIdToStorage(id);
     set({ propertyId: id });
   },

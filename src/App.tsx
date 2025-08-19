@@ -66,6 +66,7 @@ import WizardExample from "./components/Wizard/WizardExample";
 import FaenasAgricolas from "./pages/FaenasAgricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 import Cosechas from "./pages/Cosecha";
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -89,6 +90,7 @@ function App() {
       'lista-cuarteles': 'Lista Cuarteles',
       'faenas': 'Faenas',
       'labores': 'Labores',
+      'dashboard': 'Dashboard de Operaciones',
       'orden-aplicacion': 'Orden de Aplicación',
       'orden-aplicacion-new': 'Orden de Aplicación (Nueva)',
       'bodegas': 'Bodegas',
@@ -162,6 +164,18 @@ function App() {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <Home />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Dashboard route - protected but doesn't need PropertyRoute */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <DashboardPage />
               </AuthenticatedLayout>
             </ProtectedRoute>
           }

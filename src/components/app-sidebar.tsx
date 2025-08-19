@@ -31,6 +31,7 @@ import {
   PieChart,
   Wheat,
   TestTubeDiagonal,
+  TrendingUp,
 } from "lucide-react"
 
 import {
@@ -75,6 +76,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
     case "good-practices":
       return [
         // { icon: <BarChart3 size={16} />, label: "Orden de aplicación", path: "/orden-aplicacion" },
+        { icon: <TrendingUp size={16} />, label: "Dashboard", path: "/dashboard" },
         { icon: <TestTubeDiagonal size={16} />, label: "Ordenes de aplicación", path: "/orden-aplicacion-new" },
         { icon: <BarChart3 size={16} />, label: "Faenas Agrícolas", path: "/faenas-agricolas" },
         { icon: <BarChart3 size={16} />, label: "Cosechas", path: "/cosechas" },
