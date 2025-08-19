@@ -23,6 +23,7 @@ import {
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { cn } from '@/lib/utils';
+import sofiaChatService from '@/_services/sofiaChatService';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -69,9 +70,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [connectionString, setConnectionString] = useState('mongodb://admin:RqYHnFEieZBzaifpnv@100.200.100.30:27017/sofia_corellana_qa?authSource=admin');
-  const [enterpriseId, setEnterpriseId] = useState('6898f0391766d0e9d498f365');
+  const [isLarge, setIsLarge] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -104,23 +103,9 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/sofia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          connectionString,
-          enterpriseId,
-          prompt: inputValue,
-        }),
+      const data = await sofiaChatService.sendMessage({                
+        prompt: inputValue,
       });
-
-      if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
-      }
-
-      const data = await response.json();
       
       if (data.success) {
         const assistantMessage: Message = {
@@ -157,8 +142,8 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     }
   };
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
+  const toggleSize = () => {
+    setIsLarge(!isLarge);
   };
 
   const renderChart = (chartConfig: any) => {
@@ -175,7 +160,8 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
       },
     };
 
-    const chartHeight = isFullscreen ? "h-96" : "h-64";
+    // Altura de los gráficos según el tamaño
+    const chartHeight = isLarge ? "h-[500px]" : "h-64";
 
     switch (type) {
       case 'bar':
@@ -240,11 +226,11 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={toggleFullscreen}
+                  onClick={toggleSize}
                   className="h-6 w-6 p-0"
-                  title="Pantalla completa"
+                  title="Cambiar tamaño"
                 >
-                  <Maximize className="h-3 w-3" />
+                  <Maximize2 className="h-3 w-3" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -275,80 +261,75 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
   return (
     <div className={cn(
       "fixed z-50 shadow-lg",
-      isFullscreen 
+      isLarge 
         ? "inset-0 m-4" 
-        : "bottom-4 right-4 w-96 h-[600px]"
+        : "bottom-4 right-4 w-[600px] h-[500px]"
     )}>
       <Card className={cn(
         "flex flex-col h-full",
-        isFullscreen ? "w-full" : "w-96 h-[600px]"
+        isLarge ? "w-full" : "w-[600px] h-[500px]"
       )}>
         <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Bot className="h-5 w-5 text-blue-500" />
+            <CardTitle className={cn(
+              "flex items-center gap-2",
+              isLarge ? "text-2xl" : "text-lg"
+            )}>
+              <Bot className={cn(
+                "text-blue-500",
+                isLarge ? "h-7 w-7" : "h-5 w-5"
+              )} />
               sofIA Chat
             </CardTitle>
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleFullscreen}
-                className="h-6 w-6 p-0"
-                title={isFullscreen ? "Salir pantalla completa" : "Pantalla completa"}
+                onClick={toggleSize}
+                className={cn(
+                  "p-0",
+                  isLarge ? "h-8 w-8" : "h-6 w-6"
+                )}
+                title={isLarge ? "Tamaño mediano" : "Pantalla completa"}
               >
-                {isFullscreen ? <Minimize className="h-3 w-3" /> : <Maximize className="h-3 w-3" />}
+                {isLarge ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleSize}
-                className="h-6 w-6 p-0"
+                className={cn(
+                  "p-0",
+                  isLarge ? "h-8 w-8" : "h-6 w-6"
+                )}
                 title="Minimizar"
               >
-                <Minimize2 className="h-3 w-3" />
+                <Minimize2 className={cn(
+                  isLarge ? "h-4 w-4" : "h-3 w-3"
+                )} />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-6 w-6 p-0"
+                className={cn(
+                  "p-0",
+                  isLarge ? "h-8 w-8" : "h-6 w-6"
+                )}
                 title="Cerrar"
               >
-                <X className="h-3 w-3" />
+                <X className={cn(
+                  isLarge ? "h-4 w-4" : "h-3 w-3"
+                )} />
               </Button>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-          {/* Configuración de conexión */}
-          <div className="px-4 pb-2 flex-shrink-0">
-            <div className="space-y-2 text-xs">
-              <div>
-                <label className="text-xs font-medium">Connection String:</label>
-                <Input
-                  value={connectionString}
-                  onChange={(e) => setConnectionString(e.target.value)}
-                  className="h-6 text-xs"
-                  placeholder="MongoDB connection string"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Enterprise ID:</label>
-                <Input
-                  value={enterpriseId}
-                  onChange={(e) => setEnterpriseId(e.target.value)}
-                  className="h-6 text-xs"
-                  placeholder="Enterprise ID"
-                />
-              </div>
-            </div>
-          </div>
-
+          {/* Mensajes */}
           <Separator className="flex-shrink-0" />
 
-          {/* Mensajes */}
           <div className="flex-1 min-h-0 overflow-hidden">
             <ScrollArea className="h-full px-4 py-2">
             <div className="space-y-4">
@@ -361,20 +342,28 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                   )}
                 >
                   {message.type === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-blue-600" />
+                    <div className={cn(
+                      "rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0",
+                      isLarge ? "w-12 h-12" : "w-8 h-8"
+                    )}>
+                      <Bot className={cn(
+                        "text-blue-600",
+                        isLarge ? "h-6 w-6" : "h-4 w-4"
+                      )} />
                     </div>
                   )}
                   
                   <div className={cn(
-                    'max-w-[280px] space-y-2',
-                    message.type === 'user' ? 'order-1' : 'order-2'
+                    'space-y-2',
+                    message.type === 'user' ? 'order-1' : 'order-2',
+                    isLarge ? 'max-w-[800px]' : 'max-w-[400px]'
                   )}>
                     <div className={cn(
-                      'rounded-lg px-3 py-2 text-sm',
+                      'rounded-lg px-3 py-2',
                       message.type === 'user'
                         ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
+                        : 'bg-gray-100 text-gray-900',
+                      isLarge ? 'text-base' : 'text-sm'
                     )}>
                       {message.content}
                     </div>
@@ -386,20 +375,32 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
-                            size="sm"
+                            size={isLarge ? "default" : "sm"}
                             onClick={() => downloadChart(chart, index)}
-                            className="h-6 text-xs"
+                            className={cn(
+                              "text-xs",
+                              isLarge ? "h-8 px-3" : "h-6"
+                            )}
                           >
-                            <Download className="h-3 w-3 mr-1" />
+                            <Download className={cn(
+                              "mr-1",
+                              isLarge ? "h-4 w-4" : "h-3 w-3"
+                            )} />
                             Descargar
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size={isLarge ? "default" : "sm"}
                             onClick={() => copyToClipboard(JSON.stringify(chart, null, 2))}
-                            className="h-6 text-xs"
+                            className={cn(
+                              "text-xs",
+                              isLarge ? "h-8 px-3" : "h-6"
+                            )}
                           >
-                            <Copy className="h-3 w-3 mr-1" />
+                            <Copy className={cn(
+                              "mr-1",
+                              isLarge ? "h-4 w-4" : "h-3 w-3"
+                            )} />
                             Copiar
                           </Button>
                         </div>
@@ -409,29 +410,47 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                     {/* Mostrar datos si existen */}
                     {message.data && message.data.result && (
                       <div className="space-y-2">
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className={cn(
+                          "text-xs",
+                          isLarge ? "text-sm px-3 py-1" : ""
+                        )}>
                           Datos: {message.data.result.length} registros
                         </Badge>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size={isLarge ? "default" : "sm"}
                           onClick={() => copyToClipboard(JSON.stringify(message.data, null, 2))}
-                          className="h-6 text-xs"
+                          className={cn(
+                            "text-xs",
+                            isLarge ? "h-8 px-3" : "h-6"
+                          )}
                         >
-                          <Copy className="h-3 w-3 mr-1" />
+                          <Copy className={cn(
+                            "mr-1",
+                            isLarge ? "h-4 w-4" : "h-3 w-3"
+                          )} />
                           Copiar datos
                         </Button>
                       </div>
                     )}
                     
-                    <div className="text-xs text-gray-500">
+                    <div className={cn(
+                      "text-gray-500",
+                      isLarge ? "text-sm" : "text-xs"
+                    )}>
                       {message.timestamp.toLocaleTimeString()}
                     </div>
                   </div>
                   
                   {message.type === 'user' && (
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-gray-600" />
+                    <div className={cn(
+                      "rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0",
+                      isLarge ? "w-12 h-12" : "w-8 h-8"
+                    )}>
+                      <User className={cn(
+                        "text-gray-600",
+                        isLarge ? "h-6 w-6" : "h-4 w-4"
+                      )} />
                     </div>
                   )}
                 </div>
@@ -439,12 +458,24 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
               
               {isLoading && (
                 <div className="flex gap-3 justify-start">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-blue-600" />
+                  <div className={cn(
+                    "rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0",
+                    isLarge ? "w-12 h-12" : "w-8 h-8"
+                  )}>
+                    <Bot className={cn(
+                      "text-blue-600",
+                      isLarge ? "h-6 w-6" : "h-4 w-4"
+                    )} />
                   </div>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-gray-600">Procesando...</span>
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg",
+                    isLarge ? "text-base" : "text-sm"
+                  )}>
+                    <Loader2 className={cn(
+                      "animate-spin",
+                      isLarge ? "h-5 w-5" : "h-4 w-4"
+                    )} />
+                    <span className="text-gray-600">Procesando...</span>
                   </div>
                 </div>
               )}
@@ -463,16 +494,25 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe tu mensaje..."
-                className="flex-1"
+                className={cn(
+                  "flex-1",
+                  isLarge ? "h-12 text-base px-4" : "h-9 text-sm px-3"
+                )}
                 disabled={isLoading}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading}
-                size="icon"
-                className="flex-shrink-0"
+                size={isLarge ? "lg" : "icon"}
+                className={cn(
+                  "flex-shrink-0",
+                  isLarge ? "px-4" : ""
+                )}
               >
-                <Send className="h-4 w-4" />
+                <Send className={cn(
+                  isLarge ? "h-5 w-5" : "h-4 w-4"
+                )} />
+                {isLarge && <span className="ml-2">Enviar</span>}
               </Button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 // API URLs
-export const API_BASE_URL = import.meta.env.VITE_API_CRUDS_URL || 'http://localhost:4900';
-export const API_BASE_SOFIA = import.meta.env.VITE_API_SOFIA_URL || 'http://localhost:4500'; 
+export const API_BASE_URL = import.meta.env.VITE_API_CRUDS_URL || 'https://apis.sofiagestionagricola.cl/api-cruds'//'http://localhost:4900';
+export const API_BASE_SOFIA = import.meta.env.VITE_API_SOFIA_URL || 'https://apis.sofiagestionagricola.cl/api-sofia'; 
+export const API_BASE_SOFIA_CHAT = import.meta.env.VITE_API_SOFIA_CHAT_URL || 'http://100.200.100.28:3500'; 
 // API endpoints
 export const ENDPOINTS = {
   productCategory: {
