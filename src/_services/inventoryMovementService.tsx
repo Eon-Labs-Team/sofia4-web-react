@@ -99,10 +99,7 @@ class InventoryMovementService {
           const { propertyId } = useAuthStore.getState();
           
           const response = await fetch(ENDPOINTS.inventoryMovement.history(warehouseId, productId), {
-            headers: {
-              'Content-Type': 'application/json',
-              'propertyId': propertyId?.toString() || '',
-            },
+            headers: authService.getAuthHeaders(),
           });
           
           if (response.ok) {
@@ -300,14 +297,10 @@ class InventoryMovementService {
     comments?: string;
   }): Promise<any> {
     try {
-      const { propertyId: userPropertyId } = useAuthStore.getState();
 
       const response = await fetch(ENDPOINTS.inventoryMovement.assign, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(assignData),
       });
 
@@ -339,10 +332,7 @@ class InventoryMovementService {
 
       const response = await fetch(ENDPOINTS.inventoryMovement.consume, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(consumeData),
       });
 
@@ -373,10 +363,7 @@ class InventoryMovementService {
 
       const response = await fetch(ENDPOINTS.inventoryMovement.move, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(moveData),
       });
 
@@ -406,10 +393,7 @@ class InventoryMovementService {
 
       const response = await fetch(ENDPOINTS.inventoryMovement.manualChange, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(changeData),
       });
 
@@ -439,10 +423,7 @@ class InventoryMovementService {
 
       const response = await fetch(ENDPOINTS.inventoryMovement.restore, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'propertyId': userPropertyId?.toString() || '',
-        },
+        headers: authService.getAuthHeaders(),
         body: JSON.stringify(restoreData),
       });
 

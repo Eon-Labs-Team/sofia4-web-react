@@ -10,7 +10,7 @@ class MachineryService {
    * Get all machinery
    * @returns Promise with all machinery
    */
-  async findAll(propertyId: string | number | null): Promise<IMachinery[]> {
+  async findAll(): Promise<IMachinery[]> {
     try {
       
       const url = authService.buildUrlWithParams(ENDPOINTS.machinery.base);

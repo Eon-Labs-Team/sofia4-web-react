@@ -26,6 +26,12 @@ import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
 import inventoryMovementService from "@/_services/inventoryMovementService";
 import inventoryLotService from "@/_services/inventoryLotService";
 import propertyService from "@/_services/propertyService";
+import productCategoryService from "@/_services/productCategoryService";
+import productSubcategoryService from "@/_services/productSubcategoryService";
+import costClassificationService from "@/_services/costClassificationService";
+import costSubclassificationService from "@/_services/costSubclassificationService";
+import measurementUnitsService from "@/_services/measurementUnitsService";
+import genericTreatmentService from "@/_services/genericTreatmentService";
 import { toast } from "@/components/ui/use-toast";
 import DynamicForm from "@/components/DynamicForm/DynamicForm";
 import { 
@@ -109,6 +115,204 @@ const createAssignFieldRules = (
   };
 };
 
+// Field rules para el formulario de productos
+const createProductFieldRules = (
+  subcategories: any[],
+  costSubclassifications: any[]
+): FormGridRules => {
+  return {
+    rules: [
+      // =====================================
+      // REGLAS PARA CATEGORÍA Y SUBCATEGORÍA
+      // =====================================
+      
+      // Regla 1: Cuando se selecciona una categoría, filtrar subcategorías
+      {
+        trigger: { 
+          field: 'category',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'filterOptions',
+          targetField: 'subcategory',
+          filterListKey: 'subcategoriesOptions',
+          filterByField: 'categoryId',
+        }
+      },
+      
+      // Regla 2: Limpiar subcategoría solo cuando el usuario cambia manualmente la categoría
+      // (no cuando se establece automáticamente desde subcategoría)
+      {
+        trigger: { 
+          field: 'category',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'preset',
+          targetField: 'subcategory',
+          preset: (formData, _parentData, externalData) => {
+            const categoryId = formData.category;
+            const currentSubcategory = formData.subcategory;
+            
+            // Si no hay subcategoría actual, simplemente limpiar
+            if (!currentSubcategory) return '';
+            
+            // Buscar la subcategoría actual para verificar si pertenece a la nueva categoría
+            const selectedSubcategory = externalData?.subcategoriesOptions?.find((subcat: any) => 
+              subcat._id === currentSubcategory
+            );
+            
+            // Si la subcategoría actual pertenece a la nueva categoría, mantenerla
+            if (selectedSubcategory && selectedSubcategory.categoryId === categoryId) {
+              return currentSubcategory;
+            }
+            
+            // Si no pertenece, limpiarla
+            return '';
+          }
+        }
+      },
+      
+      // Regla 3: Cuando se deselecciona categoría, mostrar todas las subcategorías
+      {
+        trigger: { 
+          field: 'category',
+          condition: (value) => value === null || value === undefined || value === ''
+        },
+        action: {
+          type: 'filterOptions',
+          targetField: 'subcategory',
+          filterListKey: 'subcategoriesOptions',
+          filterFunction: (allSubcategories) => {
+            return [...allSubcategories];
+          }
+        }
+      },
+      
+      // Regla 4: Cuando se selecciona una subcategoría, establecer automáticamente su categoría
+      {
+        trigger: { 
+          field: 'subcategory',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'lookup',
+          source: 'list',
+          listKey: 'subcategoriesOptions',
+          lookupField: '_id',
+          targetField: 'category',
+          mappingField: 'categoryId'
+        }
+      },
+      
+      // Regla 5: No limpiar categoría cuando se deselecciona subcategoría
+      // Esto permite mayor flexibilidad al usuario
+
+      // =====================================
+      // REGLAS PARA CLASIFICACIÓN Y SUBCLASIFICACIÓN
+      // =====================================
+      
+      // Regla 6: Cuando se selecciona una clasificación de costo, filtrar subclasificaciones
+      {
+        trigger: { 
+          field: 'costClassification',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'filterOptions',
+          targetField: 'costSubclassification',
+          filterListKey: 'costSubclassificationsOptions',
+          filterByField: 'costClassificationId',
+        }
+      },
+      
+      // Regla 7: Limpiar subclasificación solo cuando el usuario cambia manualmente la clasificación
+      // (no cuando se establece automáticamente desde subclasificación)
+      {
+        trigger: { 
+          field: 'costClassification',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'preset',
+          targetField: 'costSubclassification',
+          preset: (formData, _parentData, externalData) => {
+            const classificationId = formData.costClassification;
+            const currentSubclassification = formData.costSubclassification;
+            
+            // Si no hay subclasificación actual, simplemente limpiar
+            if (!currentSubclassification) return '';
+            
+            // Buscar la subclasificación actual para verificar si pertenece a la nueva clasificación
+            const selectedSubclassification = externalData?.costSubclassificationsOptions?.find((subclass: any) => 
+              subclass._id === currentSubclassification
+            );
+            
+            // Si la subclasificación actual pertenece a la nueva clasificación, mantenerla
+            if (selectedSubclassification && selectedSubclassification.costClassificationId === classificationId) {
+              return currentSubclassification;
+            }
+            
+            // Si no pertenece, limpiarla
+            return '';
+          }
+        }
+      },
+      
+      // Regla 8: Cuando se deselecciona clasificación, mostrar todas las subclasificaciones
+      {
+        trigger: { 
+          field: 'costClassification',
+          condition: (value) => value === null || value === undefined || value === ''
+        },
+        action: {
+          type: 'filterOptions',
+          targetField: 'costSubclassification',
+          filterListKey: 'costSubclassificationsOptions',
+          filterFunction: (allSubclassifications) => {
+            return [...allSubclassifications];
+          }
+        }
+      },
+      
+      // Regla 9: Cuando se selecciona una subclasificación, establecer automáticamente su clasificación
+      {
+        trigger: { 
+          field: 'costSubclassification',
+          condition: (value) => value !== null && value !== undefined && value !== ''
+        },
+        action: {
+          type: 'lookup',
+          source: 'list',
+          listKey: 'costSubclassificationsOptions',
+          lookupField: '_id',
+          targetField: 'costClassification',
+          mappingField: 'costClassificationId'
+        }
+      },
+      
+      // Regla 10: No limpiar clasificación cuando se deselecciona subclasificación
+      // Esto permite mayor flexibilidad al usuario
+    ],
+    externalData: {
+      subcategoriesOptions: subcategories.map(subcat => ({
+        _id: subcat._id,
+        name: subcat.subcategoryName || subcat.name,
+        categoryId: subcat.categoryId,
+        value: subcat._id,
+        label: subcat.subcategoryName || subcat.name
+      })),
+      costSubclassificationsOptions: costSubclassifications.map(subclass => ({
+        _id: subclass._id,
+        name: subclass.name,
+        costClassificationId: subclass.costClassificationId,
+        value: subclass._id,
+        label: subclass.name
+      }))
+    }
+  };
+};
+
 // Render function for structure type
 const renderStructureType = (value: 'unit' | 'series') => {
   return (
@@ -142,13 +346,13 @@ const renderCategory = (value: string) => {
 
 // Column configuration for central lots grid
 const centralLotsColumns: Column[] = [
-  {
-    id: "id",
-    header: "ID",
-    accessor: "_id",
-    visible: true,
-    sortable: true,
-  },
+  // {
+  //   id: "id",
+  //   header: "ID",
+  //   accessor: "_id",
+  //   visible: true,
+  //   sortable: true,
+  // },
   {
     id: "lotNumber",
     header: "Número de Lote",
@@ -262,7 +466,7 @@ const columns: Column[] = [
     id: "id",
     header: "ID",
     accessor: "_id",
-    visible: true,
+    visible: false,
     sortable: true,
   },
   {
@@ -279,7 +483,7 @@ const columns: Column[] = [
     accessor: "description",
     visible: true,
     sortable: false,
-    render: (value: string) => value || '-',
+    render: (value: string) => value || 'Sin descripción',
   },
   {
     id: "category",
@@ -350,12 +554,97 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
   const [isCentralWarehouseDialogOpen, setIsCentralWarehouseDialogOpen] = useState(false);
   const [warehousesLoaded, setWarehousesLoaded] = useState(false);
   
-  // Estados para lotes de bodega central
-  const [centralLots, setCentralLots] = useState<IInventoryLot[]>([]);
+  // Estados para lotes de bodega central organizados por producto
+  const [productLots, setProductLots] = useState<{[productId: string]: IInventoryLot[]}>({});
   const [loadingCentralLots, setLoadingCentralLots] = useState(false);
   const [centralLotsLoaded, setCentralLotsLoaded] = useState(false);
   
+  // Estados para datos del formulario de productos
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [costClassifications, setCostClassifications] = useState<any[]>([]);
+  const [costSubclassifications, setCostSubclassifications] = useState<any[]>([]);
+  const [measurementUnits, setMeasurementUnits] = useState<any[]>([]);
+  const [genericTreatments, setGenericTreatments] = useState<any[]>([]);
+  const [loadingFormData, setLoadingFormData] = useState(false);
+  const [productFieldRules, setProductFieldRules] = useState<FormGridRules | null>(null);
+  
   const { user, propertyId } = useAuthStore();
+
+  // Columnas adicionales para mostrar información de stock en el grid de productos
+  const getProductColumnsWithStock = (): Column[] => {
+    return [
+      ...columns,
+      {
+        id: "totalStock",
+        header: "Stock Total",
+        accessor: "_id",
+        visible: true,
+        sortable: true,
+        render: (productId: string) => {
+          const lots = productLots[productId] || [];
+          const totalQuantity = lots.reduce((sum, lot) => sum + lot.quantity, 0);
+          return (
+            <span className={`font-semibold ${
+              totalQuantity > 0 ? 'text-green-600' : totalQuantity < 0 ? 'text-red-600' : 'text-gray-500'
+            }`}>
+              {totalQuantity.toLocaleString()}
+            </span>
+          );
+        },
+      },
+      {
+        id: "lotsCount",
+        header: "Número de Lotes",
+        accessor: "_id",
+        visible: true,
+        sortable: true,
+        render: (productId: string) => {
+          const lots = productLots[productId] || [];
+          return (
+            <span className="text-sm text-muted-foreground">
+              {lots.length} lote{lots.length !== 1 ? 's' : ''}
+            </span>
+          );
+        },
+      },
+    ];
+  };
+
+  // Función para renderizar el contenido expandible de los lotes de cada producto
+  const renderProductLotsContent = (product: IInventoryProduct) => {
+    const lots = productLots[product._id] || [];
+    console.log(`Renderizando lotes para producto ${product.name}:`, lots);
+    
+    if (lots.length === 0) {
+      return (
+        <div className="text-center p-4 text-muted-foreground">
+          <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>No hay lotes para este producto en la bodega central</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="px-6 py-3 bg-background border-t border-border/50">
+        <div className="mb-3">
+          <h4 className="font-medium text-sm text-muted-foreground/80 uppercase tracking-wide">
+            Lotes del Producto ({lots.length})
+          </h4>
+        </div>
+        <div className="overflow-hidden px-1">
+          <Grid
+            gridId={`product-lots-${product._id}`}
+            data={lots}
+            columns={centralLotsColumns}
+            idField="_id"
+            title=""
+            key={`lots-grid-${product._id}-${lots.length}`}
+          />
+        </div>
+      </div>
+    );
+  };
 
 
 
@@ -374,6 +663,13 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
       setAssignFieldRules(createAssignFieldRules(allWarehouses));
     }
   }, [allWarehouses]);
+
+  // Cargar lotes cuando se cargan los productos y hay bodega central
+  useEffect(() => {
+    if (products.length > 0 && centralWarehouses.length > 0 && !centralLotsLoaded) {
+      fetchCentralLots(centralWarehouses[0]._id);
+    }
+  }, [products, centralWarehouses, centralLotsLoaded]);
 
   const fetchProducts = async () => {
     console.log("trayendo productos")
@@ -447,10 +743,22 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
       console.log('Cargando lotes de bodega central:', centralWarehouseId);
       
       const lotsData = await inventoryLotService.getByWarehouseId(centralWarehouseId);
-      setCentralLots(lotsData);
+      const lots = lotsData || [];
+      
+      // Organizar lotes por producto
+      const lotsByProduct: {[productId: string]: IInventoryLot[]} = {};
+      lots.forEach(lot => {
+        if (!lotsByProduct[lot.productId]) {
+          lotsByProduct[lot.productId] = [];
+        }
+        lotsByProduct[lot.productId].push(lot);
+      });
+      
+      setProductLots(lotsByProduct);
       setCentralLotsLoaded(true);
       
-      console.log('Lotes de bodega central cargados:', lotsData);
+      console.log('Lotes de bodega central organizados por producto:', lotsByProduct);
+      console.log('Número de productos con lotes:', Object.keys(lotsByProduct).length);
     } catch (error) {
       console.error('Error fetching central lots:', error);
       toast({
@@ -458,8 +766,65 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
         description: "No se pudieron cargar los lotes de la bodega central",
         variant: "destructive",
       });
+      setProductLots({});
     } finally {
       setLoadingCentralLots(false);
+    }
+  };
+
+  // Función para cargar los datos necesarios para el formulario de productos
+  const fetchFormData = async () => {
+    if (loadingFormData) return;
+    
+    try {
+      setLoadingFormData(true);
+      
+      // Cargar todos los datos en paralelo
+      const [
+        categoriesData,
+        subcategoriesData,
+        costClassificationsData,
+        costSubclassificationsData,
+        measurementUnitsData,
+        genericTreatmentsData
+      ] = await Promise.all([
+        productCategoryService.findAll(),
+        productSubcategoryService.findAll(),
+        costClassificationService.findAll(),
+        costSubclassificationService.findAll(),
+        measurementUnitsService.findAll(),
+        genericTreatmentService.findAll()
+      ]);
+      
+      setCategories(categoriesData);
+      setSubcategories(subcategoriesData);
+      setCostClassifications(costClassificationsData);
+      setCostSubclassifications(costSubclassificationsData);
+      setMeasurementUnits(measurementUnitsData);
+      setGenericTreatments(genericTreatmentsData);
+      
+      // Crear field rules para filtrado
+      const fieldRules = createProductFieldRules(subcategoriesData, costSubclassificationsData);
+      setProductFieldRules(fieldRules);
+      
+      console.log('Datos del formulario cargados:', {
+        categories: categoriesData.length,
+        subcategories: subcategoriesData.length,
+        costClassifications: costClassificationsData.length,
+        costSubclassifications: costSubclassificationsData.length,
+        measurementUnits: measurementUnitsData.length,
+        genericTreatments: genericTreatmentsData.length
+      });
+      
+    } catch (error) {
+      console.error('Error loading form data:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los datos del formulario",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingFormData(false);
     }
   };
 
@@ -467,12 +832,14 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
   const handleCreate = () => {
     setSelectedProduct(null);
     setIsEditMode(false);
+    fetchFormData(); // Cargar datos del formulario
     setIsDialogOpen(true);
   };
 
   const handleEdit = (product: IInventoryProduct) => {
     setSelectedProduct(product);
     setIsEditMode(true);
+    fetchFormData(); // Cargar datos del formulario
     setIsDialogOpen(true);
   };
 
@@ -537,6 +904,7 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
       // Recargar lotes para mostrar el nuevo lote creado (si aplicable)
       if (!isEditMode && centralWarehouses.length > 0) {
         setCentralLotsLoaded(false);
+        setProductLots({}); // Limpiar los datos anteriores
         fetchCentralLots(centralWarehouses[0]._id);
       }
     } catch (error) {
@@ -631,6 +999,7 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
       // Recargar bodegas para incluir la nueva bodega central
       setWarehousesLoaded(false); // Permitir nueva carga
       setCentralLotsLoaded(false); // Permitir nueva carga de lotes
+      setProductLots({}); // Limpiar los datos anteriores
       fetchWarehousesAndProperties();
     } catch (error) {
       console.error('Error creating central warehouse:', error);
@@ -761,55 +1130,18 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
       <div className="px-[1px]">
         <Grid
           data={products}
-          columns={columns}
+          columns={getProductColumnsWithStock()}
           gridId="bodega-central-products"
+          idField="_id"
           actions={gridActions}
+          expandableContent={renderProductLotsContent}
         />
       </div>
 
-      {/* Central Warehouse Lots Section */}
-      {centralWarehouses.length > 0 && (
-        <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                <Package className="mr-3 h-6 w-6" />
-                Lotes en Bodega Central
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
-                Stock disponible en {centralWarehouses[0]?.name || 'Bodega Central'}
-              </p>
-            </div>
-            <div className="text-sm text-gray-500">
-              {loadingCentralLots ? 'Cargando...' : `${centralLots.length} lotes`}
-            </div>
-          </div>
-
-          {loadingCentralLots ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-sm text-muted-foreground">Cargando lotes de bodega central...</div>
-            </div>
-          ) : centralLots.length > 0 ? (
-            <div className="px-[1px]">
-              <Grid
-                data={centralLots}
-                columns={centralLotsColumns}
-                gridId="central-warehouse-lots"
-              />
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium">Sin lotes en bodega central</h3>
-              <p className="text-sm mt-2">Crea facturas para generar lotes automáticamente</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className={isModal ? "max-w-xl" : "max-w-2xl"}>
+        <DialogContent className={isModal ? "max-w-6xl max-h-screen overflow-auto" : "max-w-2xl"}>
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Producto" : "Nuevo Producto"}
@@ -823,8 +1155,16 @@ const BodegaCentral: React.FC<BodegaCentralProps> = ({ isModal = false, onClose 
           </DialogHeader>
 
           <DynamicForm
-            sections={getInventoryProductFormSections()}
+            sections={getInventoryProductFormSections(
+              categories,
+              subcategories,
+              costClassifications,
+              costSubclassifications,
+              measurementUnits,
+              genericTreatments
+            )}
             onSubmit={handleFormSubmit}
+            fieldRules={productFieldRules || undefined}
             defaultValues={
               selectedProduct 
                 ? getDefaultProductValues(selectedProduct)

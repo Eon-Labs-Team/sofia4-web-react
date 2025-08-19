@@ -200,9 +200,9 @@ const MaritalStatus = ({ isModal = false }: MaritalStatusProps) => {
       sortable: true,
     },
     {
-      id: "statusName",
+      id: "description",
       header: "Nombre",
-      accessor: "statusName",
+      accessor: "description",
       visible: true,
       sortable: true,
       groupable: true,

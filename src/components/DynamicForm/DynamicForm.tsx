@@ -4,8 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import FormSection from "./FormSection";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { FormGridRules, FieldRulesEngine } from "@/lib/validationSchemas";
 
 export type FieldType =
@@ -72,9 +70,11 @@ export interface DynamicFormProps {
   onSubmit: (data: any) => void;
   defaultValues?: Record<string, any>;
   validationSchema?: z.ZodType<any>;
-  enabledButtons?: boolean;
   // Field rules support
   fieldRules?: FormGridRules;
+  // External submit control
+  onFormReady?: (submitFunction: () => void) => void;
+  hideSubmitButtons?: boolean;
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
@@ -82,10 +82,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onSubmit,
   defaultValues = {},
   validationSchema,
-  enabledButtons = true,
   fieldRules,
+  onFormReady,
+  hideSubmitButtons = false,
 }) => {
-  const [formSections, setFormSections] = useState<SectionConfig[]>(sections);
   const rulesEngineRef = useRef<FieldRulesEngine | null>(null);
   
   // Estado para manejar opciones dinámicas filtradas
@@ -141,7 +141,40 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
   });
 
-  const { setValue, getValues } = formMethods;
+  const { setValue, getValues, handleSubmit: formHandleSubmit } = formMethods;
+  
+  // Ref para evitar recrear la función de submit constantemente
+  const submitFunctionRef = useRef<(() => void) | null>(null);
+
+  // Crear la función de submit una sola vez y mantenerla actualizada
+  const createSubmitFunction = () => {
+    return () => {
+      formHandleSubmit((data) => {
+        // Process any selectableGrid data to ensure it's properly formatted
+        const processedData = { ...data };
+        // Loop through all sections to find selectableGrid fields
+        formSections.forEach((section) => {
+          section.fields.forEach((field) => {
+            if (field.type === 'selectableGrid' && processedData[field.name]) {
+              // Ensure the data is an array for selectableGrid
+              if (!Array.isArray(processedData[field.name])) {
+                processedData[field.name] = [processedData[field.name]];
+              }
+            }
+          });
+        });
+        onSubmit(processedData);
+      })();
+    };
+  };
+
+  // Exponer la función de submit una sola vez
+  useEffect(() => {
+    if (onFormReady && !submitFunctionRef.current) {
+      submitFunctionRef.current = createSubmitFunction();
+      onFormReady(submitFunctionRef.current);
+    }
+  }, [onFormReady]);
   
   // Obtener campos que necesitan watch (solo los que tienen reglas)
   const watchedFieldNames = useMemo(() => {
@@ -195,9 +228,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
   }, [setValue, getValues]);
 
-  // Update sections when props change or dynamic options change
-  useEffect(() => {
-    const updatedSections = sections.map(section => ({
+  // Compute sections with dynamic options using useMemo for better performance
+  const formSections = useMemo(() => {
+    return sections.map(section => ({
       ...section,
       fields: section.fields.map(field => {
         // Si hay opciones dinámicas para este campo, usarlas
@@ -210,8 +243,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         return field;
       })
     }));
-    
-    setFormSections(updatedSections);
   }, [sections, dynamicOptions]);
 
   const handleSubmit = formMethods.handleSubmit((data) => {
@@ -237,35 +268,25 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     formMethods.reset(defaultValues);
   };
 
-  const moveSection = (dragIndex: number, hoverIndex: number) => {
-    const draggedSection = formSections[dragIndex];
-    const newSections = [...formSections];
-    newSections.splice(dragIndex, 1);
-    newSections.splice(hoverIndex, 0, draggedSection);
-    setFormSections(newSections);
-  };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <FormProvider {...formMethods}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {formSections.map((section, index) => (
-            <FormSection
-              key={section.id}
-              section={section}
-              index={index}
-              moveSection={moveSection}
-            />
-          ))}
-          {enabledButtons && (<div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleReset}>
-              Reset
-            </Button>
-            <Button type="submit">Submit</Button>
-          </div>)}
-        </form>
-      </FormProvider>
-    </DndProvider>
+    <FormProvider {...formMethods}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {formSections.map((section, index) => (
+          <FormSection
+            key={section.id}
+            section={section}
+            index={index}
+          />
+        ))}
+        {!hideSubmitButtons && (<div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button type="submit">Submit</Button>
+        </div>)}
+      </form>
+    </FormProvider>
   );
 };
 

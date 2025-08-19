@@ -31,6 +31,7 @@ import {
   PieChart,
   Wheat,
   Bot,
+  TestTubeDiagonal,
 } from "lucide-react"
 
 import {
@@ -76,8 +77,10 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
   switch (actionId) {
     case "good-practices":
       return [
-        { icon: <BarChart3 size={16} />, label: "Orden de aplicación", path: "/orden-aplicacion" },
+        // { icon: <BarChart3 size={16} />, label: "Orden de aplicación", path: "/orden-aplicacion" },
+        { icon: <TestTubeDiagonal size={16} />, label: "Ordenes de aplicación", path: "/orden-aplicacion-new" },
         { icon: <BarChart3 size={16} />, label: "Faenas Agrícolas", path: "/faenas-agricolas" },
+        { icon: <BarChart3 size={16} />, label: "Cosechas", path: "/cosechas" },
         { icon: <BarChart3 size={16} />, label: "Trabajos realizados", path: "/trabajos-realizados" },
         {
           icon: <FileText size={20} />,
@@ -121,10 +124,10 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
           children: [
             { icon: <Building2 size={16} />, label: "Lista Cuarteles", path: "/lista-cuarteles" },
             { icon: <Building2 size={16} />, label: "Bodegas", path: "/bodegas" },
-            { icon: <Wrench size={16} />, label: "Lista Maquinarias", path: "/lista-maquinarias" },
+            // { icon: <Wrench size={16} />, label: "Lista Maquinarias", path: "/lista-maquinarias" },
             { icon: <Users size={16} />, label: "Lista Trabajadores", path: "/lista-trabajadores" },
-            { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
-            { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
+            // { icon: <Briefcase size={16} />, label: "Faenas", path: "/faenas" },
+            // { icon: <Briefcase size={16} />, label: "Labores", path: "/labores" },
           ]
         },
       ];

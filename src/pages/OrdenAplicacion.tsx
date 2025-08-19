@@ -766,16 +766,14 @@ const OrdenAplicacion = () => {
   // Función para manejar la selección del tipo de ingreso
   const handleIngresoOptionSelect = (option: SplitButtonOption) => {
     if (option.value === "wizard") {
-      // Abrir wizard en el dialog
-      setFormType("wizard");
+      // Abrir wizard en diálogo separado
       setSelectedOrden(null);
       setIsEditMode(false);
       setSelectedCuartel(null);
       setSelectedTaskType('');
-      setIsDialogOpen(true);
+      setIsWizardDialogOpen(true);
     } else if (option.value === "complete") {
-      // Abrir el formulario completo actual
-      setFormType("complete");
+      // Abrir el formulario completo en diálogo principal
       setSelectedOrden(null);
       setIsEditMode(false);
       setSelectedCuartel(null);
@@ -788,7 +786,8 @@ const OrdenAplicacion = () => {
   const HOURS_PER_WORKDAY = 8; // 1 jornada = 8 horas
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formType, setFormType] = useState<"complete" | "wizard">("complete");
+  const [submitFormFunction, setSubmitFormFunction] = useState<(() => void) | null>(null);
+  const [isWizardDialogOpen, setIsWizardDialogOpen] = useState(false);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [currentProductField, setCurrentProductField] = useState<any>(null);
   const [ordenesAplicacion, setOrdenesAplicacion] = useState<IWork[]>([]);
@@ -1838,7 +1837,7 @@ const OrdenAplicacion = () => {
       handleAddOrden(processedData);
       console.log('processedData', data);
     }
-    setIsDialogOpen(false);
+    setIsWizardDialogOpen(false);
   };
 
   // Function to handle edit button click
@@ -2244,7 +2243,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await machineryService.findAll(propertyId);
+      const data = await machineryService.findAll();
       console.log('All machinery fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
@@ -2844,7 +2843,7 @@ const OrdenAplicacion = () => {
      
 
       {/* DIALOG - Form Modal */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}  >
         <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
           <DialogHeader>
             <DialogTitle 
@@ -2852,76 +2851,22 @@ const OrdenAplicacion = () => {
             >
               {isEditMode 
                 ? "Editar Orden de Aplicación" 
-                : formType === "wizard" 
-                  ? "Nueva Orden de Aplicación" 
-                  : "Nueva Orden de Aplicación"}
+                : "Nueva Orden de Aplicación"}
             </DialogTitle>
             <DialogDescription 
               style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
             >
               {isEditMode
                 ? "Actualice los detalles de la orden de aplicación existente"
-                : formType === "wizard"
-                  ? "Siga los pasos para crear una nueva orden de aplicación"
-                  : "Complete el formulario para crear una nueva orden de aplicación"}
+                : "Complete el formulario para crear una nueva orden de aplicación"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="w-full max-w-full overflow-hidden">
-            {formType === "wizard" && !isEditMode ? (
-              <WizardOrdenAplicacion
-                onComplete={handleWizardComplete}
-                onCancel={() => setIsDialogOpen(false)}
-                defaultValues={{
-                  workType: "A", // Default to Application type
-                  coverage: 100, // Cobertura siempre preseleccionado en 100
-                  paymentMethodToWorkers: "trato", // Método de pago preseleccionado en "trato"
-                  workState: "pending", // Estado de la faena preseleccionado en pendiente
-                  // Fechas y horas por defecto
-                  startDate: new Date().toISOString().split('T')[0], // Fecha de inicio setear a la actual
-                  endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
-                  hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
-                  hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
-                  reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
-                  ppe: {
-                    gloves: true,
-                    applicatorSuit: true,
-                    respirator: true,
-                    faceShield: true,
-                    protectiveShoes: true,
-                    other: ""
-                  },
-                  climateConditions: "",
-                  windSpeed: "",
-                  temperature: "",
-                  humidity: "",
-                  observation: "",
-                  observationApp: "",
-                  syncApp: false,
-                  appUser: "",
-                  responsibles: {
-                    supervisor: { userId: "" },
-                    planner: { userId: "" },
-                    technicalVerifier: { userId: "" },
-                    applicators: [{ userId: "" }]
-                  }
-                }}
-                // Pass raw data arrays (preferred for consistent rules)
-                cuarteles={cuarteles}
-                allTasks={allTasks}
-                taskTypes={taskTypes}
-                workerList={workerList}
-                weatherConditions={weatherConditions}
-                windConditions={windConditions}
-                cropTypes={cropTypes}
-                varietyTypes={varietyTypes}
-                // Keep legacy options for backward compatibility
-                {...getWizardOptions()}
-              />
-            ) : (
-              <DynamicForm
-              enabledButtons={true}
+            <DynamicForm
               fieldRules={mainFormRules}
+              hideSubmitButtons={true}
+              onFormReady={(submitFn) => setSubmitFormFunction(() => submitFn)}
               sections={formSections.map(section => {
               if (section.id === "orden-info-basic") {
                 return {
@@ -3101,7 +3046,6 @@ const OrdenAplicacion = () => {
                 }
             }
           />
-            )}
           </div>
           
           {/* Workers section - only visible in edit mode */}
@@ -3810,10 +3754,9 @@ const OrdenAplicacion = () => {
             </div>
           )}
           
-          {formType !== "wizard" && (
-            <DialogFooter 
-              className="mt-6 px-4"
-            >
+          <DialogFooter 
+            className="mt-6 px-4"
+          >
               <Button 
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
@@ -3822,15 +3765,87 @@ const OrdenAplicacion = () => {
                 Cancelar
               </Button>
               <Button 
-                type="submit" 
-                form="dynamic-form"
-                onClick={handleFormSubmit}
+                onClick={() => {
+                  if (submitFormFunction) {
+                    submitFormFunction();
+                  }
+                }}
+                disabled={!submitFormFunction}
                 style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
               >
                 {isEditMode ? "Actualizar" : "Crear"}
               </Button>
             </DialogFooter>
-          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* WIZARD DIALOG - Separate dialog for wizard */}
+      <Dialog open={isWizardDialogOpen} onOpenChange={setIsWizardDialogOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto overflow-x-hidden w-[95vw]">
+          <DialogHeader>
+            <DialogTitle 
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.xl }}
+            >
+              Ingreso Guiado - Nueva Orden de Aplicación
+            </DialogTitle>
+            <DialogDescription 
+              style={{ fontSize: DESIGN_TOKENS.typography.fontSize.sm }}
+            >
+              Complete el proceso guiado para crear una nueva orden de aplicación paso a paso
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="w-full max-w-full overflow-hidden">
+            <WizardOrdenAplicacion
+              onComplete={handleWizardComplete}
+              onCancel={() => setIsWizardDialogOpen(false)}
+              defaultValues={{
+                workType: "A", // Default to Application type
+                coverage: 100, // Cobertura siempre preseleccionado en 100
+                paymentMethodToWorkers: "trato", // Método de pago preseleccionado en "trato"
+                workState: "pending", // Estado de la faena preseleccionado en pendiente
+                // Fechas y horas por defecto
+                startDate: new Date().toISOString().split('T')[0], // Fecha de inicio setear a la actual
+                endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
+                hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
+                hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
+                reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
+                ppe: {
+                  gloves: true,
+                  applicatorSuit: true,
+                  respirator: true,
+                  faceShield: true,
+                  protectiveShoes: true,
+                  other: ""
+                },
+                climateConditions: "",
+                windSpeed: "",
+                temperature: "",
+                humidity: "",
+                observation: "",
+                observationApp: "",
+                syncApp: false,
+                appUser: "",
+                responsibles: {
+                  supervisor: { userId: "" },
+                  planner: { userId: "" },
+                  technicalVerifier: { userId: "" },
+                  applicators: [{ userId: "" }]
+                }
+              }}
+              // Pass raw data arrays (preferred for consistent rules)
+              cuarteles={cuarteles}
+              allTasks={allTasks}
+              taskTypes={taskTypes}
+              workerList={workerList}
+              weatherConditions={weatherConditions}
+              windConditions={windConditions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+              // Keep legacy options for backward compatibility
+              {...getWizardOptions()}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

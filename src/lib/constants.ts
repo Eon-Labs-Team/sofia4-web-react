@@ -11,9 +11,9 @@ export const ENDPOINTS = {
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/measurementUnits/${id}/state/${state}`,
   },
   subcategoryProduct: {
-    base: `${API_BASE_URL}/enterprise/subcategoryProduct`,
-    byId: (id: string | number) => `${API_BASE_URL}/enterprise/subcategoryProduct/${id}`,
-    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/subcategoryProduct/${id}/state/${state}`,
+    base: `${API_BASE_URL}/enterprise/productSubcategory`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/productSubcategory/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/productSubcategory/${id}/state/${state}`,
   },
   workers: {
     base: `${API_BASE_URL}/work/workers`,
@@ -264,6 +264,11 @@ export const ENDPOINTS = {
     base: `${API_BASE_URL}/enterprise/windCondition`,
     byId: (id: string | number) => `${API_BASE_URL}/enterprise/windCondition/${id}`,
     setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/windCondition/${id}/state/${state}`,
+  },
+  genericTreatment: {
+    base: `${API_BASE_URL}/enterprise/genericTreatment`,
+    byId: (id: string | number) => `${API_BASE_URL}/enterprise/genericTreatment/${id}`,
+    setState: (id: string | number, state: boolean) => `${API_BASE_URL}/enterprise/genericTreatment/${id}/state/${state}`,
   },
   work: {
     base: `${API_BASE_URL}/work/work`,

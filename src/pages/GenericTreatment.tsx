@@ -22,12 +22,11 @@ import DynamicForm, {
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { IProductCategory } from "@eon-lib/eon-mongoose";
-import productCategoryService from "@/_services/productCategoryService";
+import { IGenericTreatment } from "@eon-lib/eon-mongoose";
+import genericTreatmentService from "@/_services/genericTreatmentService";
 import propertyService from "@/_services/propertyService";
 
-
-interface ProductCategoryProps {
+interface GenericTreatmentProps {
   isModal?: boolean;
 }
 
@@ -46,15 +45,12 @@ const renderBoolean = (value: boolean) => {
   );
 };
 
-
-
-
-const ProductCategory = ({ isModal = false }: ProductCategoryProps) => {
+const GenericTreatment = ({ isModal = false }: GenericTreatmentProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [productCategories, setProductCategories] = useState<IProductCategory[]>([]);
+  const [genericTreatments, setGenericTreatments] = useState<IGenericTreatment[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProductCategory, setSelectedProductCategory] = useState<IProductCategory | null>(null);
+  const [selectedGenericTreatment, setSelectedGenericTreatment] = useState<IGenericTreatment | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Column configuration for the grid
@@ -67,9 +63,9 @@ const ProductCategory = ({ isModal = false }: ProductCategoryProps) => {
       sortable: true,
     },
     {
-      id: "categoryName",
-      header: "Nombre categoría",
-      accessor: "categoryName",
+      id: "name",
+      header: "Nombre del Tratamiento",
+      accessor: "name",
       visible: true,
       sortable: true,
       groupable: true,
@@ -104,61 +100,61 @@ const ProductCategory = ({ isModal = false }: ProductCategoryProps) => {
   ];
 
   // Expandable content for each row
-const expandableContent = (row: IProductCategory) => (
-  <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">{row.categoryName}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <p>
-          <strong>Nombre:</strong> {row.categoryName || 'N/A'}
-        </p>
-        <p>
-          <strong>Estado:</strong> {row.state ? 'Activo' : 'Inactivo'}
-        </p>
-        <p>
-          <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? 
-            properties.length > 0 ? 
-              row.assignedProperties
-                .map((id) => {
-                  const prop = properties.find((p) => p.id === id);
-                  return prop ? prop.propertyName : id;
-                })
-                .filter(Boolean)
-                .join(", ") || 'Todos'
-              : row.assignedProperties.join(", ")
-            : 'Todos'
-          }
-        </p>
-      </div>
-      <div>
-        <p>
-          <strong>Creado:</strong> {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}
-        </p>
-        <p>
-          <strong>Actualizado:</strong> {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'N/A'}
-        </p>
+  const expandableContent = (row: IGenericTreatment) => (
+    <div className="p-4">
+      <h3 className="text-lg font-semibold mb-2">{row.name}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <p>
+            <strong>Nombre:</strong> {row.name || 'N/A'}
+          </p>
+          <p>
+            <strong>Estado:</strong> {row.state ? 'Activo' : 'Inactivo'}
+          </p>
+          <p>
+            <strong>Predios Asignados:</strong> {row.assignedProperties && row.assignedProperties.length > 0 ? 
+              properties.length > 0 ? 
+                row.assignedProperties
+                  .map((id) => {
+                    const prop = properties.find((p) => p.id === id);
+                    return prop ? prop.propertyName : id;
+                  })
+                  .filter(Boolean)
+                  .join(", ") || 'Todos'
+                : row.assignedProperties.join(", ")
+              : 'Todos'
+            }
+          </p>
+        </div>
+        <div>
+          <p>
+            <strong>Creado:</strong> {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}
+          </p>
+          <p>
+            <strong>Actualizado:</strong> {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'N/A'}
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
   
-  // Fetch productCategories on component mount
+  // Fetch genericTreatments on component mount
   useEffect(() => {
-    fetchProductCategories();
+    fetchGenericTreatments();
     fetchProperties();
   }, []);
   
-  // Function to fetch productCategories data
-  const fetchProductCategories = async () => {
+  // Function to fetch genericTreatments data
+  const fetchGenericTreatments = async () => {
     setIsLoading(true);
     try {
-      const data = await productCategoryService.findAll();
-      setProductCategories(data as IProductCategory[]);
+      const data = await genericTreatmentService.findAll();
+      setGenericTreatments(data as IGenericTreatment[]);
     } catch (error) {
-      console.error("Error loading product categories:", error);
+      console.error("Error loading generic treatments:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las categorías de productos. Intente nuevamente.",
+        description: "No se pudieron cargar los tratamientos genéricos. Intente nuevamente.",
         variant: "destructive",
       });
     } finally {
@@ -188,95 +184,95 @@ const expandableContent = (row: IProductCategory) => (
     }
   };
   
-  // Function to handle adding a new productCategory
-  const handleAddProductCategory = async (data: Partial<IProductCategory>) => {
+  // Function to handle adding a new genericTreatment
+  const handleAddGenericTreatment = async (data: Partial<IGenericTreatment>) => {
     try {
-      await productCategoryService.createProductCategory(data)
+      await genericTreatmentService.create(data);
       
       toast({
         title: "Éxito",
-        description: "Categoría de producto agregada correctamente.",
+        description: "Tratamiento genérico agregado correctamente.",
       });
       
       // Refresh data
-      fetchProductCategories();
+      fetchGenericTreatments();
       // Close dialog
       setIsDialogOpen(false);
     } catch (error) {
-      console.error("Error al agregar categoría de producto:", error);
+      console.error("Error al agregar tratamiento genérico:", error);
       toast({
         title: "Error",
-        description: "No se pudo agregar la categoría de producto. Intente nuevamente.",
+        description: "No se pudo agregar el tratamiento genérico. Intente nuevamente.",
         variant: "destructive",
       });
     }
   };
 
-  // Function to handle updating a productCategory
-  const handleUpdateProductCategory = async (id: string, data: Partial<IProductCategory>) => {
+  // Function to handle updating a genericTreatment
+  const handleUpdateGenericTreatment = async (id: string, data: Partial<IGenericTreatment>) => {
     try {
-      await productCategoryService.updateProductCategory(id,data)
+      await genericTreatmentService.update(id, data);
       
       toast({
         title: "Éxito",
-        description: "Categoría de producto actualizada correctamente.",
+        description: "Tratamiento genérico actualizado correctamente.",
       });
       
       // Refresh data
-      fetchProductCategories();
+      fetchGenericTreatments();
       // Close dialog
       setIsDialogOpen(false);
-      // Reset selected productCategory
-      setSelectedProductCategory(null);
+      // Reset selected genericTreatment
+      setSelectedGenericTreatment(null);
       // Reset edit mode
       setIsEditMode(false);
     } catch (error) {
-      console.error(`Error al actualizar categoría de producto ${id}:`, error);
+      console.error(`Error al actualizar tratamiento genérico ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar la categoría de producto. Intente nuevamente.",
+        description: "No se pudo actualizar el tratamiento genérico. Intente nuevamente.",
         variant: "destructive",
       });
     }
   };
 
-  // Function to handle deleting a productCategory
-  const handleDeleteProductCategory = async (id: string) => {
+  // Function to handle deleting a genericTreatment
+  const handleDeleteGenericTreatment = async (id: string) => {
     try {
-      await productCategoryService.softDeleteProductCategory(id)
+      await genericTreatmentService.softDelete(id);
       
       toast({
         title: "Éxito",
-        description: "Categoría de producto eliminada correctamente.",
+        description: "Tratamiento genérico eliminado correctamente.",
       });
       
       // Refresh data
-      fetchProductCategories();
+      fetchGenericTreatments();
     } catch (error) {
-      console.error(`Error al eliminar categoría de producto ${id}:`, error);
+      console.error(`Error al eliminar tratamiento genérico ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar la categoría de producto. Intente nuevamente.",
+        description: "No se pudo eliminar el tratamiento genérico. Intente nuevamente.",
         variant: "destructive",
       });
     }
   };
 
-  // Form configuration for adding new productCategory
+  // Form configuration for adding new genericTreatment
   const getFormSections = useCallback((): SectionConfig[] => [
     {
-      id: "productCategory-info",
-      title: "Información de la Categoría",
-      description: "Ingrese los datos de la nueva categoría de producto",
+      id: "genericTreatment-info",
+      title: "Información del Tratamiento",
+      description: "Ingrese los datos del nuevo tratamiento genérico",
       fields: [
         {
-          id: "categoryName",
+          id: "name",
           type: "text",
           label: "Nombre *",
-          name: "categoryName",
-          placeholder: "Ingrese nombre de la categoría",
+          name: "name",
+          placeholder: "Ingrese nombre del tratamiento",
           required: true,
-          helperText: "Ingrese el nombre identificativo de la categoría"
+          helperText: "Ingrese el nombre identificativo del tratamiento"
         },
         {
           id: "state",
@@ -284,7 +280,7 @@ const expandableContent = (row: IProductCategory) => (
           label: "Activo",
           name: "state",
           required: false,
-          helperText: "Indica si la categoría está activa"
+          helperText: "Indica si el tratamiento está activo"
         },
         {
           id: "assignedProperties",
@@ -292,7 +288,7 @@ const expandableContent = (row: IProductCategory) => (
           label: "Predios Asignados",
           name: "assignedProperties",
           required: false,
-          helperText: "Seleccione los predios donde estará disponible esta categoría (deje vacío para todos)",
+          helperText: "Seleccione los predios donde estará disponible este tratamiento (deje vacío para todos)",
           options: properties.map(property => ({
             value: property.id,
             label: `${property.propertyName} - ${property.region}, ${property.city}`
@@ -304,29 +300,29 @@ const expandableContent = (row: IProductCategory) => (
 
   // Form validation schema
   const formValidationSchema = z.object({
-    categoryName: z.string().min(1, { message: "El nombre es obligatorio" }),
+    name: z.string().min(1, { message: "El nombre es obligatorio" }),
     state: z.boolean().default(true),
     assignedProperties: z.array(z.string()).optional().default([])
   });
 
   // Form submit handler
-  const handleFormSubmit = (data: Partial<IProductCategory>) => {
-    if (isEditMode && selectedProductCategory && selectedProductCategory._id) {
-      handleUpdateProductCategory(selectedProductCategory._id, data);
+  const handleFormSubmit = (data: Partial<IGenericTreatment>) => {
+    if (isEditMode && selectedGenericTreatment && selectedGenericTreatment._id) {
+      handleUpdateGenericTreatment(selectedGenericTreatment._id, data);
     } else {
-      handleAddProductCategory(data);
+      handleAddGenericTreatment(data);
     }
   };
 
   // Handle edit button click
-  const handleEditClick = (productCategory: IProductCategory) => {
-    setSelectedProductCategory(productCategory);
+  const handleEditClick = (genericTreatment: IGenericTreatment) => {
+    setSelectedGenericTreatment(genericTreatment);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
 
   // Render action buttons for each row
-  const renderActions = (row: IProductCategory) => {
+  const renderActions = (row: IGenericTreatment) => {
     return (
       <div className="flex items-center space-x-2">
         <Button
@@ -344,8 +340,8 @@ const expandableContent = (row: IProductCategory) => (
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
-            if (window.confirm(`¿Está seguro de eliminar la categoría ${row.categoryName}?`)) {
-              handleDeleteProductCategory(row._id);
+            if (window.confirm(`¿Está seguro de eliminar el tratamiento ${row.name}?`)) {
+              handleDeleteGenericTreatment(row._id);
             }
           }}
         >
@@ -359,33 +355,33 @@ const expandableContent = (row: IProductCategory) => (
     <div className={isModal ? "w-full h-full overflow-hidden" : "container mx-auto py-6"}>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Categorías de Productos</h1>
+          <h1 className="text-2xl font-bold">Tratamientos Genéricos</h1>
           <p className="text-muted-foreground">
             {isModal 
-              ? "Gestione las categorías de productos"
-              : "Gestione las categorías de productos para su organización"
+              ? "Gestione los tratamientos genéricos"
+              : "Gestione los tratamientos genéricos para su organización"
             }
           </p>
         </div>
         <Button
           onClick={() => {
             setIsEditMode(false);
-            setSelectedProductCategory(null);
+            setSelectedGenericTreatment(null);
             setIsDialogOpen(true);
           }}
         >
-          <Plus className="mr-2 h-4 w-4" /> Agregar Categoría
+          <Plus className="mr-2 h-4 w-4" /> Agregar Tratamiento
         </Button>
       </div>
 
       <div className={isModal ? "px-0.5 h-[calc(100vh-200px)] overflow-hidden" : ""}>
         <Grid
-          data={productCategories}
+          data={genericTreatments}
           columns={columns}
           expandableContent={expandableContent}
           actions={renderActions}
           isLoading={isLoading}
-          gridId="productCategories-grid"
+          gridId="genericTreatments-grid"
           idField="_id"
           title=""
         />
@@ -395,19 +391,19 @@ const expandableContent = (row: IProductCategory) => (
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Editar Categoría" : "Agregar Nueva Categoría"}
+              {isEditMode ? "Editar Tratamiento" : "Agregar Nuevo Tratamiento"}
             </DialogTitle>
             <DialogDescription>
-              Complete el formulario para {isEditMode ? "actualizar" : "agregar"} una categoría de producto.
+              Complete el formulario para {isEditMode ? "actualizar" : "agregar"} un tratamiento genérico.
             </DialogDescription>
           </DialogHeader>
 
           <DynamicForm
             sections={getFormSections()}
-            defaultValues={isEditMode && selectedProductCategory ? {
-              categoryName: selectedProductCategory.categoryName,
-              state: selectedProductCategory.state,
-              assignedProperties: selectedProductCategory.assignedProperties || []
+            defaultValues={isEditMode && selectedGenericTreatment ? {
+              name: selectedGenericTreatment.name,
+              state: selectedGenericTreatment.state,
+              assignedProperties: selectedGenericTreatment.assignedProperties || []
             } : {
               state: true,
               assignedProperties: []
@@ -430,4 +426,4 @@ const expandableContent = (row: IProductCategory) => (
   );
 };
 
-export default ProductCategory;
+export default GenericTreatment;
