@@ -61,9 +61,11 @@ import WaterChlorination from "./pages/WaterChlorination";
 import TrabajosRealizados from "./pages/TrabajosRealizados";
 import SubcategoryProduct from "./pages/subcategory-product";
 import OrdenAplicacion from "./pages/OrdenAplicacion";
+import OrdenAplicacionNew from "./pages/OrdenAplicacionNew";
 import WizardExample from "./components/Wizard/WizardExample";
-import FaenasAgricolas from "./pages/faenas-agricolas";
+import FaenasAgricolas from "./pages/FaenasAgricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
+import Cosechas from "./pages/Cosecha";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -88,6 +90,7 @@ function App() {
       'faenas': 'Faenas',
       'labores': 'Labores',
       'orden-aplicacion': 'Orden de Aplicación',
+      'orden-aplicacion-new': 'Orden de Aplicación (Nueva)',
       'bodegas': 'Bodegas',
       'monitoreo-estado-fenologico': 'Monitoreo Estado Fenológico',
       'analisis-suelo': 'Análisis de Suelo',
@@ -686,6 +689,33 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/orden-aplicacion-new"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <OrdenAplicacionNew />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+<Route
+          path="/cosechas"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Cosechas />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+        
         
         <Route
           path="/wizard-example"

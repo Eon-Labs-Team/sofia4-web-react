@@ -2243,7 +2243,7 @@ const OrdenAplicacion = () => {
     
     try {
       console.log('Fetching machinery for order:', selectedOrden?.id || selectedOrden._id);
-      const data = await machineryService.findAll(propertyId);
+      const data = await machineryService.findAll();
       console.log('All machinery fetched:', data);
       
       const workId = selectedOrden.id || (selectedOrden as any)._id;
