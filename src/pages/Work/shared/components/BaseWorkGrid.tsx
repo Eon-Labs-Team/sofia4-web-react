@@ -68,7 +68,8 @@ const renderDefaultActions = (work: IWork, onEdit?: (work: IWork) => void, onDel
           <Edit className="h-4 w-4" />
         </Button>
       )}
-      {onDelete && work.workState !== 'confirmed' && (
+      {/* {onDelete && work.workState !== 'confirmed' && ( */}
+        {onDelete && (
         <Button
           variant="ghost"
           size="sm"
@@ -141,7 +142,7 @@ export const BaseWorkGrid: React.FC<BaseWorkGridProps> = ({
         <div>
           <h2 className="text-2xl font-bold">
             {workType === 'A' && 'Órdenes de Aplicación'}
-            {workType === 'C' && 'Órdenes de Cosecha'}
+            {workType === 'C' && 'Cosechas'}
             {workType === 'T' && 'Trabajos Agrícolas'}
           </h2>
           <p className="text-muted-foreground">

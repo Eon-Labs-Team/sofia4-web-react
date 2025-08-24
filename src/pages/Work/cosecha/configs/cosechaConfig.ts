@@ -564,6 +564,22 @@ export const cosechaGridColumns: Column[] = [
   //   sortable: true,
   // },
   {
+    id: "taskType",
+    header: "Faena",
+    accessor: "taskType",
+    visible: true,
+    sortable: true,
+    groupable: true,
+  },
+  {
+    id: "task",
+    header: "Labor",
+    accessor: "task",
+    visible: true,
+    sortable: true,
+    groupable: true,
+  },
+  {
     id: "workState",
     header: "Estado",
     accessor: "workState",

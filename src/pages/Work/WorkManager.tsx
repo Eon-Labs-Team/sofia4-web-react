@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { 
   TestTubeDiagonal, 
   Package, 
   Wrench, 
@@ -55,6 +65,8 @@ const WorkManager: React.FC<WorkManagerProps> = ({
   hideTypeSelector = false,
 }) => {
   const [selectedWorkType, setSelectedWorkType] = useState<WorkType>(defaultWorkType);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [workToDelete, setWorkToDelete] = useState<any>(null);
   
   // Hook de datos para el tipo de trabajo seleccionado
   const {
@@ -71,6 +83,44 @@ const WorkManager: React.FC<WorkManagerProps> = ({
 
   // Configuración activa basada en el tipo seleccionado
   const activeConfig = WORK_TYPE_CONFIGS[selectedWorkType];
+
+  // Generar columnas dinámicas con datos maestros (como en OrdenAplicacion.tsx)
+  const dynamicColumns = useMemo(() => {
+    return activeConfig.gridColumns.map(column => {
+      // Para la columna de cuartel
+      if (column.id === 'barracks') {
+        return {
+          ...column,
+          render: (value: string) => {
+            return masterData.cuarteles.find(cuartel => cuartel._id === value)?.areaName || value;
+          }
+        };
+      }
+      
+      // Para la columna de taskType (faena)
+      if (column.id === 'taskType') {
+        return {
+          ...column,
+          render: (value: string) => {
+            return masterData.taskTypes.find(taskType => taskType._id === value)?.name || value;
+          }
+        };
+      }
+      
+      // Para la columna de task (labor)
+      if (column.id === 'task') {
+        return {
+          ...column,
+          render: (value: any) => {
+            const taskId = typeof value === 'string' ? value : value?._id || value?.id;
+            return masterData.allTasks.find(task => task._id === taskId)?.taskName || taskId;
+          }
+        };
+      }
+      
+      return column;
+    });
+  }, [activeConfig.gridColumns, masterData.cuarteles, masterData.taskTypes, masterData.allTasks]);
 
   // Opciones para el selector de tipo de trabajo
   const workTypeOptions: WorkTypeSelectorOption[] = useMemo(() => [
@@ -184,9 +234,27 @@ const WorkManager: React.FC<WorkManagerProps> = ({
    * Manejar eliminación de trabajo
    */
   const handleDelete = async (work: any) => {
-    if (window.confirm(`¿Está seguro que desea eliminar el trabajo ${work.orderNumber}?`)) {
-      await deleteWork(work._id);
+    setWorkToDelete(work);
+    setShowDeleteDialog(true);
+  };
+
+  /**
+   * Confirmar eliminación de trabajo
+   */
+  const handleConfirmDelete = async () => {
+    if (workToDelete) {
+      await deleteWork(workToDelete._id);
+      setShowDeleteDialog(false);
+      setWorkToDelete(null);
     }
+  };
+
+  /**
+   * Cancelar eliminación de trabajo
+   */
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setWorkToDelete(null);
   };
 
   /**
@@ -331,13 +399,13 @@ const WorkManager: React.FC<WorkManagerProps> = ({
         </div>
         
         <div className="flex space-x-2">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={refreshData}
             disabled={state.isLoading}
           >
             Actualizar
-          </Button>
+          </Button> */}
           <Button
             onClick={handleNewWork}
             disabled={isLoadingMasterData}
@@ -370,7 +438,7 @@ const WorkManager: React.FC<WorkManagerProps> = ({
       <BaseWorkGrid
         workType={selectedWorkType}
         works={state.works}
-        columns={activeConfig.gridColumns}
+        columns={dynamicColumns}
         isLoading={state.isLoading}
         onEdit={handleEdit}
         onDelete={handleDelete}
@@ -392,6 +460,34 @@ const WorkManager: React.FC<WorkManagerProps> = ({
         isEditMode={state.isEditMode}
         isSubmitting={state.isLoading}
       />
+
+      {/* Alert Dialog para confirmación de eliminación */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro que desea eliminar el trabajo <strong>{workToDelete?.orderNumber}</strong>?
+              <br /><br />
+              <span className="text-red-600 font-medium">
+                ⚠️ Esta acción no se puede deshacer. Perderá toda la información del registro, 
+                incluyendo datos asociados de trabajadores, productos y maquinarias.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
