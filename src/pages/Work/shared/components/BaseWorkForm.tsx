@@ -12,7 +12,7 @@ import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm
 import { FormGrid } from "@/components/Grid/FormGrid";
 import { Trash2 } from "lucide-react";
 import type { IWork, WorkType as LibWorkType, IWorkers, IMachinery, IProducts } from "@eon-lib/eon-mongoose";
-import type { FormGridRules, WorkerFormData, MachineryFormData, ProductFormData } from "@/lib/validationSchemas";
+import type { FormGridRules } from "@/lib/validationSchemas";
 import type { WorkMasterData, WorkType } from "../types/workTypes";
 import type { Column } from "@/lib/store/gridStore";
 import workerService from "@/_services/workerService";
@@ -21,6 +21,7 @@ import productService from "@/_services/productService";
 import inventoryProductService from "@/_services/inventoryProductService";
 import inventoryMovementService from "@/_services/inventoryMovementService";
 import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
+import workService from "@/_services/workService";
 import { toast } from "@/components/ui/use-toast";
 import ProductSelectionModal from "@/components/ProductSelectionModal";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -498,6 +499,27 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       visible: true,
       sortable: true,
     },
+    {
+      id: "treatment",
+      header: "Tratamiento",
+      accessor: "treatment",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "doses",
+      header: "Dosis",
+      accessor: "doses",
+      visible: true,
+      sortable: true,
+    },
+    {
+      id: "calibration",
+      header: "Calibración",
+      accessor: "calibration",
+      visible: true,
+      sortable: true,
+    },
   ], [masterData.warehouseProducts]);
 
   // Field configurations for FormGrid components
@@ -649,7 +671,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       placeholder: 'Seleccionar maquinaria',
       options: masterData.machineryList.map(m => ({
         value: m._id,
-        label: (m as any).machineryName || (m as any).name || m._id
+        label: (m as any).equipment || (m as any).name || m._id
       }))
     },
     startTime: {
@@ -775,6 +797,18 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     invoiceNumber: {
       type: 'text' as const,
       placeholder: "Número de factura"
+    },
+    treatment: {
+      type: 'text' as const,
+      placeholder: "Tratamiento"
+    },
+    doses: {
+      type: 'text' as const,
+      placeholder: "Dosis"
+    },
+    calibration: {
+      type: 'text' as const,
+      placeholder: "Calibración"
     }
   }), [masterData.warehouseProducts]);
 
@@ -1156,11 +1190,247 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   }), [selectedWork, masterData.machineryList]);
 
   // =======================================
+  // FUNCIONES PARA ACTUALIZAR ARRAYS DE WORK
+  // =======================================
+
+  /**
+   * Convertir datos de FormGrid Worker al formato WorkWorkers de IWork
+   */
+  const convertToWorkWorker = (workerData: any, workId?: string): any => {
+    // Buscar información completa del trabajador por su ID
+    const selectedWorker = masterData.workerList.find(
+      worker => worker._id === workerData.worker || (worker as any).id === workerData.worker
+    );
+
+
+    return {
+      id: workerData.id,
+      workId: workId || (selectedWork?._id || selectedWork?.id) || "",
+      classification: workerData.classification || "",
+      worker: {
+        id: workerData.worker || "",
+        workerNationality: selectedWorker?.workerNationality || "",
+        rutDniNationality: selectedWorker?.rutDniNationality || "",
+        identificationDocumentType: selectedWorker?.identificationDocumentType || "",
+        rut: selectedWorker?.rut || "",
+        internalCod: selectedWorker?.internalCod || "",
+        names: selectedWorker?.names || "",
+        lastName: selectedWorker?.lastName || "",
+        secondLastName: selectedWorker?.secondLastName || "",
+      },
+      quadrille: workerData.quadrille || "",
+      workingDay: Number(workerData.workingDay || 1),
+      paymentMethod: workerData.paymentMethod || "trato", // Default to valid enum value
+      yield: Number(workerData.yield || 0),
+      totalHoursYield: Number(workerData.totalHoursYield || 8),
+      overtime: Number(workerData.overtime || 0),
+      bonus: Number(workerData.bonus || 0),
+      yieldValue: Number(workerData.yieldValue || 0),
+      dayValue: Number(workerData.dayValue || 0),
+      additionalBonuses: Number(workerData.additionalBonuses || 0),
+      exportPerformance: Number(workerData.exportPerformance || 0),
+      juicePerformance: Number(workerData.juicePerformance || 0),
+      othersPerformance: Number(workerData.othersPerformance || 0),
+      totalDeal: Number(workerData.totalDeal || 0),
+      dailyTotal: Number(workerData.dailyTotal || 0),
+      value: Number(workerData.value || 0),
+      salary: Number(workerData.salary || 0),
+      date: workerData.date || new Date().toISOString().split('T')[0],
+      contractor: workerData.contractor || "",
+      state: Boolean(workerData.state !== false), // Default to true unless explicitly false
+    };
+  };
+
+  /**
+   * Convertir datos de FormGrid Machinery al formato WorkMachinery de IWork
+   */
+  const convertToWorkMachinery = (machineryData: any, workId?: string): any => {
+    // Usar el entityId proporcionado o generar ID ficticio
+
+    return {
+      id: machineryData.id,
+      workId: workId || (selectedWork?._id || selectedWork?.id) || "",
+      machinery: machineryData.machinery || "",
+      startTime: machineryData.startTime || "",
+      endTime: machineryData.endTime || "",
+      finalHours: Number(machineryData.finalHours || 0),
+      timeValue: Number(machineryData.timeValue || 0),
+      totalValue: Number(machineryData.totalValue || 0),
+    };
+  };
+
+  /**
+   * Convertir datos de FormGrid Product al formato WorkProducts de IWork
+   */
+  const convertToWorkProduct = (productData: any, workId?: string, entityId?: string): any => {
+    // Usar el entityId proporcionado o generar ID ficticio
+    const recordId = entityId || productData.id || `product-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    return {
+      id: recordId,
+      entityId: entityId, // ID de la entidad separada para futuras búsquedas
+      workId: workId || (selectedWork?._id || selectedWork?.id) || "",
+      category: productData.category || "",
+      product: productData.product || "",
+      unitOfMeasurement: productData.unitOfMeasurement || "",
+      amountPerHour: String(productData.amountPerHour || 0),
+      amount: String(productData.amount || 0),
+      netUnitValue: String(productData.netUnitValue || 0),
+      totalValue: String(productData.totalValue || 0),
+      return: String(productData.return || 0),
+      machineryRelationship: productData.machineryRelationship || "",
+      packagingCode: productData.packagingCode || "",
+      invoiceNumber: productData.invoiceNumber || "",
+      treatment: productData.treatment || "",
+      doses: productData.doses || "",
+      calibration: productData.calibration || "",
+    };
+  };
+
+  /**
+   * Actualizar el array de workers en el registro Work
+   */
+  const updateWorkWorkers = async (action: 'add' | 'update' | 'remove', workerData?: any, originalWorkerId?: string) => {
+    if (!selectedWork) return;
+
+    try {
+      const currentWork = await workService.findById(selectedWork._id || selectedWork.id);
+      const currentWorkers = currentWork.workers || [];
+
+      let updatedWorkers: any[];
+
+      switch (action) {
+        case 'add':
+          const workId = selectedWork._id || selectedWork.id;
+          const workWorker = convertToWorkWorker(workerData, workId);
+          updatedWorkers = [...currentWorkers, workWorker];
+          break;
+        case 'update':
+          const updateWorkId = selectedWork._id || selectedWork.id;
+          updatedWorkers = currentWorkers.map((worker: any) =>
+            worker.id === workerData.id // Buscar por entityId para hacer la actualización correcta
+              ? convertToWorkWorker(workerData, updateWorkId)
+              : worker
+          );
+          break;
+        case 'remove':
+          updatedWorkers = currentWorkers.filter((worker: any) =>
+            worker.id !== workerData.id // Filtrar por id
+          );
+          break;
+        default:
+          updatedWorkers = currentWorkers;
+      }
+
+      // Actualizar solo los workers usando el endpoint específico
+      await workService.updateWorkers(selectedWork._id || selectedWork.id, updatedWorkers);
+
+      console.log(`Work workers array updated (${action}):`, updatedWorkers);
+
+    } catch (error) {
+      console.error(`Error updating work workers array (${action}):`, error);
+      // No lanzar error para no bloquear la operación principal
+    }
+  };
+
+  /**
+   * Actualizar el array de machinery en el registro Work
+   */
+  const updateWorkMachinery = async (action: 'add' | 'update' | 'remove', machineryData?: any) => {
+    if (!selectedWork) return;
+
+    try {
+      const currentWork = await workService.findById(selectedWork._id || selectedWork.id);
+      const currentMachinery = currentWork.machinery || [];
+
+      let updatedMachinery: any[];
+
+      switch (action) {
+        case 'add':
+          const workId = selectedWork._id || selectedWork.id;
+          const workMachinery = convertToWorkMachinery(machineryData, workId);
+          updatedMachinery = [...currentMachinery, workMachinery];
+          break;
+        case 'update':
+          const updateWorkId = selectedWork._id || selectedWork.id;
+          updatedMachinery = currentMachinery.map((machinery: any) =>
+            machinery.id === machineryData.id
+              ? convertToWorkMachinery(machineryData, updateWorkId)
+              : machinery
+          );
+          break;
+        case 'remove':
+          updatedMachinery = currentMachinery.filter((machinery: any) =>
+            machinery.id !== machineryData.id
+          );
+          break;
+        default:
+          updatedMachinery = currentMachinery;
+      }
+
+      // Actualizar solo la maquinaria usando el endpoint específico
+      await workService.updateMachinery(selectedWork._id || selectedWork.id, updatedMachinery);
+
+      console.log(`Work machinery array updated (${action}):`, updatedMachinery);
+
+    } catch (error) {
+      console.error(`Error updating work machinery array (${action}):`, error);
+      // No lanzar error para no bloquear la operación principal
+    }
+  };
+
+  /**
+   * Actualizar el array de products en el registro Work
+   */
+  const updateWorkProducts = async (action: 'add' | 'update' | 'remove', productData?: any, originalProductId?: string, entityId?: string) => {
+    if (!selectedWork) return;
+
+    try {
+      const currentWork = await workService.findById(selectedWork._id || selectedWork.id);
+      const currentProducts = currentWork.products || [];
+
+      let updatedProducts: any[];
+
+      switch (action) {
+        case 'add':
+          const workId = selectedWork._id || selectedWork.id;
+          const workProduct = convertToWorkProduct(productData, workId, entityId);
+          updatedProducts = [...currentProducts, workProduct];
+          break;
+        case 'update':
+          const updateWorkId = selectedWork._id || selectedWork.id;
+          updatedProducts = currentProducts.map((product: any) =>
+            product.entityId === entityId
+              ? convertToWorkProduct(productData, updateWorkId, entityId)
+              : product
+          );
+          break;
+        case 'remove':
+          updatedProducts = currentProducts.filter((product: any) =>
+            product.entityId !== entityId
+          );
+          break;
+        default:
+          updatedProducts = currentProducts;
+      }
+
+      // Actualizar solo los productos usando el endpoint específico
+      await workService.updateProducts(selectedWork._id || selectedWork.id, updatedProducts);
+
+      console.log(`Work products array updated (${action}):`, updatedProducts);
+
+    } catch (error) {
+      console.error(`Error updating work products array (${action}):`, error);
+      // No lanzar error para no bloquear la operación principal
+    }
+  };
+
+  // =======================================
   // FUNCIONES DE FETCH DE DATOS
   // =======================================
 
   /**
-   * Función para obtener trabajadores del trabajo actual
+   * Función para obtener trabajadores desde work.workers del trabajo actual
    */
   const fetchWorkers = async () => {
     if (!selectedWork) {
@@ -1170,31 +1440,47 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     
     try {
       setIsLoadingEntities(true);
-      console.log('Fetching workers for work:', selectedWork._id || selectedWork.id);
-      const data = await workerService.findAll();
-      console.log('All workers fetched:', data);
+      console.log('Getting workers from work.workers for work:', selectedWork._id || selectedWork.id);
       
-      const workId = selectedWork._id || selectedWork.id;
-      console.log('Filtering workers by workId:', workId);
+      // Obtener los trabajadores directamente del array work.workers
+      const workWorkers = selectedWork.workers || [];
+      console.log('Workers from work.workers:', workWorkers);
       
-      // Manejar respuestas tanto de arrays como paginadas
-      const allWorkersData = Array.isArray(data) ? data : (data as any)?.data || [];
-      console.log('Processed workers data:', allWorkersData);
+      // Convertir la estructura de work.workers al formato esperado por el grid
+      const convertedWorkers = workWorkers.map((workWorker: any, index: number) => ({
+        id: workWorker.id, // Usar el ID del schema o generar uno temporal
+        worker: workWorker.worker?.id || workWorker.worker || '',
+        classification: workWorker.classification || '',
+        quadrille: workWorker.quadrille || '',
+        workingDay: Number(workWorker.workingDay) || 1,
+        paymentMethod: workWorker.paymentMethod || '',
+        contractor: workWorker.contractor || '',
+        date: workWorker.date || '',
+        salary: Number(workWorker.salary) || 0,
+        yield: Number(workWorker.yield) || 0,
+        totalHoursYield: Number(workWorker.totalHoursYield) || 0,
+        yieldValue: Number(workWorker.yieldValue) || 0,
+        overtime: Number(workWorker.overtime) || 0,
+        bonus: Number(workWorker.bonus) || 0,
+        additionalBonuses: Number(workWorker.additionalBonuses) || 0,
+        dayValue: Number(workWorker.dayValue) || 0,
+        totalDeal: Number(workWorker.totalDeal) || 0,
+        dailyTotal: Number(workWorker.dailyTotal) || 0,
+        value: Number(workWorker.value) || 0,
+        exportPerformance: Number(workWorker.exportPerformance) || 0,
+        juicePerformance: Number(workWorker.juicePerformance) || 0,
+        othersPerformance: Number(workWorker.othersPerformance) || 0,
+        state: workWorker.state !== false, // Mantener el estado del schema
+        workId: selectedWork._id || selectedWork.id
+      }));
       
-      // Filtrar trabajadores que pertenecen al trabajo actual y están activos
-      const workWorkers = allWorkersData.filter((worker: any) => {
-        const matches = worker.workId === workId && worker.state !== false;
-        console.log(`Worker ${worker.id} - workId: ${worker.workId}, matches: ${matches}, state: ${worker.state}`);
-        return matches;
-      });
-      
-      console.log('Filtered workers for this work:', workWorkers);
-      setWorkers(workWorkers);
+      console.log('Converted workers for grid:', convertedWorkers);
+      setWorkers(convertedWorkers);
     } catch (error) {
-      console.error("Error loading workers:", error);
+      console.error("Error loading workers from work.workers:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los trabajadores",
+        description: "No se pudieron cargar los trabajadores del trabajo",
         variant: "destructive",
       });
     } finally {
@@ -1203,7 +1489,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   };
 
   /**
-   * Función para obtener maquinaria del trabajo actual
+   * Función para obtener maquinaria desde work.machinery del trabajo actual
    */
   const fetchMachinery = async () => {
     if (!selectedWork) {
@@ -1213,31 +1499,31 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     
     try {
       setIsLoadingEntities(true);
-      console.log('Fetching machinery for work:', selectedWork._id || selectedWork.id);
-      const data = await machineryService.findAll();
-      console.log('All machinery fetched:', data);
+      console.log('Getting machinery from work.machinery for work:', selectedWork._id || selectedWork.id);
       
-      const workId = selectedWork._id || selectedWork.id;
-      console.log('Filtering machinery by workId:', workId);
+      // Obtener la maquinaria directamente del array work.machinery
+      const workMachinery = selectedWork.machinery || [];
+      console.log('Machinery from work.machinery:', workMachinery);
       
-      // Manejar respuestas tanto de arrays como paginadas
-      const allMachineryData = Array.isArray(data) ? data : (data as any)?.data || [];
-      console.log('Processed machinery data:', allMachineryData);
+      // Convertir la estructura de work.machinery al formato esperado por el grid
+      const convertedMachinery = workMachinery.map((workMachine: any, index: number) => ({
+        id: workMachine.id, // ID temporal para el grid
+        machinery: workMachine.machinery || '',
+        startTime: workMachine.startTime || '',
+        endTime: workMachine.endTime || '',
+        finalHours: parseFloat(workMachine.finalHours) || 0,
+        timeValue: parseFloat(workMachine.timeValue) || 0,
+        totalValue: parseFloat(workMachine.totalValue) || 0,
+        workId: selectedWork._id || selectedWork.id
+      }));
       
-      // Filtrar maquinaria que pertenece al trabajo actual y está activa
-      const workMachinery = allMachineryData.filter((machine: any) => {
-        const matches = machine.workId === workId && machine.state !== false;
-        console.log(`Machinery ${machine.id} - workId: ${machine.workId}, state: ${machine.state}, matches: ${matches}`);
-        return matches;
-      });
-      
-      console.log('Filtered machinery for this work:', workMachinery);
-      setMachinery(workMachinery);
+      console.log('Converted machinery for grid:', convertedMachinery);
+      setMachinery(convertedMachinery);
     } catch (error) {
-      console.error("Error loading machinery:", error);
+      console.error("Error loading machinery from work.machinery:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar las maquinarias",
+        description: "No se pudieron cargar las maquinarias del trabajo",
         variant: "destructive",
       });
     } finally {
@@ -1246,7 +1532,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
   };
 
   /**
-   * Función para obtener productos del trabajo actual
+   * Función para obtener productos desde work.products del trabajo actual
    */
   const fetchProducts = async () => {
     if (!selectedWork) {
@@ -1256,31 +1542,39 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
     
     try {
       setIsLoadingEntities(true);
-      console.log('Fetching products for work:', selectedWork._id || selectedWork.id);
-      const data = await productService.findAll();
-      console.log('All products fetched:', data);
+      console.log('Getting products from work.products for work:', selectedWork._id || selectedWork.id);
       
-      const workId = selectedWork._id || selectedWork.id;
-      console.log('Filtering products by workId:', workId);
+      // Obtener los productos directamente del array work.products
+      const workProducts = selectedWork.products || [];
+      console.log('Products from work.products:', workProducts);
       
-      // Manejar respuestas tanto de arrays como paginadas
-      const allProductsData = Array.isArray(data) ? data : (data as any)?.data || [];
-      console.log('Processed products data:', allProductsData);
+      // Convertir la estructura de work.products al formato esperado por el grid
+      const convertedProducts = workProducts.map((workProduct: any, index: number) => ({
+        _id: `work-product-${index}-${Date.now()}`, // ID temporal para el grid
+        category: workProduct.category || '',
+        product: workProduct.product || '',
+        unitOfMeasurement: workProduct.unitOfMeasurement || '',
+        amountPerHour: parseFloat(workProduct.amountPerHour) || 0,
+        amount: parseFloat(workProduct.amount) || 0,
+        netUnitValue: parseFloat(workProduct.netUnitValue) || 0,
+        totalValue: parseFloat(workProduct.totalValue) || 0,
+        return: parseFloat(workProduct.return) || 0,
+        machineryRelationship: workProduct.machineryRelationship?.id || workProduct.machineryRelationship || '',
+        packagingCode: workProduct.packagingCode || '',
+        invoiceNumber: workProduct.invoiceNumber || '',
+        treatment: workProduct.treatment || '',
+        doses: workProduct.doses || '',
+        calibration: workProduct.calibration || '',
+        workId: selectedWork._id || selectedWork.id
+      }));
       
-      // Filtrar productos que pertenecen al trabajo actual
-      const workProducts = allProductsData.filter((product: any) => {
-        const matches = product.workId === workId;
-        console.log(`Product ${product._id} - workId: ${product.workId}, matches: ${matches}`);
-        return matches;
-      });
-      
-      console.log('Filtered products for this work:', workProducts);
-      setProducts(workProducts);
+      console.log('Converted products for grid:', convertedProducts);
+      setProducts(convertedProducts);
     } catch (error) {
-      console.error("Error loading products:", error);
+      console.error("Error loading products from work.products:", error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los productos",
+        description: "No se pudieron cargar los productos del trabajo",
         variant: "destructive",
       });
     } finally {
@@ -1635,15 +1929,23 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                     workId: selectedWork ? String(selectedWork._id || selectedWork.id) : "",
                     state: true
                   }}
-                  actions={(row: IWorkers) => (
+                  actions={(row: any) => (
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={async () => {
                         try {
-                          console.log('Soft deleting worker:', (row as any)._id);
-                          await workerService.softDeleteWorker((row as any)._id || '');
-                          console.log('Worker soft deleted successfully');
+                          console.log('Soft deleting worker:', (row as any).id);
+                          
+                          
+                          // Primero cambiar estado a false en la entidad Workers si tiene entityId
+                          if (row.id) {
+                            await workerService.softDeleteWorker(row.id);
+                            console.log('Worker state set to false in entity successfully');
+                          }
+                          
+                          // Luego eliminar del array workers en Work
+                          await updateWorkWorkers('remove', row, undefined);
                           
                           toast({
                             title: "Éxito",
@@ -1653,7 +1955,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                           console.log('Refreshing workers list after deletion...');
                           await fetchWorkers();
                         } catch (error) {
-                          console.error('Error deleting worker:', error);
+                          console.error('Error removing worker from work:', error);
                           toast({
                             title: "Error",
                             description: "No se pudo eliminar el trabajador",
@@ -1669,7 +1971,8 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                   onEditSave={async (originalRow, updatedRow) => {
                     try {
                       console.log('Saving worker edit:', { originalRow, updatedRow });
-                      // Convertir campos numéricos a strings como espera la interfaz IWorkers
+                      
+                      // Preparar datos para la entidad Workers
                       const workerData = {
                         ...updatedRow,
                         salary: String(updatedRow.salary || 0),
@@ -1687,21 +1990,31 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                         juicePerformance: String(updatedRow.juicePerformance || 0),
                         othersPerformance: String(updatedRow.othersPerformance || 0),
                       };
-                      await workerService.updateWorker(originalRow._id, workerData);
+                      
+                      
+                      // Primero actualizar la entidad Workers si tiene entityId
+                      if (workerData.id) {
+                        await workerService.updateWorker(workerData.id, workerData);
+                      }
+                      
+                      // Luego actualizar el array workers en Work
+                      await updateWorkWorkers('update', updatedRow, undefined);
+                      
                       await fetchWorkers();
                     } catch (error) {
                       console.error('Error updating worker:', error);
                       throw error; // Dejar que FormGrid maneje la notificación de error
                     }
                   }}
-                  onInlineAdd={async (newWorker: WorkerFormData) => {
+                  onInlineAdd={async (newWorker: any) => {
                     try {
                       if (!selectedWork) {
                         throw new Error("No hay un trabajo seleccionado");
                       }
 
                       const workId = selectedWork._id || selectedWork.id;
-                      // Convertir campos numéricos y preparar datos
+                      
+                      // Preparar datos para la entidad Workers
                       const workerData = {
                         ...newWorker,
                         workId: String(workId),
@@ -1723,7 +2036,14 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       };
                       
                       console.log('Adding new worker:', workerData);
-                      await workerService.createWorker(workerData as any);
+                      
+                      // Primero crear la entidad Worker
+                      const createdWorker = await workerService.createWorker(workerData as any);
+                      console.log('Worker created in entity:', createdWorker);
+                      
+                      // Luego actualizar el array workers en Work usando el ID del registro creado
+                      await updateWorkWorkers('add', {...newWorker, id: createdWorker._id }, undefined );
+                      
                       await fetchWorkers();
                     } catch (error) {
                       console.error('Error adding worker:', error);
@@ -1760,15 +2080,24 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                     totalValue: 0,
                     workId: selectedWork ? String(selectedWork._id || selectedWork.id) : "",
                   }}
-                  actions={(row: IMachinery) => (
+                  actions={(row: any) => (
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={async () => {
                         try {
                           console.log('Soft deleting machinery:', (row as any)._id);
-                          await machineryService.softDeleteMachinery((row as any)._id || '');
-                          console.log('Machinery soft deleted successfully');
+                          
+                          const entityId = (row as any)._id;
+                          
+                          // Primero cambiar estado a false en la entidad Machinery si tiene entityId
+                          if (entityId) {
+                            await machineryService.softDeleteMachinery(entityId);
+                            console.log('Machinery state set to false in entity successfully');
+                          }
+                          
+                          // Luego eliminar del array machinery en Work
+                          await updateWorkMachinery('remove', undefined);
                           
                           toast({
                             title: "Éxito",
@@ -1778,7 +2107,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                           console.log('Refreshing machinery list after deletion...');
                           await fetchMachinery();
                         } catch (error) {
-                          console.error('Error deleting machinery:', error);
+                          console.error('Error removing machinery from work:', error);
                           toast({
                             title: "Error",
                             description: "No se pudo eliminar la maquinaria",
@@ -1794,30 +2123,51 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                   onEditSave={async (originalRow, updatedRow) => {
                     try {
                       console.log('Saving machinery edit:', { originalRow, updatedRow });
+                      
+                      // Preparar datos para la entidad Machinery
                       const machineryData = {
                         ...updatedRow
                       };
-                      await machineryService.updateMachinery((originalRow as any)._id, machineryData);
+                      
+                      const entityId = (originalRow as any)._id;
+                      
+                      // Primero actualizar la entidad Machinery si tiene entityId
+                      if (entityId) {
+                        await machineryService.updateMachinery(entityId, machineryData);
+                      }
+                      
+                      // Luego actualizar el array machinery en Work
+                      await updateWorkMachinery('update', updatedRow);
+                      
                       await fetchMachinery();
                     } catch (error) {
                       console.error('Error updating machinery:', error);
                       throw error; // Dejar que FormGrid maneje la notificación de error
                     }
                   }}
-                  onInlineAdd={async (newMachinery: MachineryFormData) => {
+                  onInlineAdd={async (newMachinery: any) => {
                     try {
                       if (!selectedWork) {
                         throw new Error("No hay un trabajo seleccionado");
                       }
 
                       const workId = selectedWork._id || selectedWork.id;
+                      
+                      // Preparar datos para la entidad Machinery
                       const machineryData = {
                         ...newMachinery,
                         workId: String(workId),
                       };
                       
                       console.log('Adding new machinery:', machineryData);
-                      await machineryService.createMachinery(machineryData);
+                      
+                      // Primero crear la entidad Machinery
+                      const createdMachinery = await machineryService.createMachinery(machineryData);
+                      console.log('Machinery created in entity:', createdMachinery);
+                      
+                      // Luego actualizar el array machinery en Work usando el ID del registro creado
+                      await updateWorkMachinery('add', {...newMachinery, id: createdMachinery._id});
+                      
                       await fetchMachinery();
                     } catch (error) {
                       console.error('Error adding machinery:', error);
@@ -1854,21 +2204,33 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                     machineryRelationship: "",
                     packagingCode: "",
                     invoiceNumber: "",
+                    treatment: "",
+                    doses: "",
+                    calibration: "",
                     workId: selectedWork ? String(selectedWork.id || (selectedWork as any)._id) : "",
                   }}
                   addableColumns={[
                     "category", "product", "unitOfMeasurement", "amountPerHour", 
-                    "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber"
+                    "amount", "netUnitValue", "totalValue", "return", "machineryRelationship", "packagingCode", "invoiceNumber", "treatment", "doses", "calibration"
                   ]}
-                  actions={(row: IProducts) => (
+                  actions={(row: any) => (
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={async () => {
                         try {
                           console.log('Deleting product:', (row as any)._id);
-                          await productService.deleteProduct((row as any)._id || '');
-                          console.log('Product deleted successfully');
+                          
+                          const entityId = (row as any)._id;
+                          
+                          // Primero eliminar de la entidad Products si tiene entityId (hard delete para products)
+                          if (entityId) {
+                            await productService.deleteProduct(entityId);
+                            console.log('Product deleted from entity successfully');
+                          }
+                          
+                          // Luego eliminar del array products en Work
+                          await updateWorkProducts('remove', undefined, undefined, entityId);
                           
                           toast({
                             title: "Éxito",
@@ -1878,7 +2240,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                           console.log('Refreshing products list after deletion...');
                           await fetchProducts();
                         } catch (error) {
-                          console.error('Error deleting product:', error);
+                          console.error('Error removing product from work:', error);
                           toast({
                             title: "Error",
                             description: "No se pudo eliminar el producto",
@@ -1891,14 +2253,15 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
                   )}
-                  onInlineAdd={async (newProduct: ProductFormData) => {
+                  onInlineAdd={async (newProduct: any) => {
                     try {
                       if (!selectedWork) {
                         throw new Error("No hay un trabajo seleccionado");
                       }
 
                       const workId = selectedWork._id || selectedWork.id;
-                      // Convertir campos numéricos a strings como espera la interfaz IProducts
+                      
+                      // Preparar datos para la entidad Products
                       const productData = {
                         ...newProduct,
                         workId: String(workId),
@@ -1910,7 +2273,13 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       };
                       
                       console.log('Adding new product:', productData);
-                      await productService.createProduct(productData);
+                      
+                      // Primero crear la entidad Product
+                      const createdProduct = await productService.createProduct(productData);
+                      console.log('Product created in entity:', createdProduct);
+                      
+                      // Luego actualizar el array products en Work usando el ID del registro creado
+                      await updateWorkProducts('add', newProduct, undefined, createdProduct._id || createdProduct.id);
                       
                       // Consume product from inventory
                       await consumeInventoryProduct(newProduct);

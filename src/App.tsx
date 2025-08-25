@@ -92,7 +92,7 @@ function App() {
       'labores': 'Labores',
       'dashboard': 'Dashboard de Operaciones',
       'orden-aplicacion': 'Orden de Aplicación',
-      'orden-aplicacion-new': 'Orden de Aplicación (Nueva)',
+      'orden-aplicacion-new': 'Orden de Aplicación',
       'bodegas': 'Bodegas',
       'monitoreo-estado-fenologico': 'Monitoreo Estado Fenológico',
       'analisis-suelo': 'Análisis de Suelo',

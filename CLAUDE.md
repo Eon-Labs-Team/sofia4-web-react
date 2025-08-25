@@ -52,8 +52,9 @@ This is a React 18 + TypeScript agricultural management system built with Vite, 
 ### API Integration
 
 **Dual API Architecture**:
-- **Primary API** (`VITE_API_URL`, default: localhost:4900): Main agricultural management operations
-- **CRUD API** (`VITE_API_CRUD_URL`, default: localhost:4500): Warehouse/inventory operations
+- **Primary API** (`VITE_API_CRUDS_URL`, default: localhost:4900): Main agricultural management operations
+- **Secondary API** (`VITE_API_SOFIA_URL`, default: localhost:4500): Authentication and chat operations
+- **Sofia Chat API** (`VITE_API_SOFIA_CHAT_URL`, default: localhost:3000): AI chat integration
 
 **Endpoint Management**: All API endpoints centralized in `src/lib/constants.ts` with:
 - Consistent CRUD patterns (base, byId, changeState, setState)
@@ -99,6 +100,10 @@ Comprehensive agricultural management system covering 6 main areas:
 
 **5. Production & Operations**:
 - Crop monitoring, task planning, work execution
+- **Work Management System**: Unified WorkManager handling 3 work types:
+  - **Type A (Aplicación)**: Pesticide/fertilizer applications
+  - **Type C (Cosecha)**: Harvest operations  
+  - **Type T (Trabajo)**: General agricultural work
 - Order applications (OrdenAplicacion), operational area management
 - Crop types, varieties, soil types configuration
 
@@ -176,3 +181,8 @@ Comprehensive agricultural management system covering 6 main areas:
 - Run `npm run lint` before committing changes
 - ESLint configured for TypeScript/React best practices
 - Use TypeScript for type safety despite strict mode being disabled
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

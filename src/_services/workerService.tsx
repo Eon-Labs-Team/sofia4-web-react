@@ -54,7 +54,9 @@ class WorkerService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      return await response.json();
+      const workersResponse = await response.json();
+      return workersResponse.data || workersResponse;
+
     } catch (error) {
       console.error('Error creating worker:', error);
       throw error;

@@ -54,7 +54,9 @@ class MachineryService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      return await response.json();
+      const machineryResponse = await response.json();
+      return machineryResponse.data || machineryResponse;
+
     } catch (error) {
       console.error('Error creating machinery:', error);
       throw error;
