@@ -20,7 +20,10 @@ class WorkService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      
+    const work = await response.json();
+    return work.data || work;
+
     } catch (error) {
       console.error('Error fetching orden de aplicación:', error);
       throw error;
@@ -107,6 +110,7 @@ class WorkService {
    */
   async updateWork(id: string | number, work: Partial<IWork>): Promise<IWork> {
     try {
+      console.log("updateWork in service", JSON.stringify(work))
       const user = authService.getCurrentUser();
       
       const workData = { 
@@ -172,7 +176,7 @@ class WorkService {
    */
   async findById(id: string | number): Promise<IWork> {
     try {
-      const response = await fetch(ENDPOINTS.work?.byId(id), {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.work?.byId(id) ), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -180,9 +184,107 @@ class WorkService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const work = await response.json();
+      return work.data || work;
+      
     } catch (error) {
       console.error(`Error fetching orden de aplicación ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update work workers
+   * @param id Work ID
+   * @param workers Updated workers data
+   * @returns Promise with updated work
+   */
+  async updateWorkers(id: string | number, workers: any[]): Promise<IWork> {
+    try {
+      const user = authService.getCurrentUser();
+      
+      const workersData = { 
+        workers,
+        updatedBy: user?.id || null,
+      };
+      
+      const response = await fetch(authService.buildUrlWithParams(`${ENDPOINTS.work?.byId(id)}/workers`), {
+        method: 'PATCH',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(workersData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error updating work workers ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update work machinery
+   * @param id Work ID
+   * @param machinery Updated machinery data
+   * @returns Promise with updated work
+   */
+  async updateMachinery(id: string | number, machinery: any[]): Promise<IWork> {
+    try {
+      const user = authService.getCurrentUser();
+      
+      const machineryData = { 
+        machinery,
+        updatedBy: user?.id || null,
+      };
+      
+      const response = await fetch(authService.buildUrlWithParams(`${ENDPOINTS.work?.byId(id)}/machinery`), {
+        method: 'PATCH',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(machineryData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error updating work machinery ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update work products
+   * @param id Work ID
+   * @param products Updated products data
+   * @returns Promise with updated work
+   */
+  async updateProducts(id: string | number, products: any[]): Promise<IWork> {
+    try {
+      const user = authService.getCurrentUser();
+      
+      const productsData = { 
+        products,
+        updatedBy: user?.id || null,
+      };
+      
+      const response = await fetch(authService.buildUrlWithParams(`${ENDPOINTS.work?.byId(id)}/products`), {
+        method: 'PATCH',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(productsData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error updating work products ${id}:`, error);
       throw error;
     }
   }
