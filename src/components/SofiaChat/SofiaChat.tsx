@@ -6,24 +6,24 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  MessageSquare, 
   Send, 
   X, 
   Minimize2, 
   Maximize2, 
   Bot, 
   User,
-  BarChart3,
   Download,
   Copy,
   Loader2,
-  Maximize,
-  Minimize
+  Mic,
+  MicOff,
+  Square
 } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { cn } from '@/lib/utils';
 import sofiaChatService from '@/_services/sofiaChatService';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -74,6 +74,22 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Speech recognition hook
+  const {
+    transcript,
+    finalTranscript,
+    isListening,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+    error: speechError,
+  } = useSpeechRecognition({
+    lang: 'es-ES',
+    continuous: true,
+    interimResults: true,
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -87,6 +103,27 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
       inputRef.current.focus();
     }
   }, [isOpen, isMinimized]);
+
+  // Update input with speech transcript
+  useEffect(() => {
+    if (transcript || finalTranscript) {
+      const fullTranscript = finalTranscript + transcript;
+      setInputValue(fullTranscript);
+    }
+  }, [transcript, finalTranscript]);
+
+  // Auto-send when final transcript is received and listening stops
+  useEffect(() => {
+    if (!isListening && finalTranscript.trim() && !isLoading) {
+      // Small delay to ensure the input is updated
+      const timer = setTimeout(() => {
+        handleSendMessage();
+        resetTranscript();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isListening, finalTranscript, isLoading]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -135,7 +172,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -144,6 +181,28 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
 
   const toggleSize = () => {
     setIsLarge(!isLarge);
+  };
+
+  const handleVoiceInput = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      if (inputValue.trim()) {
+        // Si hay texto, limpiarlo antes de empezar a escuchar
+        setInputValue('');
+        resetTranscript();
+      }
+      startListening();
+    }
+  };
+
+  const handleStopVoice = () => {
+    stopListening();
+    // Si hay transcripción, mantenerla en el input sin enviar automáticamente
+    if (finalTranscript.trim() || transcript.trim()) {
+      const fullText = finalTranscript + transcript;
+      setInputValue(fullText);
+    }
   };
 
   const renderChart = (chartConfig: any) => {
@@ -197,7 +256,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     navigator.clipboard.writeText(text);
   };
 
-  const downloadChart = (chartConfig: any, index: number) => {
+  const downloadChart = (chartConfig: any) => {
     if (!chartConfig || !chartConfig.config) return;
     
     // Crear un canvas temporal para exportar
@@ -376,7 +435,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                           <Button
                             variant="outline"
                             size={isLarge ? "default" : "sm"}
-                            onClick={() => downloadChart(chart, index)}
+                            onClick={() => downloadChart(chart)}
                             className={cn(
                               "text-xs",
                               isLarge ? "h-8 px-3" : "h-6"
@@ -487,19 +546,95 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
 
           {/* Input de mensaje */}
           <div className="p-4 border-t flex-shrink-0">
+            {/* Mostrar error de reconocimiento de voz si existe */}
+            {speechError && (
+              <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                <p className={cn(
+                  "text-red-600",
+                  isLarge ? "text-sm" : "text-xs"
+                )}>
+                  {speechError}
+                </p>
+              </div>
+            )}
+            
+            {/* Indicador de que está escuchando */}
+            {isListening && (
+              <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                  <p className={cn(
+                    "text-blue-600",
+                    isLarge ? "text-sm" : "text-xs"
+                  )}>
+                    Escuchando... Habla ahora
+                  </p>
+                  <Button
+                    onClick={handleStopVoice}
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto h-6 px-2"
+                  >
+                    <Square className="h-3 w-3 mr-1" />
+                    Parar
+                  </Button>
+                </div>
+                {transcript && (
+                  <p className={cn(
+                    "mt-1 text-gray-600 italic",
+                    isLarge ? "text-sm" : "text-xs"
+                  )}>
+                    "{transcript}"
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje..."
+                onKeyDown={handleKeyDown}
+                placeholder={isListening ? "Escuchando..." : "Escribe tu mensaje o habla..."}
                 className={cn(
                   "flex-1",
-                  isLarge ? "h-12 text-base px-4" : "h-9 text-sm px-3"
+                  isLarge ? "h-12 text-base px-4" : "h-9 text-sm px-3",
+                  isListening && "bg-blue-50"
                 )}
                 disabled={isLoading}
               />
+              
+              {/* Botón de voz */}
+              {isSpeechSupported && (
+                <Button
+                  onClick={handleVoiceInput}
+                  disabled={isLoading}
+                  size={isLarge ? "lg" : "icon"}
+                  variant={isListening ? "destructive" : "outline"}
+                  className={cn(
+                    "flex-shrink-0",
+                    isListening && "animate-pulse"
+                  )}
+                  title={isListening ? "Parar grabación de voz" : "Iniciar grabación de voz"}
+                >
+                  {isListening ? (
+                    <MicOff className={cn(
+                      isLarge ? "h-5 w-5" : "h-4 w-4"
+                    )} />
+                  ) : (
+                    <Mic className={cn(
+                      isLarge ? "h-5 w-5" : "h-4 w-4"
+                    )} />
+                  )}
+                  {isLarge && (
+                    <span className="ml-2">
+                      {isListening ? "Parar" : "Voz"}
+                    </span>
+                  )}
+                </Button>
+              )}
+              
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim() || isLoading}
