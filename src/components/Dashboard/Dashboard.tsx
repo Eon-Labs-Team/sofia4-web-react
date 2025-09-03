@@ -24,7 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
-import dashboardService from "@/_services/dashboardService";
+import workService from "@/_services/workService";
+import type { IWork } from "@eon-lib/eon-mongoose";
 import { useAuthStore } from "@/lib/store/authStore";
 import {
   ChartContainer,
@@ -64,23 +65,35 @@ interface DashboardStats {
 interface WorkerActivity {
   workerId: string;
   workerName: string;
-  tasksCount: number;
-  lastActivity: string;
-  propertyName: string;
+  worksCount: number;
+  totalYield: number;
+  totalHours: number;
+  totalEarnings: number;
+  lastWorkDate: string;
+  workTypes: string[];
+  efficiency: number;
 }
 
 interface ProductConsumption {
+  productId: string;
   productName: string;
-  totalConsumed: number;
-  unit: string;
+  totalQuantity: number;
+  totalWorks: number;
+  avgDosage: number;
   lastUsed: string;
+  workTypes: string[];
 }
 
 interface MachineryUsage {
+  machineryId: string;
   machineryName: string;
+  totalWorks: number;
   totalHours: number;
+  totalHectares: number;
+  avgCalibration: number;
   lastUsed: string;
-  propertyName: string;
+  workTypes: string[];
+  utilizationRate: number;
 }
 
 // Mock data for charts
@@ -142,22 +155,11 @@ const Dashboard: React.FC = () => {
     pendingTasks: 6,
   });
   
-  const [workerActivities, setWorkerActivities] = useState<WorkerActivity[]>([
-    { workerId: "1", workerName: "Juan Pérez", tasksCount: 15, lastActivity: "Hoy", propertyName: "Predio Norte" },
-    { workerId: "2", workerName: "María González", tasksCount: 12, lastActivity: "Ayer", propertyName: "Predio Sur" },
-    { workerId: "3", workerName: "Carlos Rodríguez", tasksCount: 10, lastActivity: "Hace 2 días", propertyName: "Predio Este" },
-  ]);
+  const [workerActivities, setWorkerActivities] = useState<WorkerActivity[]>([]);
   
-  const [productConsumptions, setProductConsumptions] = useState<ProductConsumption[]>([
-    { productName: "Fertilizante NPK", totalConsumed: 450, unit: "kg", lastUsed: "Hoy" },
-    { productName: "Pesticida Orgánico", totalConsumed: 125, unit: "L", lastUsed: "Ayer" },
-    { productName: "Semillas Híbridas", totalConsumed: 85, unit: "kg", lastUsed: "Hace 3 días" },
-  ]);
+  const [productConsumptions, setProductConsumptions] = useState<ProductConsumption[]>([]);
   
-  const [machineryUsage, setMachineryUsage] = useState<MachineryUsage[]>([
-    { machineryName: "Tractor John Deere", totalHours: 156, lastUsed: "Hoy", propertyName: "Predio Norte" },
-    { machineryName: "Cosechadora Case", totalHours: 89, lastUsed: "Ayer", propertyName: "Predio Sur" },
-  ]);
+  const [machineryUsage, setMachineryUsage] = useState<MachineryUsage[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
   
@@ -167,20 +169,250 @@ const Dashboard: React.FC = () => {
     loadDashboardData();
   }, []);
 
+  // Extract worker data from IWork.workers array
+  const extractWorkerData = (works: IWork[]): WorkerActivity[] => {
+    const workerMap = new Map<string, {
+      workerId: string;
+      workerName: string;
+      worksCount: number;
+      totalYield: number;
+      totalHours: number;
+      totalEarnings: number;
+      lastWorkDate: Date;
+      workTypes: Set<string>;
+    }>();
+
+    works.forEach(work => {
+      if (work.workers && Array.isArray(work.workers)) {
+        work.workers.forEach(workerData => {
+          const workerId = workerData.worker?.id || workerData.worker || 'unknown';
+          const workerName = workerData.worker?.name || workerData.worker?.firstName || `Trabajador ${workerId}`;
+          
+          if (!workerMap.has(workerId)) {
+            workerMap.set(workerId, {
+              workerId,
+              workerName,
+              worksCount: 0,
+              totalYield: 0,
+              totalHours: 0,
+              totalEarnings: 0,
+              lastWorkDate: new Date(work.executionDate || work.startDate || work.createdAt),
+              workTypes: new Set()
+            });
+          }
+
+          const worker = workerMap.get(workerId)!;
+          worker.worksCount += 1;
+          worker.totalYield += workerData.yield || 0;
+          worker.totalHours += workerData.totalHoursYield || workerData.workingDay || 0;
+          worker.totalEarnings += workerData.totalDeal || workerData.dailyTotal || 0;
+          worker.workTypes.add(work.workType || 'T');
+          
+          const workDate = new Date(work.executionDate || work.startDate || work.createdAt);
+          if (workDate > worker.lastWorkDate) {
+            worker.lastWorkDate = workDate;
+          }
+        });
+      }
+    });
+
+    return Array.from(workerMap.values())
+      .map(worker => ({
+        workerId: worker.workerId,
+        workerName: worker.workerName,
+        worksCount: worker.worksCount,
+        totalYield: worker.totalYield,
+        totalHours: worker.totalHours,
+        totalEarnings: worker.totalEarnings,
+        lastWorkDate: worker.lastWorkDate.toLocaleDateString(),
+        workTypes: Array.from(worker.workTypes),
+        efficiency: worker.totalYield > 0 ? Math.min(100, Math.round((worker.totalYield / worker.totalHours) * 10)) : 85
+      }))
+      .sort((a, b) => b.worksCount - a.worksCount)
+      .slice(0, 10);
+  };
+
+  // Extract machinery data from IWork.machinery array
+  const extractMachineryData = (works: IWork[]): MachineryUsage[] => {
+    const machineryMap = new Map<string, {
+      machineryId: string;
+      machineryName: string;
+      totalWorks: number;
+      totalHours: number;
+      totalHectares: number;
+      totalCalibration: number;
+      calibrationCount: number;
+      lastWorkDate: Date;
+      workTypes: Set<string>;
+    }>();
+
+    works.forEach(work => {
+      if (work.machinery && Array.isArray(work.machinery)) {
+        work.machinery.forEach(machineData => {
+          const machineryId = machineData.machinery?.id || machineData.machinery || 'unknown';
+          const machineryName = machineData.machinery?.name || machineData.machinery?.machineryName || `Maquinaria ${machineryId}`;
+          
+          if (!machineryMap.has(machineryId)) {
+            machineryMap.set(machineryId, {
+              machineryId,
+              machineryName,
+              totalWorks: 0,
+              totalHours: 0,
+              totalHectares: 0,
+              totalCalibration: 0,
+              calibrationCount: 0,
+              lastWorkDate: new Date(work.executionDate || work.startDate || work.createdAt),
+              workTypes: new Set()
+            });
+          }
+
+          const machinery = machineryMap.get(machineryId)!;
+          machinery.totalWorks += 1;
+          machinery.totalHours += machineData.totalHours || machineData.hours || 1;
+          machinery.totalHectares += work.appliedHectares || work.hectares || 0;
+          machinery.workTypes.add(work.workType || 'T');
+          
+          if (work.calibrationPerHectare && work.calibrationPerHectare > 0) {
+            machinery.totalCalibration += work.calibrationPerHectare;
+            machinery.calibrationCount += 1;
+          }
+          
+          const workDate = new Date(work.executionDate || work.startDate || work.createdAt);
+          if (workDate > machinery.lastWorkDate) {
+            machinery.lastWorkDate = workDate;
+          }
+        });
+      }
+    });
+
+    return Array.from(machineryMap.values())
+      .map(machinery => ({
+        machineryId: machinery.machineryId,
+        machineryName: machinery.machineryName,
+        totalWorks: machinery.totalWorks,
+        totalHours: machinery.totalHours,
+        totalHectares: machinery.totalHectares,
+        avgCalibration: machinery.calibrationCount > 0 ? machinery.totalCalibration / machinery.calibrationCount : 0,
+        lastUsed: machinery.lastWorkDate.toLocaleDateString(),
+        workTypes: Array.from(machinery.workTypes),
+        utilizationRate: Math.min(100, Math.round((machinery.totalWorks / 30) * 100)) // Assuming 30 is max works per month
+      }))
+      .sort((a, b) => b.totalWorks - a.totalWorks)
+      .slice(0, 10);
+  };
+
+  // Extract product data from IWork.products array
+  const extractProductData = (works: IWork[]): ProductConsumption[] => {
+    const productMap = new Map<string, {
+      productId: string;
+      productName: string;
+      totalQuantity: number;
+      totalWorks: number;
+      dosageCount: number;
+      totalDosage: number;
+      lastWorkDate: Date;
+      workTypes: Set<string>;
+    }>();
+
+    works.forEach(work => {
+      if (work.products && Array.isArray(work.products)) {
+        work.products.forEach(productData => {
+          const productId = productData.product?.id || productData.product || 'unknown';
+          const productName = productData.product?.name || productData.product?.productName || `Producto ${productId}`;
+          
+          if (!productMap.has(productId)) {
+            productMap.set(productId, {
+              productId,
+              productName,
+              totalQuantity: 0,
+              totalWorks: 0,
+              dosageCount: 0,
+              totalDosage: 0,
+              lastWorkDate: new Date(work.executionDate || work.startDate || work.createdAt),
+              workTypes: new Set()
+            });
+          }
+
+          const product = productMap.get(productId)!;
+          product.totalWorks += 1;
+          product.totalQuantity += productData.quantityUsed || productData.quantity || 0;
+          product.workTypes.add(work.workType || 'A');
+          
+          if (productData.dosage && productData.dosage > 0) {
+            product.totalDosage += productData.dosage;
+            product.dosageCount += 1;
+          }
+          
+          const workDate = new Date(work.executionDate || work.startDate || work.createdAt);
+          if (workDate > product.lastWorkDate) {
+            product.lastWorkDate = workDate;
+          }
+        });
+      }
+    });
+
+    return Array.from(productMap.values())
+      .map(product => ({
+        productId: product.productId,
+        productName: product.productName,
+        totalQuantity: product.totalQuantity,
+        totalWorks: product.totalWorks,
+        avgDosage: product.dosageCount > 0 ? product.totalDosage / product.dosageCount : 0,
+        lastUsed: product.lastWorkDate.toLocaleDateString(),
+        workTypes: Array.from(product.workTypes)
+      }))
+      .sort((a, b) => b.totalQuantity - a.totalQuantity)
+      .slice(0, 10);
+  };
+
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      // Using mock data for demonstration
-      // In production, uncomment the lines below to use real data
-      
-      // const dashboardData = await dashboardService.getDashboardStats();
-      // setStats(dashboardData.stats);
-      // setWorkerActivities(dashboardData.workerActivities);
-      // setProductConsumptions(dashboardData.productConsumptions);
-      // setMachineryUsage(dashboardData.machineryUsage);
-      
-      // Mock data is already set in state initialization
-      console.log('Dashboard loaded with mock data');
+      // Get real IWork data
+      const works: IWork[] = await workService.findAll();
+      console.log('Loaded works:', works.length);
+
+      // Calculate dashboard stats from IWork data
+      const today = new Date().toISOString().split('T')[0];
+      const todayWorks = works.filter(work => {
+        const workDate = new Date(work.executionDate || work.startDate || work.createdAt).toISOString().split('T')[0];
+        return workDate === today;
+      });
+
+      // Update stats
+      const uniqueWorkers = new Set();
+      const uniqueMachinery = new Set();
+      works.forEach(work => {
+        work.workers?.forEach(w => uniqueWorkers.add(w.worker?.id || w.worker));
+        work.machinery?.forEach(m => uniqueMachinery.add(m.machinery?.id || m.machinery));
+      });
+
+      setStats({
+        totalWorkers: uniqueWorkers.size,
+        activeWorkers: uniqueWorkers.size,
+        totalMachinery: uniqueMachinery.size,
+        activeMachinery: uniqueMachinery.size,
+        totalProducts: works.reduce((sum, work) => sum + (work.products?.length || 0), 0),
+        lowStockProducts: 0,
+        todayTasks: todayWorks.length,
+        completedTasks: works.filter(w => w.workState === 'confirmed').length,
+        pendingTasks: works.filter(w => w.workState === 'pending').length,
+      });
+
+      // Extract detailed reports from IWork arrays
+      const workerData = extractWorkerData(works);
+      const machineryData = extractMachineryData(works);
+      const productData = extractProductData(works);
+
+      setWorkerActivities(workerData);
+      setMachineryUsage(machineryData);
+      setProductConsumptions(productData);
+
+      console.log('Dashboard loaded with IWork data:', {
+        workers: workerData.length,
+        machinery: machineryData.length,
+        products: productData.length
+      });
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -415,9 +647,10 @@ const Dashboard: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Trabajador</TableHead>
-                    <TableHead>Tareas</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                    <TableHead>Última Act.</TableHead>
+                    <TableHead>Trabajos</TableHead>
+                    <TableHead>Rendimiento</TableHead>
+                    <TableHead>Horas</TableHead>
+                    <TableHead>Tipos</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -429,23 +662,35 @@ const Dashboard: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
-                            {activity.tasksCount}
+                            {activity.worksCount}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{activity.propertyName}</span>
+                            <Target className="h-3 w-3 text-blue-500" />
+                            <span className="text-sm">{activity.totalYield.toFixed(1)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {activity.lastActivity}
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{activity.totalHours.toFixed(1)}h</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {activity.workTypes.map(type => (
+                              <Badge key={type} variant={type === 'A' ? 'default' : type === 'C' ? 'secondary' : 'outline'} className="text-xs">
+                                {type === 'A' ? 'Apl' : type === 'C' ? 'Cos' : 'Tra'}
+                              </Badge>
+                            ))}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
                         No hay datos de actividad disponibles
                       </TableCell>
                     </TableRow>
@@ -470,33 +715,47 @@ const Dashboard: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Producto</TableHead>
-                    <TableHead>Consumido</TableHead>
-                    <TableHead>Último Uso</TableHead>
+                    <TableHead>Cantidad Total</TableHead>
+                    <TableHead>Trabajos</TableHead>
+                    <TableHead>Dosis Prom.</TableHead>
+                    <TableHead>Tipos</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {productConsumptions.length > 0 ? (
                     productConsumptions.map((consumption, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={consumption.productId || index}>
                         <TableCell className="font-medium">
                           {consumption.productName}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <span>{consumption.totalConsumed}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {consumption.unit}
-                            </span>
+                            <Package className="h-3 w-3 text-green-500" />
+                            <span>{consumption.totalQuantity.toFixed(1)}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {consumption.lastUsed}
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {consumption.totalWorks}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {consumption.avgDosage > 0 ? `${consumption.avgDosage.toFixed(2)} L/Ha` : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {consumption.workTypes.map(type => (
+                              <Badge key={type} variant={type === 'A' ? 'default' : 'outline'} className="text-xs">
+                                {type === 'A' ? 'Apl' : type === 'C' ? 'Cos' : 'Tra'}
+                              </Badge>
+                            ))}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
                         No hay datos de consumo disponibles
                       </TableCell>
                     </TableRow>
@@ -521,48 +780,54 @@ const Dashboard: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Maquinaria</TableHead>
-                    <TableHead>Horas Totales</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                    <TableHead>Último Uso</TableHead>
-                    <TableHead>Estado</TableHead>
+                    <TableHead>Trabajos</TableHead>
+                    <TableHead>Horas</TableHead>
+                    <TableHead>Hectáreas</TableHead>
+                    <TableHead>Calibración</TableHead>
+                    <TableHead>Tipos</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {machineryUsage.length > 0 ? (
                     machineryUsage.map((usage, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={usage.machineryId || index}>
                         <TableCell className="font-medium">
                           {usage.machineryName}
                         </TableCell>
                         <TableCell>
+                          <Badge variant="secondary">
+                            {usage.totalWorks}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span>{usage.totalHours}h</span>
+                            <span>{usage.totalHours.toFixed(1)}h</span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{usage.propertyName}</span>
+                            <Leaf className="h-3 w-3 text-green-500" />
+                            <span>{usage.totalHectares.toFixed(1)} Ha</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {usage.lastUsed}
+                        <TableCell className="text-sm">
+                          {usage.avgCalibration > 0 ? `${usage.avgCalibration.toFixed(1)} L/Ha` : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={usage.totalHours > 0 ? "default" : "secondary"}
-                            className="flex items-center gap-1"
-                          >
-                            <Leaf className="h-3 w-3" />
-                            {usage.totalHours > 0 ? "Activa" : "Inactiva"}
-                          </Badge>
+                          <div className="flex gap-1">
+                            {usage.workTypes.map(type => (
+                              <Badge key={type} variant={type === 'A' ? 'default' : type === 'C' ? 'secondary' : 'outline'} className="text-xs">
+                                {type === 'A' ? 'Apl' : type === 'C' ? 'Cos' : 'Tra'}
+                              </Badge>
+                            ))}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
                         No hay datos de uso de maquinaria disponibles
                       </TableCell>
                     </TableRow>

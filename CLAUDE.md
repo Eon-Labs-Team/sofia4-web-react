@@ -56,6 +56,10 @@ This is a React 18 + TypeScript agricultural management system built with Vite, 
 - **Secondary API** (`VITE_API_SOFIA_URL`, default: localhost:4500): Authentication and chat operations
 - **Sofia Chat API** (`VITE_API_SOFIA_CHAT_URL`, default: localhost:3000): AI chat integration
 
+**Text-to-Speech Configuration**:
+- **TTS Provider** (`VITE_TTS_PROVIDER`): Select TTS provider - `'elevenlabs'` or `'native'` (default: `'native'`)
+- **ElevenLabs API Key** (`VITE_ELEVENLABS_API_KEY`): Required only when `VITE_TTS_PROVIDER='elevenlabs'`
+
 **Endpoint Management**: All API endpoints centralized in `src/lib/constants.ts` with:
 - Consistent CRUD patterns (base, byId, changeState, setState)
 - Enterprise-scoped data access

@@ -1475,7 +1475,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       }));
       
       console.log('Converted workers for grid:', convertedWorkers);
-      setWorkers(convertedWorkers);
+      setWorkers(convertedWorkers as any);
     } catch (error) {
       console.error("Error loading workers from work.workers:", error);
       toast({
@@ -1507,18 +1507,19 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       
       // Convertir la estructura de work.machinery al formato esperado por el grid
       const convertedMachinery = workMachinery.map((workMachine: any, index: number) => ({
-        id: workMachine.id, // ID temporal para el grid
+        _id: workMachine.id || `machinery-${index}-${Date.now()}`, // _id para el grid
+        id: workMachine.id, // entityId para operaciones duales
         machinery: workMachine.machinery || '',
         startTime: workMachine.startTime || '',
         endTime: workMachine.endTime || '',
-        finalHours: parseFloat(workMachine.finalHours) || 0,
-        timeValue: parseFloat(workMachine.timeValue) || 0,
-        totalValue: parseFloat(workMachine.totalValue) || 0,
+        finalHours: Number(workMachine.finalHours) || 0,
+        timeValue: Number(workMachine.timeValue) || 0,
+        totalValue: Number(workMachine.totalValue) || 0,
         workId: selectedWork._id || selectedWork.id
       }));
       
       console.log('Converted machinery for grid:', convertedMachinery);
-      setMachinery(convertedMachinery);
+      setMachinery(convertedMachinery as any);
     } catch (error) {
       console.error("Error loading machinery from work.machinery:", error);
       toast({
@@ -1550,7 +1551,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       
       // Convertir la estructura de work.products al formato esperado por el grid
       const convertedProducts = workProducts.map((workProduct: any, index: number) => ({
-        _id: `work-product-${index}-${Date.now()}`, // ID temporal para el grid
+        _id: workProduct._id, // ID temporal para el grid
         category: workProduct.category || '',
         product: workProduct.product || '',
         unitOfMeasurement: workProduct.unitOfMeasurement || '',
@@ -1569,7 +1570,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
       }));
       
       console.log('Converted products for grid:', convertedProducts);
-      setProducts(convertedProducts);
+      setProducts(convertedProducts as any);
     } catch (error) {
       console.error("Error loading products from work.products:", error);
       toast({
@@ -2086,9 +2087,9 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                       size="icon"
                       onClick={async () => {
                         try {
-                          console.log('Soft deleting machinery:', (row as any)._id);
+                          console.log('Soft deleting machinery:', row);
                           
-                          const entityId = (row as any)._id;
+                          const entityId = (row as any).id; // Use 'id' which is the entityId from fetchMachinery
                           
                           // Primero cambiar estado a false en la entidad Machinery si tiene entityId
                           if (entityId) {
@@ -2097,7 +2098,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                           }
                           
                           // Luego eliminar del array machinery en Work
-                          await updateWorkMachinery('remove', undefined);
+                          await updateWorkMachinery('remove', row);
                           
                           toast({
                             title: "Éxito",
@@ -2129,7 +2130,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
                         ...updatedRow
                       };
                       
-                      const entityId = (originalRow as any)._id;
+                      const entityId = (originalRow as any).id; // Use 'id' which is the entityId from fetchMachinery
                       
                       // Primero actualizar la entidad Machinery si tiene entityId
                       if (entityId) {

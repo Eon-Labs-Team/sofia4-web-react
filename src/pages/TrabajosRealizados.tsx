@@ -456,11 +456,8 @@ const TrabajosRealizados = () => {
   const handleUpdateTrabajo = async (id: string | number, data: any) => {
     try {
       await workerService.updateWorker(id, {
-        // @ts-ignore
         classification: data.classification,
-        worker: {
-          id: data.worker.id
-        },
+        worker: data.worker,
         quadrille: data.quadrille,
         workingDay: data.workingDay,
         paymentMethod: data.paymentMethod,
