@@ -1,4 +1,5 @@
 import { API_BASE_SOFIA_CHAT } from '@/lib/constants';
+import authService from './authService';
 
 interface SofiaChatRequest {
   prompt: string;
@@ -34,10 +35,11 @@ class SofiaChatService {
 
   async sendMessage(request: SofiaChatRequest): Promise<SofiaChatResponse> {
     try {
-      const response = await fetch(`${API_BASE_SOFIA_CHAT}/api/sofia`, {
+      let body = {...request, propertyId: authService.getPropertyId()}
+      const response = await fetch(authService.buildUrlWithParams(`${API_BASE_SOFIA_CHAT}/api/sofia`), {
         method: 'POST',
         headers: this.getHeaders(),
-        body: JSON.stringify(request),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {

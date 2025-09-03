@@ -17,12 +17,17 @@ import {
   Loader2,
   Mic,
   MicOff,
-  Square
+  Square,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause
 } from 'lucide-react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { cn } from '@/lib/utils';
 import sofiaChatService from '@/_services/sofiaChatService';
+import ttsService from '@/_services/ttsService';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 // Registrar componentes de Chart.js
@@ -71,6 +76,9 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLarge, setIsLarge] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +100,67 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handlePlayTTS = async (text: string, messageId: string) => {
+    try {
+      // Stop any currently playing audio
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      
+      // Stop native TTS if it's being used
+      ttsService.stop();
+
+      setPlayingAudio(messageId);
+      const audio = await ttsService.playText(text);
+      setCurrentAudio(audio);
+
+      // Only add event listeners if we got an actual audio element (ElevenLabs)
+      if (audio && audio.addEventListener) {
+        audio.addEventListener('ended', () => {
+          setPlayingAudio(null);
+          setCurrentAudio(null);
+        });
+
+        audio.addEventListener('error', () => {
+          setPlayingAudio(null);
+          setCurrentAudio(null);
+        });
+      } else {
+        // For native TTS, we need to handle the state differently
+        // Since native TTS returns a mock audio element, we'll use a timeout
+        setTimeout(() => {
+          setPlayingAudio(null);
+          setCurrentAudio(null);
+        }, text.length * 50); // Rough estimation of speech duration
+      }
+    } catch (error) {
+      console.error('TTS Error:', error);
+      setPlayingAudio(null);
+      setCurrentAudio(null);
+    }
+  };
+
+  const handleStopTTS = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    
+    // Also stop native TTS
+    ttsService.stop();
+    
+    setPlayingAudio(null);
+    setCurrentAudio(null);
+  };
+
+  const toggleTTSGlobal = () => {
+    if (currentAudio) {
+      handleStopTTS();
+    }
+    setTtsEnabled(!ttsEnabled);
   };
 
   useEffect(() => {
@@ -155,6 +224,13 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Auto-play TTS for assistant messages if enabled
+        if (ttsEnabled && assistantMessage.content && ttsService.isAvailable()) {
+          setTimeout(() => {
+            handlePlayTTS(assistantMessage.content, assistantMessage.id);
+          }, 500); // Small delay to ensure message is rendered
+        }
       } else {
         throw new Error(data.message || 'Error en el procesamiento');
       }
@@ -167,6 +243,13 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      
+      // Auto-play TTS for error messages if enabled
+      if (ttsEnabled && errorMessage.content && ttsService.isAvailable()) {
+        setTimeout(() => {
+          handlePlayTTS(errorMessage.content, errorMessage.id);
+        }, 500);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -344,6 +427,32 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={toggleTTSGlobal}
+                className={cn(
+                  "p-0",
+                  isLarge ? "h-8 w-8" : "h-6 w-6"
+                )}
+                title={
+                  ttsEnabled 
+                    ? `Desactivar TTS (${ttsService.getCurrentProvider()})` 
+                    : `Activar TTS (${ttsService.getCurrentProvider()})`
+                }
+              >
+                {ttsEnabled ? (
+                  <Volume2 className={cn(
+                    ttsService.getCurrentProvider() === 'elevenlabs' ? "text-purple-500" : "text-blue-500",
+                    isLarge ? "h-4 w-4" : "h-3 w-3"
+                  )} />
+                ) : (
+                  <VolumeX className={cn(
+                    "text-gray-400",
+                    isLarge ? "h-4 w-4" : "h-3 w-3"
+                  )} />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={toggleSize}
                 className={cn(
                   "p-0",
@@ -424,7 +533,39 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
                         : 'bg-gray-100 text-gray-900',
                       isLarge ? 'text-base' : 'text-sm'
                     )}>
-                      {message.content}
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="flex-1">{message.content}</span>
+                        {message.type === 'assistant' && ttsEnabled && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (playingAudio === message.id) {
+                                handleStopTTS();
+                              } else {
+                                handlePlayTTS(message.content, message.id);
+                              }
+                            }}
+                            className={cn(
+                              "flex-shrink-0 p-1",
+                              isLarge ? "h-7 w-7" : "h-5 w-5"
+                            )}
+                            title={playingAudio === message.id ? "Pausar audio" : "Reproducir audio"}
+                          >
+                            {playingAudio === message.id ? (
+                              <Pause className={cn(
+                                "text-blue-600",
+                                isLarge ? "h-4 w-4" : "h-3 w-3"
+                              )} />
+                            ) : (
+                              <Play className={cn(
+                                "text-gray-600 hover:text-blue-600",
+                                isLarge ? "h-4 w-4" : "h-3 w-3"
+                              )} />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Renderizar charts si existen */}
