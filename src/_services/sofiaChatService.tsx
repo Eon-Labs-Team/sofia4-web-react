@@ -15,15 +15,22 @@ interface SofiaChatResponse {
   message?: string;
 }
 
+interface StreamingRequestConfig {
+  url: string;
+  requestData: any;
+  headers: Record<string, string>;
+}
+
 class SofiaChatService {
   private getAuthToken(): string | null {
     return localStorage.getItem('auth_token');
   }
 
-  private getHeaders(): HeadersInit {
+  private getHeaders(): Record<string, string> {
     const token = this.getAuthToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
     };
 
     if (token) {
@@ -33,6 +40,18 @@ class SofiaChatService {
     return headers;
   }
 
+  // Método para preparar la configuración de streaming
+  prepareStreamingConfig(request: SofiaChatRequest): StreamingRequestConfig {
+    const body = {...request, propertyId: authService.getPropertyId()};
+    
+    return {
+      url: authService.buildUrlWithParams(`${API_BASE_SOFIA_CHAT}/api/sofia/process-query-streaming`),
+      requestData: body,
+      headers: this.getHeaders()
+    };
+  }
+
+  // Método legacy para compatibilidad (mantener por ahora)
   async sendMessage(request: SofiaChatRequest): Promise<SofiaChatResponse> {
     try {
       let body = {...request, propertyId: authService.getPropertyId()}
