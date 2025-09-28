@@ -28,8 +28,8 @@ import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
 import { cn } from '@/lib/utils';
 import sofiaChatService from '@/_services/sofiaChatService';
 import ttsService from '@/_services/ttsService';
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { useStreamingResponse } from '@/hooks/useStreamingResponse';
+import { useSpeechRecognition } from '@/lib/hooks/useSpeechRecognition';
+import { useStreamingResponse } from '@/lib/hooks/useStreamingResponse';
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -51,7 +51,19 @@ interface StreamingEvent {
     total?: number;
     message?: string;
     interpretation?: string;
-    visualization?: any;
+    visualization?: {
+      type: 'bar' | 'line' | 'pie' | 'doughnut' | 'table';
+      config: {
+        type: string;
+        data: {
+          labels: string[];
+          datasets: any[];
+        };
+        options: any;
+      };
+      title?: string;
+      description?: string;
+    };
     result?: any[];
     error?: string;
     data?: any;
@@ -59,8 +71,10 @@ interface StreamingEvent {
     chunkIndex?: number;
     totalChunks?: number;
     progress?: number;
+    totalItems?: number;
+    chunkSize?: number;
     // Propiedades adicionales de metadata
-    aggregationPipeline?: any;
+    aggregationPipeline?: any[];
     tokenContent?: any;
     enterpriseId?: string;
     connectionString?: string;
@@ -68,21 +82,51 @@ interface StreamingEvent {
     conversationId?: string;
     prompt?: string;
     additionalInputs?: any;
-    history?: any;
+    history?: any[];
     // Propiedades de estado
     success?: boolean;
     warning?: boolean;
     collection?: string;
     count?: number;
-    details?: any;
-    summary?: any;
+    details?: {
+      promptLength?: number;
+      hasHistory?: boolean;
+      hasAdditionalInputs?: boolean;
+      hasToken?: boolean;
+      tokenLength?: number;
+      enterpriseId?: string;
+      userId?: string;
+      historyLength?: number;
+      analysisMode?: string;
+      resultCount?: number;
+      dataSize?: number;
+      willChunk?: boolean;
+      errorType?: string;
+      errorMessage?: string;
+      [key: string]: any;
+    };
+    summary?: {
+      totalResults?: number;
+      collectionUsed?: string;
+      processingTime?: number;
+      chunksSent?: number;
+      [key: string]: any;
+    };
+    mode?: string;
   };
   timestamp: string;
 }
 
 interface MessageVisualization {
-  type: 'bar' | 'line' | 'pie' | 'doughnut';
-  config: any;
+  type: 'bar' | 'line' | 'pie' | 'doughnut' | 'table';
+  config: {
+    type: string;
+    data: {
+      labels: string[];
+      datasets: any[];
+    };
+    options: any;
+  };
   title?: string;
   description?: string;
 }
@@ -271,22 +315,39 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     }
   }, [isListening, finalTranscript, isLoading]);
 
+  // State para trackear eventos procesados
+  const [processedEventCount, setProcessedEventCount] = useState(0);
+
   // Escuchar eventos de streaming y procesarlos
   useEffect(() => {
-    if (events.length > 0) {
-      const lastEvent = events[events.length - 1] as StreamingEvent;
+    if (events.length > processedEventCount) {
+      // Procesar todos los eventos nuevos, no solo el último
+      const newEvents = events.slice(processedEventCount);
       
-      console.log('🔥 Nuevo evento streaming recibido:', {
-        type: lastEvent.type,
-        dataKeys: Object.keys(lastEvent.data || {}),
-        timestamp: lastEvent.timestamp,
-        hasVisualization: !!(lastEvent.data?.visualization),
-        hasInterpretation: !!(lastEvent.data?.interpretation)
+      console.log('🔥 Procesando eventos nuevos:', {
+        totalEvents: events.length,
+        processedBefore: processedEventCount,
+        newEventsCount: newEvents.length,
+        newEventTypes: newEvents.map(e => e.type)
       });
       
-      processStreamingEvent(lastEvent);
+      // Procesar cada evento nuevo secuencialmente
+      newEvents.forEach((event, index) => {
+        console.log(`📝 Procesando evento ${processedEventCount + index + 1}/${events.length}:`, {
+          type: event.type,
+          dataKeys: Object.keys(event.data || {}),
+          timestamp: event.timestamp,
+          hasVisualization: !!(event.data?.visualization),
+          hasInterpretation: !!(event.data?.interpretation)
+        });
+        
+        processStreamingEvent(event as StreamingEvent);
+      });
+      
+      // Actualizar contador de eventos procesados
+      setProcessedEventCount(events.length);
     }
-  }, [events]);
+  }, [events, processedEventCount]);
 
   // Función para procesar eventos de streaming y actualizar mensajes
   const processStreamingEvent = (event: StreamingEvent): void => {
@@ -352,28 +413,55 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
         break;
 
       case 'metadata':
-        // Procesar el evento metadata que contiene tanto interpretación como visualización
-        console.log('🎯 Procesando evento metadata:', data);
+        // Procesar el evento metadata que contiene interpretación, visualización y metadatos del pipeline
+        console.log('🎯 Procesando evento metadata completo:', {
+          hasInterpretation: !!data.interpretation,
+          hasVisualization: !!(data.visualization?.type && data.visualization?.config),
+          hasPipeline: !!data.aggregationPipeline,
+          enterpriseId: data.enterpriseId,
+          sessionId: data.sessionId,
+          prompt: data.prompt?.substring(0, 50) + '...'  // Solo primeros 50 chars para debug
+        });
         
-        // Extraer interpretación
+        // 1. Extraer y aplicar interpretación
         if (data.interpretation) {
           updatedContent = data.interpretation;
+          console.log('📝 Interpretación extraída:', data.interpretation.substring(0, 100) + '...');
         }
         
-        // Extraer visualización si existe
+        // 2. Procesar visualización si existe
         if (data.visualization && data.visualization.type && data.visualization.config) {
-          const newVisualization: MessageVisualization = {
-            type: data.visualization.type,
-            config: data.visualization.config,
-            title: data.visualization.title || `Gráfico ${data.visualization.type}`,
-            description: data.visualization.description || 'Visualización generada por sofIA'
-          };
-          updatedVisualizations = [newVisualization];
-          console.log('📊 Visualización extraída de metadata:', newVisualization);
+          // Validar que es un tipo de visualización soportado
+          const supportedTypes = ['bar', 'line', 'pie', 'doughnut', 'table'];
+          if (supportedTypes.includes(data.visualization.type)) {
+            const newVisualization: MessageVisualization = {
+              type: data.visualization.type,
+              config: data.visualization.config,
+              title: data.visualization.title || 
+                     (data.visualization.config.options?.plugins?.title?.text) || 
+                     `Gráfico ${data.visualization.type.toUpperCase()}`,
+              description: data.visualization.description || 'Visualización generada por sofIA'
+            };
+            updatedVisualizations = [newVisualization];
+            console.log('📊 Visualización procesada:', {
+              type: newVisualization.type,
+              title: newVisualization.title,
+              hasData: !!(newVisualization.config?.data),
+              datasetCount: newVisualization.config?.data?.datasets?.length || 0,
+              labelCount: newVisualization.config?.data?.labels?.length || 0
+            });
+          } else {
+            console.warn('⚠️ Tipo de visualización no soportado:', data.visualization.type);
+          }
         }
         
-        // Actualizar contenido con la interpretación si existe
-        updatedContent = data.interpretation || updatedContent || 'Datos procesados exitosamente';
+        // 3. Almacenar metadatos adicionales para debugging/auditoría (opcional)
+        if (data.aggregationPipeline) {
+          console.log('🔍 Pipeline de agregación recibido:', data.aggregationPipeline.length, 'etapas');
+        }
+        
+        // 4. Actualizar contenido final
+        updatedContent = data.interpretation || updatedContent || 'Metadatos procesados exitosamente';
         break;
         
       case 'visualization':
@@ -402,27 +490,47 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
         updatedContent = data.interpretation || data.message || message.content;
         break;
         
+      case 'results_meta':
+        // Metadatos de chunking (nuevo tipo de evento)
+        console.log('📦 Metadatos de chunking:', {
+          totalItems: data.totalItems,
+          totalChunks: data.totalChunks,
+          chunkSize: data.chunkSize
+        });
+        updatedContent = `Preparando envío de ${data.totalItems} registros en ${data.totalChunks} chunks...`;
+        break;
+        
       case 'results_chunk':
-        // Manejar chunks de resultados
-        if (data.data) {
+        // Manejar chunks de resultados con mejor tracking
+        if (data.data && Array.isArray(data.data)) {
           const currentData = message.data || { result: [], rawData: null };
           const combinedResults = [...(currentData.result || []), ...data.data];
           
           updatedData = {
             result: combinedResults,
             rawData: combinedResults,
-            summary: `Recibiendo datos... (${data.progress}% - Chunk ${data.chunkIndex + 1}/${data.totalChunks})`
+            summary: `Chunk ${data.chunkIndex + 1}/${data.totalChunks} recibido (${data.progress || 0}% completado)`
           };
+          
+          console.log('📦 Chunk procesado:', {
+            chunkIndex: data.chunkIndex + 1,
+            totalChunks: data.totalChunks,
+            chunkSize: data.data.length,
+            progress: data.progress,
+            totalReceived: combinedResults.length
+          });
         }
-        updatedContent = data.message || `Procesando chunk ${data.chunkIndex + 1}/${data.totalChunks} (${data.progress}%)`;
+        updatedContent = data.message || `Procesando chunk ${(data.chunkIndex || 0) + 1}/${data.totalChunks || 1} (${data.progress || 0}%)`;
         break;
         
       case 'results_complete':
+        // Completado el envío de chunks
+        console.log('✅ Chunking completado');
         updatedContent = data.message || 'Todos los datos recibidos exitosamente';
         if (message.data) {
           updatedData = {
             ...message.data,
-            summary: data.message || 'Datos completos recibidos'
+            summary: data.message || 'Transfer completo - todos los chunks recibidos'
           };
         }
         break;
@@ -630,6 +738,9 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     const promptToSend = inputValue;
     setInputValue('');
     setIsLoading(true);
+    
+    // Reset del contador de eventos procesados para el nuevo streaming
+    setProcessedEventCount(0);
 
     try {
       // Preparar configuración de streaming
@@ -713,6 +824,130 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     }
   };
 
+  // Función para renderizar tabla
+  const renderTableVisualization = (visualization: MessageVisualization, index: number) => {
+    if (!visualization || !visualization.config?.data) {
+      console.warn('Invalid table visualization data:', visualization);
+      return null;
+    }
+
+    const { config, title, description } = visualization;
+    const { labels, datasets } = config.data;
+    
+    // Extraer datos de la tabla
+    const headers = labels || [];
+    const rows = datasets?.[0]?.data || [];
+
+    return (
+      <div key={index} className="space-y-2 border border-gray-200 rounded-lg p-3">
+        {title && (
+          <h4 className={cn("font-semibold text-gray-800", isLarge ? "text-lg" : "text-base")}>
+            📋 {title}
+          </h4>
+        )}
+        {description && (
+          <p className={cn("text-gray-600", isLarge ? "text-sm" : "text-xs")}>
+            {description}
+          </p>
+        )}
+        
+        {/* Tabla responsive */}
+        <div className="w-full overflow-x-auto">
+          <table className={cn(
+            "min-w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm",
+            isLarge ? "text-sm" : "text-xs"
+          )}>
+            <thead className="bg-blue-50">
+              <tr>
+                {headers.map((header: string, headerIndex: number) => (
+                  <th 
+                    key={headerIndex}
+                    className={cn(
+                      "border border-gray-200 px-3 py-2 text-left font-semibold text-blue-900",
+                      isLarge ? "text-sm" : "text-xs"
+                    )}
+                  >
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row: any[], rowIndex: number) => (
+                <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                  {row.map((cell: any, cellIndex: number) => (
+                    <td 
+                      key={cellIndex}
+                      className={cn(
+                        "border border-gray-200 px-3 py-2 text-gray-700",
+                        isLarge ? "text-sm" : "text-xs"
+                      )}
+                    >
+                      {typeof cell === 'number' ? cell.toLocaleString('es-CL') : String(cell || '-')}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+          <Button
+            variant="outline"
+            size={isLarge ? "default" : "sm"}
+            onClick={() => downloadVisualization(visualization)}
+            className={cn(
+              "text-xs",
+              isLarge ? "h-8 px-3" : "h-6"
+            )}
+          >
+            <Download className={cn(
+              "mr-1",
+              isLarge ? "h-4 w-4" : "h-3 w-3"
+            )} />
+            Descargar
+          </Button>
+          <Button
+            variant="outline"
+            size={isLarge ? "default" : "sm"}
+            onClick={() => {
+              // Convertir tabla a CSV y descargar
+              const csvData = convertTableToCSV(headers, rows);
+              downloadAsCSV(csvData, 'sofia-table.csv');
+            }}
+            className={cn(
+              "text-xs",
+              isLarge ? "h-8 px-3" : "h-6"
+            )}
+          >
+            <Download className={cn(
+              "mr-1",
+              isLarge ? "h-4 w-4" : "h-3 w-3"
+            )} />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            size={isLarge ? "default" : "sm"}
+            onClick={() => copyToClipboard(JSON.stringify(visualization, null, 2))}
+            className={cn(
+              "text-xs",
+              isLarge ? "h-8 px-3" : "h-6"
+            )}
+          >
+            <Copy className={cn(
+              "mr-1",
+              isLarge ? "h-4 w-4" : "h-3 w-3"
+            )} />
+            Copiar
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // Función mejorada para renderizar visualizaciones
   const renderVisualization = (visualization: MessageVisualization, index: number) => {
     if (!visualization || !visualization.config) {
@@ -742,7 +977,12 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
     // Altura de los gráficos según el tamaño
     const chartHeight = isLarge ? "h-[500px]" : "h-64";
 
-    let ChartComponent;
+    // Renderizar tabla si es tipo table
+    if (type === 'table') {
+      return renderTableVisualization(visualization, index);
+    }
+
+    let ChartComponent: React.ComponentType<any>;
     switch (type) {
       case 'bar':
         ChartComponent = Bar;
@@ -780,7 +1020,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
           <Button
             variant="outline"
             size={isLarge ? "default" : "sm"}
-            onClick={() => downloadVisualization(visualization, index)}
+            onClick={() => downloadVisualization(visualization)}
             className={cn(
               "text-xs",
               isLarge ? "h-8 px-3" : "h-6"
@@ -817,7 +1057,7 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
   };
 
   // Función mejorada para descargar visualizaciones
-  const downloadVisualization = (visualization: MessageVisualization, index: number) => {
+  const downloadVisualization = (visualization: MessageVisualization) => {
     if (!visualization || !visualization.config) {
       console.warn('Cannot download invalid visualization');
       return;
@@ -915,6 +1155,23 @@ const SofiaChat: React.FC<SofiaChatProps> = ({
         </div>
       </div>
     );
+  };
+
+  // Utilidad para convertir tabla a CSV
+  const convertTableToCSV = (headers: string[], rows: any[][]): string => {
+    if (!headers.length || !rows.length) return '';
+    
+    const csvRows = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(cell => {
+          const value = cell != null ? String(cell) : '';
+          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        }).join(',')
+      )
+    ];
+    
+    return csvRows.join('\n');
   };
 
   // Utilidad para convertir datos a CSV

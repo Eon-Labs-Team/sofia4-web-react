@@ -133,7 +133,11 @@ const Wizard: React.FC<WizardProps> = ({
 
   // Obtener campos que necesitan watch (solo los que tienen reglas)
   const watchedFieldNames = useMemo(() => {
-    return rulesEngineRef.current ? rulesEngineRef.current.getWatchedFields() : [];
+    const watchedFields = rulesEngineRef.current ? rulesEngineRef.current.getWatchedFields() : [];
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Wizard watchedFieldNames:', watchedFields);
+    }
+    return watchedFields;
   }, [fieldRules]);
 
   // Watch selectivo - solo campos con reglas activas
@@ -141,6 +145,13 @@ const Wizard: React.FC<WizardProps> = ({
     control: formMethods.control,
     name: watchedFieldNames.length > 0 ? watchedFieldNames : undefined
   });
+
+  // Debug watchedValues
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && watchedValues) {
+      console.log('👀 WatchedValues changed:', watchedValues);
+    }
+  }, [watchedValues]);
 
   const prevValuesRef = useRef<Record<string, any>>({});
 
@@ -162,6 +173,14 @@ const Wizard: React.FC<WizardProps> = ({
         
         // Execute rules only if value actually changed
         if (currentValue !== previousValue) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`🎯 Field changed: ${fieldName}`, {
+              from: previousValue,
+              to: currentValue,
+              allFormValues: formMethods.getValues()
+            });
+          }
+          
           rulesEngineRef.current!.executeRules(
             fieldName,
             currentValue,
@@ -247,16 +266,45 @@ const Wizard: React.FC<WizardProps> = ({
   const canProceed = useCallback(() => {
     if (currentStep.isOptional && allowSkipOptional) return true;
     
-    // Check if step has required fields
+    // If step has custom validation, use that
+    if (currentStep.customValidation) {
+      const currentValues = getValues();
+      const isValid = currentStep.customValidation(currentValues);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Custom validation result:', {
+          stepId: currentStep.id,
+          isValid,
+          currentValues
+        });
+      }
+      return isValid;
+    }
+    
+    // Check if step has required fields (traditional validation)
     const requiredFields = currentStep.sections.flatMap(section =>
       section.fields.filter(field => field.required).map(field => field.name)
     );
 
     const currentValues = getValues();
-    return requiredFields.every(fieldName => {
+    const missingFields = requiredFields.filter(fieldName => {
       const value = currentValues[fieldName];
-      return value !== undefined && value !== null && value !== "";
+      const isEmpty = value === undefined || value === null || value === "";
+      if (isEmpty && process.env.NODE_ENV === 'development') {
+        console.log(`❌ Missing required field: ${fieldName} =`, value);
+      }
+      return isEmpty;
     });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 CanProceed check:', {
+        requiredFields,
+        currentValues,
+        missingFields,
+        canProceed: missingFields.length === 0
+      });
+    }
+
+    return missingFields.length === 0;
   }, [currentStep, allowSkipOptional, getValues]);
 
   const handleNext = useCallback(async () => {
@@ -311,24 +359,24 @@ const Wizard: React.FC<WizardProps> = ({
       const allData = getValues();
       await onComplete(allData);
       
-      toast({
-        title: "Éxito",
-        description: "El wizard se completó correctamente.",
-      });
+      // toast({
+      //   title: "Éxito",
+      //   description: "El wizard se completó correctamente.",
+      // });
     } catch (error) {
       console.error("Error completing wizard:", error);
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al completar el wizard. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Ocurrió un error al completar el wizard. Por favor intente nuevamente.",
+      //   variant: "destructive",
+      // });
     } finally {
       setIsSubmitting(false);
     }
   }, [steps, completedSteps, getValues, onComplete]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto w-[95vw] space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">{title}</CardTitle>
@@ -366,32 +414,39 @@ const Wizard: React.FC<WizardProps> = ({
                 )}
               </div>
 
-              {currentStepWithDynamicOptions.sections.map((section) => (
-                <div key={section.id} className="space-y-4">
-                  {section.title && (
-                    <div>
-                      <h4 className="text-base font-medium text-gray-900">
-                        {section.title}
-                      </h4>
-                      {section.description && (
-                        <p className="text-sm text-gray-600 mt-1">
-                          {section.description}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {section.fields.map((field) => (
-                      <div 
-                        key={field.id} 
-                        className={field.type === "textarea" ? "md:col-span-2" : ""}
-                      >
-                        <FormField field={field} />
-                      </div>
-                    ))}
-                  </div>
+              {/* Render custom content if available, otherwise render traditional sections */}
+              {currentStep.customContent ? (
+                <div className="w-full overflow-hidden">
+                  {currentStep.customContent}
                 </div>
-              ))}
+              ) : (
+                currentStepWithDynamicOptions.sections.map((section) => (
+                  <div key={section.id} className="space-y-4">
+                    {section.title && (
+                      <div>
+                        <h4 className="text-base font-medium text-gray-900">
+                          {section.title}
+                        </h4>
+                        {section.description && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            {section.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {section.fields.map((field) => (
+                        <div 
+                          key={field.id} 
+                          className={field.type === "textarea" ? "md:col-span-2" : ""}
+                        >
+                          <FormField field={field} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </FormProvider>
 

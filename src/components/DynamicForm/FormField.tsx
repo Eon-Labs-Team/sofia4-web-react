@@ -229,7 +229,13 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
                 <FormLabel>{field.label}</FormLabel>
                 <FormControl>
                   <RadioGroup
-                    onValueChange={formField.onChange}
+                    onValueChange={(value) => {
+                      formField.onChange(value);
+                      // Call custom onChange if provided
+                      if ((field as any).onChange) {
+                        (field as any).onChange(value, setValue, getValues);
+                      }
+                    }}
                     defaultValue={formField.value}
                     className="flex flex-col space-y-1"
                     disabled={field.disabled}

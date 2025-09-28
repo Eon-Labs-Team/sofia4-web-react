@@ -185,8 +185,8 @@ const Dashboard: React.FC = () => {
     works.forEach(work => {
       if (work.workers && Array.isArray(work.workers)) {
         work.workers.forEach(workerData => {
-          const workerId = workerData.worker?.id || workerData.worker || 'unknown';
-          const workerName = workerData.worker?.name || workerData.worker?.firstName || `Trabajador ${workerId}`;
+          const workerId = workerData.worker?.id || 'unknown';
+          const workerName = workerData.worker?.names || `Trabajador ${workerId}`;
           
           if (!workerMap.has(workerId)) {
             workerMap.set(workerId, {
@@ -249,8 +249,8 @@ const Dashboard: React.FC = () => {
     works.forEach(work => {
       if (work.machinery && Array.isArray(work.machinery)) {
         work.machinery.forEach(machineData => {
-          const machineryId = machineData.machinery?.id || machineData.machinery || 'unknown';
-          const machineryName = machineData.machinery?.name || machineData.machinery?.machineryName || `Maquinaria ${machineryId}`;
+          const machineryId = machineData.machinery || 'unknown';
+          const machineryName = `Maquinaria ${machineryId}`;
           
           if (!machineryMap.has(machineryId)) {
             machineryMap.set(machineryId, {
@@ -268,7 +268,7 @@ const Dashboard: React.FC = () => {
 
           const machinery = machineryMap.get(machineryId)!;
           machinery.totalWorks += 1;
-          machinery.totalHours += machineData.totalHours || machineData.hours || 1;
+          machinery.totalHours += machineData.finalHours || 1;
           machinery.totalHectares += work.appliedHectares || work.hectares || 0;
           machinery.workTypes.add(work.workType || 'T');
           
@@ -317,8 +317,8 @@ const Dashboard: React.FC = () => {
     works.forEach(work => {
       if (work.products && Array.isArray(work.products)) {
         work.products.forEach(productData => {
-          const productId = productData.product?.id || productData.product || 'unknown';
-          const productName = productData.product?.name || productData.product?.productName || `Producto ${productId}`;
+          const productId = productData.product || 'unknown';
+          const productName = `Producto ${productId}`;
           
           if (!productMap.has(productId)) {
             productMap.set(productId, {
@@ -335,11 +335,11 @@ const Dashboard: React.FC = () => {
 
           const product = productMap.get(productId)!;
           product.totalWorks += 1;
-          product.totalQuantity += productData.quantityUsed || productData.quantity || 0;
+          product.totalQuantity += parseFloat(productData.amount) || 0;
           product.workTypes.add(work.workType || 'A');
           
-          if (productData.dosage && productData.dosage > 0) {
-            product.totalDosage += productData.dosage;
+          if (productData.doses && parseFloat(productData.doses) > 0) {
+            product.totalDosage += parseFloat(productData.doses);
             product.dosageCount += 1;
           }
           
@@ -383,8 +383,8 @@ const Dashboard: React.FC = () => {
       const uniqueWorkers = new Set();
       const uniqueMachinery = new Set();
       works.forEach(work => {
-        work.workers?.forEach(w => uniqueWorkers.add(w.worker?.id || w.worker));
-        work.machinery?.forEach(m => uniqueMachinery.add(m.machinery?.id || m.machinery));
+        work.workers?.forEach(w => uniqueWorkers.add(w.worker?.id));
+        work.machinery?.forEach(m => uniqueMachinery.add(m.machinery));
       });
 
       setStats({

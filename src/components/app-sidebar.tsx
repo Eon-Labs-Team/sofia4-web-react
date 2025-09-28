@@ -70,7 +70,7 @@ import {
 import { useAuthStore } from "@/lib/store/authStore"
 import { useSidebarStore, NavItem } from "@/lib/store/sidebarStore"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { useSofiaChat } from "@/hooks/useSofiaChat"
+import { useSofiaChat } from "@/lib/hooks/useSofiaChat"
 import SofiaChat from "@/components/SofiaChat/SofiaChat"
 
 // Esta es la configuración de menús específicos según el tipo de acción
