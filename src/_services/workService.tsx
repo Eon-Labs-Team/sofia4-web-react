@@ -288,6 +288,51 @@ class WorkService {
       throw error;
     }
   }
+
+  /**
+   * Create a work with entity integration
+   * @param entityType Type of entity (MONITORING_PHENOLOGICAL_STATE, WATER_CONSUMPTION, etc.)
+   * @param entityData Entity specific data (single object or array)
+   * @param workData Complete work data (taskType and task will be assigned automatically)
+   * @returns Promise with created work and entity records
+   */
+  async createWorkWithEntity(
+    entityType: string,
+    entityData: any | any[],
+    workData: Partial<IWork>
+  ): Promise<any> {
+    try {
+      
+      // Ensure entityData is an array for the API
+      const entityDataArray = Array.isArray(entityData) ? entityData : [entityData];
+      
+      const payload = {
+        work: {
+          ...workData,
+        },
+        entityData: entityDataArray,
+        entityType: entityType.toUpperCase() // API expects uppercase entity types
+      };
+
+      console.log('Creating work with entity:', JSON.stringify(payload));
+
+      const response = await fetch(authService.buildUrlWithParams(`${ENDPOINTS.work?.base}/with-entity`), {
+        method: 'POST',
+        headers: authService.getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error creating work with entity ${entityType}:`, error);
+      throw error;
+    }
+  }
 }
 
 // Create a singleton instance
