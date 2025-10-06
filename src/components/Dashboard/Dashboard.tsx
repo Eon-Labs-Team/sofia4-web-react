@@ -25,8 +25,11 @@ import {
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/use-toast";
 import workService from "@/_services/workService";
-import type { IWork } from "@eon-lib/eon-mongoose";
-import { useAuthStore } from "@/lib/store/authStore";
+import type {
+  IWork,
+  WorkSpecificData
+} from "@eon-lib/eon-mongoose";
+import { isApplicationWork } from "@eon-lib/eon-mongoose";
 import {
   ChartContainer,
   ChartTooltip,
@@ -39,12 +42,9 @@ import {
   AreaChart,
   Bar,
   BarChart,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   Cell,
-  ResponsiveContainer,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -162,15 +162,13 @@ const Dashboard: React.FC = () => {
   const [machineryUsage, setMachineryUsage] = useState<MachineryUsage[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { user } = useAuthStore();
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   // Extract worker data from IWork.workers array
-  const extractWorkerData = (works: IWork[]): WorkerActivity[] => {
+  const extractWorkerData = (works: IWork<WorkSpecificData>[]): WorkerActivity[] => {
     const workerMap = new Map<string, {
       workerId: string;
       workerName: string;
@@ -233,7 +231,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Extract machinery data from IWork.machinery array
-  const extractMachineryData = (works: IWork[]): MachineryUsage[] => {
+  const extractMachineryData = (works: IWork<WorkSpecificData>[]): MachineryUsage[] => {
     const machineryMap = new Map<string, {
       machineryId: string;
       machineryName: string;
@@ -251,7 +249,7 @@ const Dashboard: React.FC = () => {
         work.machinery.forEach(machineData => {
           const machineryId = machineData.machinery || 'unknown';
           const machineryName = `Maquinaria ${machineryId}`;
-          
+
           if (!machineryMap.has(machineryId)) {
             machineryMap.set(machineryId, {
               machineryId,
@@ -269,14 +267,24 @@ const Dashboard: React.FC = () => {
           const machinery = machineryMap.get(machineryId)!;
           machinery.totalWorks += 1;
           machinery.totalHours += machineData.finalHours || 1;
-          machinery.totalHectares += work.appliedHectares || work.hectares || 0;
-          machinery.workTypes.add(work.workType || 'T');
-          
-          if (work.calibrationPerHectare && work.calibrationPerHectare > 0) {
-            machinery.totalCalibration += work.calibrationPerHectare;
-            machinery.calibrationCount += 1;
+
+          // Use type guard for type-safe access to specificData
+          let appliedHectares = work.hectares || 0;
+          if (isApplicationWork(work) && work.specificData) {
+            appliedHectares = work.specificData.appliedHectares || work.hectares || 0;
           }
-          
+          machinery.totalHectares += appliedHectares;
+          machinery.workTypes.add(work.workType || 'T');
+
+          // For application works (A), access calibration from specificData with type safety
+          if (isApplicationWork(work) && work.specificData) {
+            const calibrationPerHectare = work.specificData.calibrationPerHectare;
+            if (calibrationPerHectare && calibrationPerHectare > 0) {
+              machinery.totalCalibration += calibrationPerHectare;
+              machinery.calibrationCount += 1;
+            }
+          }
+
           const workDate = new Date(work.executionDate || work.startDate || work.createdAt);
           if (workDate > machinery.lastWorkDate) {
             machinery.lastWorkDate = workDate;
@@ -302,7 +310,7 @@ const Dashboard: React.FC = () => {
   };
 
   // Extract product data from IWork.products array
-  const extractProductData = (works: IWork[]): ProductConsumption[] => {
+  const extractProductData = (works: IWork<WorkSpecificData>[]): ProductConsumption[] => {
     const productMap = new Map<string, {
       productId: string;
       productName: string;
@@ -368,8 +376,8 @@ const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     setIsLoading(true);
     try {
-      // Get real IWork data
-      const works: IWork[] = await workService.findAll();
+      // Get real IWork data with generic type
+      const works: IWork<WorkSpecificData>[] = await workService.findAll();
       console.log('Loaded works:', works.length);
 
       // Calculate dashboard stats from IWork data

@@ -11,7 +11,16 @@ import {
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { FormGrid } from "@/components/Grid/FormGrid";
 import { Trash2 } from "lucide-react";
-import type { IWork, WorkType as LibWorkType, IWorkers, IMachinery, IProducts } from "@eon-lib/eon-mongoose";
+import type {
+  IWork,
+  WorkType as LibWorkType,
+  IWorkers,
+  IMachinery,
+  IProducts,
+  WorkSpecificData,
+  IApplicationSpecificData
+} from "@eon-lib/eon-mongoose";
+import { isApplicationWork } from "@eon-lib/eon-mongoose";
 import type { FormGridRules } from "@/lib/validationSchemas";
 import type { WorkMasterData, WorkType } from "../types/workTypes";
 import type { Column } from "@/lib/store/gridStore";
@@ -30,26 +39,26 @@ interface BaseWorkFormProps {
   workType: WorkType;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Partial<IWork>) => Promise<void>;
-  
+  onSubmit: (data: Partial<IWork<WorkSpecificData>>) => Promise<void>;
+
   // Configuración del formulario
   formSections: SectionConfig[];
   fieldRules?: FormGridRules;
   validationSchema?: any;
   defaultValues?: Record<string, any>;
-  
+
   // Datos para el formulario
   masterData: WorkMasterData;
-  selectedWork?: IWork | null;
+  selectedWork?: IWork<WorkSpecificData> | null;
   isEditMode?: boolean;
-  
+
   // Customización
   title?: string;
   description?: string;
   submitLabel?: string;
   customHeader?: React.ReactNode;
   customFooter?: React.ReactNode;
-  
+
   // Estados
   isSubmitting?: boolean;
 }
@@ -107,21 +116,33 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
         ...baseDefaults,
         ...selectedWork,
         // Asegurar que las fechas estén en formato correcto para inputs
-        executionDate: selectedWork.executionDate 
+        executionDate: selectedWork.executionDate
           ? new Date(selectedWork.executionDate).toISOString().split('T')[0]
           : '',
-        startDate: selectedWork.startDate 
+        startDate: selectedWork.startDate
           ? new Date(selectedWork.startDate).toISOString().split('T')[0]
           : '',
-        endDate: selectedWork.endDate 
+        endDate: selectedWork.endDate
           ? new Date(selectedWork.endDate).toISOString().split('T')[0]
           : '',
-        gracePeriodEndDate: selectedWork.gracePeriodEndDate 
-          ? new Date(selectedWork.gracePeriodEndDate).toISOString().split('T')[0]
-          : '',
-        reEntryDate: selectedWork.reEntryDate 
-          ? new Date(selectedWork.reEntryDate).toISOString().split('T')[0]
-          : '',
+        // Manejar specificData con type safety usando type guards
+        specificData: selectedWork.specificData ? (() => {
+          // Si es un trabajo de tipo A (Aplicación), procesar sus fechas específicas
+          if (isApplicationWork(selectedWork) && selectedWork.specificData) {
+            const appData = selectedWork.specificData as IApplicationSpecificData;
+            return {
+              ...appData,
+              gracePeriodEndDate: appData.gracePeriodEndDate
+                ? new Date(appData.gracePeriodEndDate).toISOString().split('T')[0]
+                : '',
+              reEntryDate: appData.reEntryDate
+                ? new Date(appData.reEntryDate).toISOString().split('T')[0]
+                : '',
+            };
+          }
+          // Para otros tipos de trabajo, devolver specificData tal cual
+          return selectedWork.specificData;
+        })() : undefined
       };
 
       // Si task es un objeto, convertirlo al ID para el formulario (como en OrdenAplicacion.tsx)
@@ -186,7 +207,7 @@ export const BaseWorkForm: React.FC<BaseWorkFormProps> = ({
           case 'responsibles.supervisor.userId':
           case 'responsibles.planner.userId':
           case 'responsibles.technicalVerifier.userId':
-          case 'responsibles.applicators.0.userId':
+          case 'specificData.applicators.0.userId':
             processedField.options = masterData.workerList.map(worker => ({
               value: worker._id,
               label: `${worker.names} ${worker.lastName}` || worker._id

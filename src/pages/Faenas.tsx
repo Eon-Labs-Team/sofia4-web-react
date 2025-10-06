@@ -25,7 +25,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ITaskType, WorkType, UsageScope } from "@eon-lib/eon-mongoose";
+import { ITaskType, TaskTypeWorkType, UsageScope } from "@eon-lib/eon-mongoose";
 import faenaService from "@/_services/taskTypeService";
 import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";
@@ -35,7 +35,7 @@ interface FaenaWithId {
   _id: string;
   name: string;
   optionalCode?: string;
-  workType: WorkType;
+  workType: TaskTypeWorkType;
   usageScope: UsageScope;
   usesCalibrationPerHa: boolean;
   assignedProperties: string[];
@@ -48,7 +48,7 @@ interface FaenasProps {
 }
 
 // Render function for the workType column
-const renderWorkType = (value: WorkType) => {
+const renderWorkType = (value: TaskTypeWorkType) => {
   const types = {
     'T': 'Labor Agrícola',
     'A': 'Aplicaciones',

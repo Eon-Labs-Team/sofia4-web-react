@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TestTubeDiagonal } from "lucide-react";
-import type { WorkType, WorkTypeConfig } from "../../shared/types/workTypes";
+import type { WorkTypeConfig } from "../../shared/types/workTypes";
 import type { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import type { Column } from "@/lib/store/gridStore";
 
@@ -68,45 +68,29 @@ export const aplicacionFormSections: SectionConfig[] = [
   },
   {
     id: "aplicacion-info-detail",
-    title: "Detalles de Aplicación",
-    description: "Especificaciones técnicas de la aplicación",
+    title: "Detalles Generales",
+    description: "Información general del trabajo",
     fields: [
       {
         id: "hectares",
         type: "number",
         label: "Hectáreas",
         name: "hectares",
-        required: true
-      },
-      {
-        id: "appliedHectares",
-        type: "number",
-        label: "Hectáreas Aplicadas",
-        name: "appliedHectares",
+        disabled: true,
         required: true
       },
       {
         id: "coverage",
-        type: "number",
-        label: "Cobertura (%)",
+        type: "select",
+        label: "Cobertura",
         name: "coverage",
         required: true,
-        defaultValue: 100
-      },
-      {
-        id: "generalObjective",
-        type: "text",
-        label: "Objetivo General",
-        name: "generalObjective",
-        placeholder: "Objetivo de la aplicación",
-        required: true
-      },
-      {
-        id: "calibrationPerHectare",
-        type: "number",
-        label: "Mojamiento x HA (L/ha)",
-        name: "calibrationPerHectare",
-        placeholder: "Mojamiento por hectárea"
+        options: [
+          { value: "stripping", label: "Desmanche" },
+          { value: "between rows", label: "Entre hilera" },
+          { value: "over rows", label: "Sobre hilera" },
+          { value: "total", label: "Total" }
+        ]
       },
       {
         id: "observation",
@@ -121,6 +105,35 @@ export const aplicacionFormSections: SectionConfig[] = [
         label: "Observación desde App",
         name: "observationApp",
         placeholder: "Observaciones desde la aplicación móvil"
+      },
+    ],
+  },
+  {
+    id: "aplicacion-specific-data",
+    title: "Información Específica de la aplicación",
+    description: "Datos específicos para aplicaciones de productos (Tipo A)",
+    fields: [
+      {
+        id: "generalObjective",
+        type: "text",
+        label: "Objetivo General",
+        name: "specificData.generalObjective",
+        placeholder: "Objetivo de la aplicación",
+        required: true
+      },
+      {
+        id: "appliedHectares",
+        type: "number",
+        label: "Hectáreas Aplicadas",
+        name: "specificData.appliedHectares",
+        required: true
+      },
+      {
+        id: "calibrationPerHectare",
+        type: "number",
+        label: "Mojamiento x HA (L/ha)",
+        name: "specificData.calibrationPerHectare",
+        placeholder: "Mojamiento por hectárea"
       },
     ],
   },
@@ -213,7 +226,7 @@ export const aplicacionFormSections: SectionConfig[] = [
   {
     id: "aplicacion-info-dates",
     title: "Fechas y Horas",
-    description: "Programación temporal de la aplicación",
+    description: "Programación temporal de la aplicacion",
     fields: [
       {
         id: "startDate",
@@ -241,23 +254,30 @@ export const aplicacionFormSections: SectionConfig[] = [
         name: "hourEndDate",
         placeholder: "HH:MM"
       },
+    ],
+  },
+  {
+    id: "aplicacion-specific-dates",
+    title: "Fechas Específicas de Aplicación",
+    description: "Fechas de carencia y reingreso (específico para aplicaciones)",
+    fields: [
       {
         id: "gracePeriodEndDate",
         type: "date",
         label: "Fecha de Término de Carencia",
-        name: "gracePeriodEndDate"
+        name: "specificData.gracePeriodEndDate"
       },
       {
         id: "reEntryDate",
         type: "date",
         label: "Fecha de Reingreso",
-        name: "reEntryDate"
+        name: "specificData.reEntryDate"
       },
       {
         id: "reEntryHour",
         type: "text",
         label: "Hora de Reingreso",
-        name: "reEntryHour",
+        name: "specificData.reEntryHour",
         placeholder: "HH:MM"
       },
     ],
@@ -319,8 +339,8 @@ export const aplicacionFormSections: SectionConfig[] = [
   },
   {
     id: "aplicacion-info-responsibles",
-    title: "Responsables",
-    description: "Asignación de roles y responsabilidades",
+    title: "Responsables Generales",
+    description: "Asignación de roles y responsabilidades comunes",
     fields: [
       {
         id: "responsibles.supervisor.userId",
@@ -343,74 +363,81 @@ export const aplicacionFormSections: SectionConfig[] = [
         name: "responsibles.technicalVerifier.userId",
         placeholder: "Seleccione un verificador técnico"
       },
+    ],
+  },
+  {
+    id: "aplicacion-specific-responsibles",
+    title: "Responsables Específicos de Aplicación",
+    description: "Aplicadores asignados a esta aplicación de productos",
+    fields: [
       {
-        id: "responsibles.applicators.0.userId",
+        id: "specificData.applicators.0.userId",
         type: "select",
         label: "Aplicador Principal",
-        name: "responsibles.applicators.0.userId",
+        name: "specificData.applicators.0.userId",
         placeholder: "Seleccione un aplicador principal"
       },
     ],
   },
   {
     id: "aplicacion-info-ppe",
-    title: "Equipo de Protección Personal",
-    description: "Equipos de seguridad requeridos",
+    title: "Equipo de Protección Personal (EPP)",
+    description: "Equipos de seguridad requeridos para la aplicación",
     fields: [
       {
-        id: "ppe.gloves",
+        id: "specificData.ppe.gloves",
         type: "checkbox",
         label: "Guantes",
-        name: "ppe.gloves",
+        name: "specificData.ppe.gloves",
         defaultValue: true
       },
       {
-        id: "ppe.applicatorSuit",
+        id: "specificData.ppe.applicatorSuit",
         type: "checkbox",
         label: "Traje de Aplicador",
-        name: "ppe.applicatorSuit",
+        name: "specificData.ppe.applicatorSuit",
         defaultValue: true
       },
       {
-        id: "ppe.respirator",
+        id: "specificData.ppe.respirator",
         type: "checkbox",
         label: "Respirador",
-        name: "ppe.respirator",
+        name: "specificData.ppe.respirator",
         defaultValue: true
       },
       {
-        id: "ppe.faceShield",
+        id: "specificData.ppe.faceShield",
         type: "checkbox",
         label: "Protector Facial",
-        name: "ppe.faceShield",
+        name: "specificData.ppe.faceShield",
         defaultValue: true
       },
       {
-        id: "ppe.apron",
+        id: "specificData.ppe.apron",
         type: "checkbox",
         label: "Delantal",
-        name: "ppe.apron",
+        name: "specificData.ppe.apron",
         defaultValue: true
       },
       {
-        id: "ppe.boots",
+        id: "specificData.ppe.boots",
         type: "checkbox",
         label: "Botas",
-        name: "ppe.boots",
+        name: "specificData.ppe.boots",
         defaultValue: true
       },
       {
-        id: "ppe.noseMouthProtector",
+        id: "specificData.ppe.noseMouthProtector",
         type: "checkbox",
         label: "Protector Nariz-Boca",
-        name: "ppe.noseMouthProtector",
+        name: "specificData.ppe.noseMouthProtector",
         defaultValue: true
       },
       {
-        id: "ppe.others",
+        id: "specificData.ppe.others",
         type: "textarea",
         label: "Otros Equipos",
-        name: "ppe.others",
+        name: "specificData.ppe.others",
         placeholder: "Otros equipos de protección requeridos"
       },
     ],
@@ -418,67 +445,67 @@ export const aplicacionFormSections: SectionConfig[] = [
   {
     id: "aplicacion-info-washing",
     title: "Protocolo de Lavado",
-    description: "Procedimientos de limpieza y descontaminación",
+    description: "Procedimientos de limpieza y descontaminación para aplicaciones",
     fields: [
       {
-        id: "washing.suit1",
+        id: "specificData.washing.suit1",
         type: "checkbox",
         label: "Traje 1",
-        name: "washing.suit1"
+        name: "specificData.washing.suit1"
       },
       {
-        id: "washing.suit2",
+        id: "specificData.washing.suit2",
         type: "checkbox",
         label: "Traje 2",
-        name: "washing.suit2"
+        name: "specificData.washing.suit2"
       },
       {
-        id: "washing.suit3",
+        id: "specificData.washing.suit3",
         type: "checkbox",
         label: "Traje 3",
-        name: "washing.suit3"
+        name: "specificData.washing.suit3"
       },
       {
-        id: "washing.filterHolder1",
+        id: "specificData.washing.filterHolder1",
         type: "checkbox",
         label: "Porta Filtro 1",
-        name: "washing.filterHolder1"
+        name: "specificData.washing.filterHolder1"
       },
       {
-        id: "washing.filterHolder2",
+        id: "specificData.washing.filterHolder2",
         type: "checkbox",
         label: "Porta Filtro 2",
-        name: "washing.filterHolder2"
+        name: "specificData.washing.filterHolder2"
       },
       {
-        id: "washing.filterHolder3",
+        id: "specificData.washing.filterHolder3",
         type: "checkbox",
         label: "Porta Filtro 3",
-        name: "washing.filterHolder3"
+        name: "specificData.washing.filterHolder3"
       },
       {
-        id: "washing.tripleWash",
+        id: "specificData.washing.tripleWash",
         type: "checkbox",
         label: "Triple Lavado",
-        name: "washing.tripleWash"
+        name: "specificData.washing.tripleWash"
       },
       {
-        id: "washing.machinery",
+        id: "specificData.washing.machinery",
         type: "checkbox",
         label: "Maquinaria",
-        name: "washing.machinery"
+        name: "specificData.washing.machinery"
       },
       {
-        id: "washing.leftovers",
+        id: "specificData.washing.leftovers",
         type: "checkbox",
         label: "Sobrantes",
-        name: "washing.leftovers"
+        name: "specificData.washing.leftovers"
       },
       {
-        id: "washing.leftoverObservation",
+        id: "specificData.washing.leftoverObservation",
         type: "checkbox",
         label: "Observación de Sobrantes",
-        name: "washing.leftoverObservation"
+        name: "specificData.washing.leftoverObservation"
       },
     ],
   }
@@ -600,18 +627,13 @@ export const aplicacionValidationSchema = z.object({
   variety: z.string({ invalid_type_error: "La variedad debe ser texto" }).min(1, { message: "La variedad es obligatoria" }),
   phenologicalState: z.string({ invalid_type_error: "El estado fenológico debe ser texto" }).min(1, { message: "El estado fenológico es obligatorio" }),
   hectares: z.number({ invalid_type_error: "Las hectáreas deben ser un número" }).min(0, { message: "Las hectáreas no pueden ser negativas" }),
-  appliedHectares: z.number({ invalid_type_error: "Las hectáreas aplicadas deben ser un número" }).min(0, { message: "Las hectáreas aplicadas no pueden ser negativas" }),
-  coverage: z.number({ invalid_type_error: "La cobertura debe ser un número" }).optional(),
-  generalObjective: z.string({ invalid_type_error: "El objetivo general debe ser texto" }).min(1, { message: "El objetivo general es obligatorio" }),
+  coverage: z.string({ invalid_type_error: "La cobertura debe ser texto" }).min(1, { message: "La cobertura es obligatoria" }),
   observation: z.string({ invalid_type_error: "La observación debe ser texto" }).optional(),
   observationApp: z.string({ invalid_type_error: "La observación de app debe ser texto" }).optional(),
   startDate: z.string({ invalid_type_error: "La fecha de inicio debe ser texto" }).optional(),
   hourStartDate: z.string({ invalid_type_error: "La hora de inicio debe ser texto" }).optional(),
   endDate: z.string({ invalid_type_error: "La fecha de fin debe ser texto" }).optional(),
   hourEndDate: z.string({ invalid_type_error: "La hora de fin debe ser texto" }).optional(),
-  gracePeriodEndDate: z.string({ invalid_type_error: "La fecha de término de carencia debe ser texto" }).optional(),
-  reEntryDate: z.string({ invalid_type_error: "La fecha de reingreso debe ser texto" }).optional(),
-  reEntryHour: z.string({ invalid_type_error: "La hora de reingreso debe ser texto" }).optional(),
   climateConditions: z.string({ invalid_type_error: "Las condiciones climáticas deben ser texto" }).optional(),
   windSpeed: z.string({ invalid_type_error: "La velocidad del viento debe ser texto" }).optional(),
   temperature: z.string({ invalid_type_error: "La temperatura debe ser texto" }).optional(),
@@ -619,7 +641,7 @@ export const aplicacionValidationSchema = z.object({
   syncApp: z.boolean({ invalid_type_error: "El campo syncApp debe ser verdadero o falso" }).default(false),
   appUser: z.string({ invalid_type_error: "El usuario de la app debe ser texto" }).optional(),
   workState: z.string({ invalid_type_error: "El estado del trabajo debe ser texto" }).default("pending"),
-  
+
   // Task related fields
   taskType: z.string({ invalid_type_error: "Debe seleccionar una faena" }).min(1, { message: "La faena es obligatoria" }),
   task: z.union([
@@ -641,15 +663,14 @@ export const aplicacionValidationSchema = z.object({
     }) // Objeto completo que viene de la DB o se envía a la API
   ]),
   customTask: z.string().optional(),
-  calibrationPerHectare: z.number().optional(),
-  
+
   // Payment related fields
   taskOptimalYield: z.number().optional(),
   initialBonusToWorkers: z.number().optional(),
   paymentMethodToWorkers: z.string().optional(),
   taskPrice: z.number().optional(),
-  
-  // Responsibles validation
+
+  // Responsibles validation (sin applicators, que ahora va en specificData)
   responsibles: z.object({
     supervisor: z.object({
       userId: z.string().optional(),
@@ -662,57 +683,67 @@ export const aplicacionValidationSchema = z.object({
     technicalVerifier: z.object({
       userId: z.string().optional(),
       name: z.string().optional()
-    }).optional(),
+    }).optional()
+  }).optional(),
+
+  // Specific data for Application type (A)
+  specificData: z.object({
+    generalObjective: z.string({ invalid_type_error: "El objetivo general debe ser texto" }).min(1, { message: "El objetivo general es obligatorio" }),
+    appliedHectares: z.number({ invalid_type_error: "Las hectáreas aplicadas deben ser un número" }).min(0, { message: "Las hectáreas aplicadas no pueden ser negativas" }),
+    gracePeriodEndDate: z.string({ invalid_type_error: "La fecha de término de carencia debe ser texto" }).optional(),
+    reEntryDate: z.string({ invalid_type_error: "La fecha de reingreso debe ser texto" }).optional(),
+    reEntryHour: z.string({ invalid_type_error: "La hora de reingreso debe ser texto" }).optional(),
+    calibrationPerHectare: z.number().optional(),
     applicators: z.array(
       z.object({
         userId: z.string().optional(),
         name: z.string().optional()
       })
-    ).optional()
-  }).optional(),
-  
-  // PPE validation
-  ppe: z.object({
-    gloves: z.boolean().optional().default(false),
-    applicatorSuit: z.boolean().optional().default(false),
-    respirator: z.boolean().optional().default(false),
-    faceShield: z.boolean().optional().default(false),
-    apron: z.boolean().optional().default(false),
-    boots: z.boolean().optional().default(false),
-    noseMouthProtector: z.boolean().optional().default(false),
-    others: z.string().optional()
-  }).optional(),
-  
-  // Washing validation
-  washing: z.object({
-    suit1: z.boolean().optional().default(false),
-    suit2: z.boolean().optional().default(false),
-    suit3: z.boolean().optional().default(false),
-    filterHolder1: z.boolean().optional().default(false),
-    filterHolder2: z.boolean().optional().default(false),
-    filterHolder3: z.boolean().optional().default(false),
-    tripleWash: z.boolean().optional().default(false),
-    machinery: z.boolean().optional().default(false),
-    leftovers: z.boolean().optional().default(false),
-    leftoverObservation: z.boolean().optional().default(false)
+    ).optional(),
+    // PPE validation (dentro de specificData para aplicaciones)
+    ppe: z.object({
+      gloves: z.boolean().optional().default(false),
+      applicatorSuit: z.boolean().optional().default(false),
+      respirator: z.boolean().optional().default(false),
+      faceShield: z.boolean().optional().default(false),
+      apron: z.boolean().optional().default(false),
+      boots: z.boolean().optional().default(false),
+      noseMouthProtector: z.boolean().optional().default(false),
+      others: z.string().optional()
+    }).optional(),
+    // Washing validation (dentro de specificData para aplicaciones)
+    washing: z.object({
+      suit1: z.boolean().optional().default(false),
+      suit2: z.boolean().optional().default(false),
+      suit3: z.boolean().optional().default(false),
+      filterHolder1: z.boolean().optional().default(false),
+      filterHolder2: z.boolean().optional().default(false),
+      filterHolder3: z.boolean().optional().default(false),
+      tripleWash: z.boolean().optional().default(false),
+      machinery: z.boolean().optional().default(false),
+      leftovers: z.boolean().optional().default(false),
+      leftoverObservation: z.boolean().optional().default(false)
+    }).optional()
   }).optional()
 });
 
 // Valores por defecto para aplicaciones
 export const aplicacionDefaultValues = {
   workType: "A",
-  coverage: 100,
+  coverage: "total",
   paymentMethodToWorkers: "trato",
   workState: "pending",
   syncApp: false,
-  ppe: {
-    gloves: true,
-    applicatorSuit: true,
-    respirator: true,
-    faceShield: true,
-    apron: true,
-    boots: true,
-    noseMouthProtector: true,
+  specificData: {
+    ppe: {
+      gloves: true,
+      applicatorSuit: true,
+      respirator: true,
+      faceShield: true,
+      apron: true,
+      boots: true,
+      noseMouthProtector: true,
+    }
   }
 };
 

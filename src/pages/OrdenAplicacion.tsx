@@ -55,7 +55,7 @@ import { IProducts } from "@eon-lib/eon-mongoose";
 import { IProductCategory } from "@eon-lib/eon-mongoose";
 // @ts-ignore
 import { IWarehouseProduct } from "@eon-lib/eon-mongoose";
-import { ITaskType, WorkType } from "@eon-lib/eon-mongoose";
+import { ITaskType, TaskTypeWorkType } from "@eon-lib/eon-mongoose";
 import { ITask } from "@eon-lib/eon-mongoose";
 import { IWeatherCondition } from "@eon-lib/eon-mongoose";
 import { IWindCondition } from "@eon-lib/eon-mongoose";
@@ -217,7 +217,7 @@ const formSections: SectionConfig[] = [
         id: "appliedHectares",
         type: "number",
         label: "Hectáreas Aplicadas",
-        name: "appliedHectares",
+        name: "specificData.appliedHectares",
         required: true
       },
       {
@@ -231,7 +231,7 @@ const formSections: SectionConfig[] = [
         id: "generalObjective",
         type: "text",
         label: "Objetivo General",
-        name: "generalObjective",
+        name: "specificData.generalObjective",
         placeholder: "Objetivo de la aplicación",
         required: true
       },
@@ -239,7 +239,7 @@ const formSections: SectionConfig[] = [
         id: "calibrationPerHectare",
         type: "number",
         label: "Mojamiento x HA",
-        name: "calibrationPerHectare",
+        name: "specificData.calibrationPerHectare",
         placeholder: "Mojamiento por hectárea"
       },
       {
@@ -372,19 +372,19 @@ const formSections: SectionConfig[] = [
         id: "gracePeriodEndDate",
         type: "date",
         label: "Fecha de Término de Carencia",
-        name: "gracePeriodEndDate"
+        name: "specificData.gracePeriodEndDate"
       },
       {
         id: "reEntryDate",
         type: "date",
         label: "Fecha de Reingreso",
-        name: "reEntryDate"
+        name: "specificData.reEntryDate"
       },
       {
         id: "reEntryHour",
         type: "text",
         label: "Hora de Reingreso",
-        name: "reEntryHour"
+        name: "specificData.reEntryHour"
       },
     ],
   },
@@ -472,10 +472,10 @@ const formSections: SectionConfig[] = [
         options: [] // Will be populated dynamically
       },
       {
-        id: "responsibles.applicators.0.userId",
+        id: "specificData.applicators.0.userId",
         type: "select",
         label: "Aplicador Principal",
-        name: "responsibles.applicators.0.userId",
+        name: "specificData.applicators.0.userId",
         placeholder: "Seleccione un aplicador principal",
         options: [] // Will be populated dynamically
       },
@@ -621,18 +621,13 @@ const orderFormValidationSchema = z.object({
   variety: z.string({ invalid_type_error: "La variedad debe ser texto" }).min(1, { message: "La variedad es obligatoria" }),
   phenologicalState: z.string({ invalid_type_error: "El estado fenológico debe ser texto" }).min(1, { message: "El estado fenológico es obligatorio" }),
   hectares: z.number({ invalid_type_error: "Las hectáreas deben ser un número" }).min(0, { message: "Las hectáreas no pueden ser negativas" }),
-  appliedHectares: z.number({ invalid_type_error: "Las hectáreas aplicadas deben ser un número" }).min(0, { message: "Las hectáreas aplicadas no pueden ser negativas" }),
   coverage: z.number({ invalid_type_error: "La cobertura debe ser un número" }).optional(),
-  generalObjective: z.string({ invalid_type_error: "El objetivo general debe ser texto" }).min(1, { message: "El objetivo general es obligatorio" }),
   observation: z.string({ invalid_type_error: "La observación debe ser texto" }).optional(),
   observationApp: z.string({ invalid_type_error: "La observación de app debe ser texto" }).optional(),
   startDate: z.string({ invalid_type_error: "La fecha de inicio debe ser texto" }).optional(),
   hourStartDate: z.string({ invalid_type_error: "La hora de inicio debe ser texto" }).optional(),
   endDate: z.string({ invalid_type_error: "La fecha de fin debe ser texto" }).optional(),
   hourEndDate: z.string({ invalid_type_error: "La hora de fin debe ser texto" }).optional(),
-  gracePeriodEndDate: z.string({ invalid_type_error: "La fecha de término de carencia debe ser texto" }).optional(),
-  reEntryDate: z.string({ invalid_type_error: "La fecha de reingreso debe ser texto" }).optional(),
-  reEntryHour: z.string({ invalid_type_error: "La hora de reingreso debe ser texto" }).optional(),
   climateConditions: z.string({ invalid_type_error: "Las condiciones climáticas deben ser texto" }).optional(),
   windSpeed: z.string({ invalid_type_error: "La velocidad del viento debe ser texto" }).optional(),
   temperature: z.string({ invalid_type_error: "La temperatura debe ser texto" }).optional(),
@@ -665,15 +660,14 @@ const orderFormValidationSchema = z.object({
     })
   ]),
   customTask: z.string().optional(),
-  calibrationPerHectare: z.number().optional(),
-  
+
   // Payment related fields
   taskOptimalYield: z.number().optional(),
   initialBonusToWorkers: z.number().optional(),
   paymentMethodToWorkers: z.string().optional(),
   taskPrice: z.number().optional(),
   
-  // Responsibles validation
+  // Responsibles validation (sin applicators, que ahora va en specificData)
   responsibles: z.object({
     supervisor: z.object({
       userId: z.string().optional(),
@@ -686,39 +680,47 @@ const orderFormValidationSchema = z.object({
     technicalVerifier: z.object({
       userId: z.string().optional(),
       name: z.string().optional()
-    }).optional(),
+    }).optional()
+  }).optional(),
+
+  // Specific data for Application type (A)
+  specificData: z.object({
+    generalObjective: z.string({ invalid_type_error: "El objetivo general debe ser texto" }).min(1, { message: "El objetivo general es obligatorio" }),
+    appliedHectares: z.number({ invalid_type_error: "Las hectáreas aplicadas deben ser un número" }).min(0, { message: "Las hectáreas aplicadas no pueden ser negativas" }),
+    gracePeriodEndDate: z.string({ invalid_type_error: "La fecha de término de carencia debe ser texto" }).optional(),
+    reEntryDate: z.string({ invalid_type_error: "La fecha de reingreso debe ser texto" }).optional(),
+    reEntryHour: z.string({ invalid_type_error: "La hora de reingreso debe ser texto" }).optional(),
+    calibrationPerHectare: z.number().optional(),
     applicators: z.array(
       z.object({
         userId: z.string().optional(),
         name: z.string().optional()
       })
-    ).optional()
-  }).optional(),
-  
-  // PPE validation
-  ppe: z.object({
-    gloves: z.boolean().optional().default(false),
-    applicatorSuit: z.boolean().optional().default(false),
-    respirator: z.boolean().optional().default(false),
-    faceShield: z.boolean().optional().default(false),
-    apron: z.boolean().optional().default(false),
-    boots: z.boolean().optional().default(false),
-    noseMouthProtector: z.boolean().optional().default(false),
-    others: z.string().optional()
-  }).optional(),
-  
-  // Washing validation
-  washing: z.object({
-    suit1: z.boolean().optional().default(false),
-    suit2: z.boolean().optional().default(false),
-    suit3: z.boolean().optional().default(false),
-    filterHolder1: z.boolean().optional().default(false),
-    filterHolder2: z.boolean().optional().default(false),
-    filterHolder3: z.boolean().optional().default(false),
-    tripleWash: z.boolean().optional().default(false),
-    machinery: z.boolean().optional().default(false),
-    leftovers: z.boolean().optional().default(false),
-    leftoverObservation: z.boolean().optional().default(false)
+    ).optional(),
+    // PPE validation (dentro de specificData para aplicaciones)
+    ppe: z.object({
+      gloves: z.boolean().optional().default(false),
+      applicatorSuit: z.boolean().optional().default(false),
+      respirator: z.boolean().optional().default(false),
+      faceShield: z.boolean().optional().default(false),
+      apron: z.boolean().optional().default(false),
+      boots: z.boolean().optional().default(false),
+      noseMouthProtector: z.boolean().optional().default(false),
+      others: z.string().optional()
+    }).optional(),
+    // Washing validation (dentro de specificData para aplicaciones)
+    washing: z.object({
+      suit1: z.boolean().optional().default(false),
+      suit2: z.boolean().optional().default(false),
+      suit3: z.boolean().optional().default(false),
+      filterHolder1: z.boolean().optional().default(false),
+      filterHolder2: z.boolean().optional().default(false),
+      filterHolder3: z.boolean().optional().default(false),
+      tripleWash: z.boolean().optional().default(false),
+      machinery: z.boolean().optional().default(false),
+      leftovers: z.boolean().optional().default(false),
+      leftoverObservation: z.boolean().optional().default(false)
+    }).optional()
   }).optional()
 });
 
@@ -916,16 +918,18 @@ const OrdenAplicacion = () => {
     {
       id: "appliedHectares",
       header: "Hectáreas Aplicadas",
-      accessor: "appliedHectares",
+      accessor: "specificData.appliedHectares",
       visible: true,
       sortable: true,
+      render: (value: any, row: any) => row.specificData?.appliedHectares || 0
     },
     {
       id: "generalObjective",
       header: "Objetivo General",
-      accessor: "generalObjective",
+      accessor: "specificData.generalObjective",
       visible: true,
       sortable: true,
+      render: (value: any, row: any) => row.specificData?.generalObjective || ''
     },
     {
       id: "workState",
@@ -1425,7 +1429,7 @@ const OrdenAplicacion = () => {
       console.log('Fetched task types:', data);
       
       // Filtrar solo las faenas que están marcadas como Aplicación (workType = 'A')
-      const applicationTaskTypes = data.filter((taskType: ITaskType) => taskType.workType === ('A' as WorkType));
+      const applicationTaskTypes = data.filter((taskType: ITaskType) => taskType.workType === ('A' as TaskTypeWorkType));
       console.log('Filtered application task types:', applicationTaskTypes);
       
       setTaskTypes(applicationTaskTypes);
@@ -2370,8 +2374,8 @@ const OrdenAplicacion = () => {
   //       formSetValue('responsibles.technicalVerifier.userId', workerId);
   //       formSetValue('responsibles.technicalVerifier.name', workerName);
   //     } else if (responsibleType === 'applicator') {
-  //       formSetValue('responsibles.applicators.0.userId', workerId);
-  //       formSetValue('responsibles.applicators.0.name', workerName);
+  //       formSetValue('specificData.applicators.0.userId', workerId);
+  //       formSetValue('specificData.applicators.0.name', workerName);
   //     }
       
   //     console.log(`Set ${responsibleType} to:`, { userId: workerId, name: workerName });
@@ -2956,7 +2960,7 @@ const OrdenAplicacion = () => {
                     if (field.id === "responsibles.technicalVerifier.userId") {
                       return { ...field, options: workerOptions };
                     }
-                    if (field.id === "responsibles.applicators.0.userId") {
+                    if (field.id === "specificData.applicators.0.userId") {
                       return { ...field, options: workerOptions };
                     }
                     // onChange removido de todos los responsibles - ahora manejado por fieldRules
@@ -3008,40 +3012,46 @@ const OrdenAplicacion = () => {
                   endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
                   hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
                   hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
-                  reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
-                  ppe: {
-                    gloves: true,
-                    applicatorSuit: true,
-                    respirator: true,
-                    faceShield: true,
-                    apron: true,
-                    boots: true,
-                    noseMouthProtector: true
-                  },
                   rowNumber: "",
                   taskType: "",
                   task: "",
-                  calibrationPerHectare: 0,
                   taskOptimalYield: 0,
                   initialBonusToWorkers: 0,
                   taskPrice: 0,
                   responsibles: {
                     supervisor: { userId: "", name: "" },
                     planner: { userId: "", name: "" },
-                    technicalVerifier: { userId: "", name: "" },
-                    applicators: [{ userId: "", name: "" }]
+                    technicalVerifier: { userId: "", name: "" }
                   },
-                  washing: {
-                    suit1: false,
-                    suit2: false,
-                    suit3: false,
-                    filterHolder1: false,
-                    filterHolder2: false,
-                    filterHolder3: false,
-                    tripleWash: false,
-                    machinery: false,
-                    leftovers: false,
-                    leftoverObservation: false
+                  specificData: {
+                    generalObjective: "",
+                    appliedHectares: 0,
+                    calibrationPerHectare: 0,
+                    gracePeriodEndDate: "",
+                    reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
+                    reEntryHour: "",
+                    applicators: [{ userId: "", name: "" }],
+                    ppe: {
+                      gloves: true,
+                      applicatorSuit: true,
+                      respirator: true,
+                      faceShield: true,
+                      apron: true,
+                      boots: true,
+                      noseMouthProtector: true
+                    },
+                    washing: {
+                      suit1: false,
+                      suit2: false,
+                      suit3: false,
+                      filterHolder1: false,
+                      filterHolder2: false,
+                      filterHolder3: false,
+                      tripleWash: false,
+                      machinery: false,
+                      leftovers: false,
+                      leftoverObservation: false
+                    }
                   }
                 }
             }
@@ -3809,15 +3819,6 @@ const OrdenAplicacion = () => {
                 endDate: new Date().toISOString().split('T')[0], // Fecha de fin setear a hoy
                 hourStartDate: new Date().toTimeString().slice(0, 5), // Hora de inicio setear a la hora actual
                 hourEndDate: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5), // Hora de fin setear a 1 hora más adelante
-                reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
-                ppe: {
-                  gloves: true,
-                  applicatorSuit: true,
-                  respirator: true,
-                  faceShield: true,
-                  protectiveShoes: true,
-                  other: ""
-                },
                 climateConditions: "",
                 windSpeed: "",
                 temperature: "",
@@ -3829,8 +3830,37 @@ const OrdenAplicacion = () => {
                 responsibles: {
                   supervisor: { userId: "" },
                   planner: { userId: "" },
-                  technicalVerifier: { userId: "" },
-                  applicators: [{ userId: "" }]
+                  technicalVerifier: { userId: "" }
+                },
+                specificData: {
+                  generalObjective: "",
+                  appliedHectares: 0,
+                  calibrationPerHectare: 0,
+                  gracePeriodEndDate: "",
+                  reEntryDate: new Date().toISOString().split('T')[0], // Fecha de reingreso setear a la actual
+                  reEntryHour: "",
+                  applicators: [{ userId: "" }],
+                  ppe: {
+                    gloves: true,
+                    applicatorSuit: true,
+                    respirator: true,
+                    faceShield: true,
+                    apron: true,
+                    boots: true,
+                    noseMouthProtector: true
+                  },
+                  washing: {
+                    suit1: false,
+                    suit2: false,
+                    suit3: false,
+                    filterHolder1: false,
+                    filterHolder2: false,
+                    filterHolder3: false,
+                    tripleWash: false,
+                    machinery: false,
+                    leftovers: false,
+                    leftoverObservation: false
+                  }
                 }
               }}
               // Pass raw data arrays (preferred for consistent rules)
