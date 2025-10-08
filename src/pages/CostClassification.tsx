@@ -21,15 +21,10 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICostClassification } from "@eon-lib/eon-mongoose";
+import { ICostClassification } from "@eon-lib/eon-mongoose/types";
 import costClassificationService from "@/_services/costClassificationService";
 import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";
-
-// Extended interface for CostClassification with MongoDB _id
-interface CostClassificationWithId extends ICostClassification {
-  _id: string;
-}
 
 interface CostClassificationProps {
   isModal?: boolean;
@@ -56,10 +51,10 @@ const renderBoolean = (value: boolean) => {
 
 const CostClassification = ({ isModal = false }: CostClassificationProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [costClassifications, setCostClassifications] = useState<CostClassificationWithId[]>([]);
+  const [costClassifications, setCostClassifications] = useState<ICostClassification[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCostClassification, setSelectedCostClassification] = useState<CostClassificationWithId | null>(null);
+  const [selectedCostClassification, setSelectedCostClassification] = useState<ICostClassification | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Fetch costClassifications on component mount
@@ -115,7 +110,7 @@ const columns: Column[] = [
 ];
 
 // Expandable content for each row
-const expandableContent = (row: CostClassificationWithId) => (
+const expandableContent = (row: ICostClassification) => (
   <div className="p-4">
     <h3 className="text-lg font-semibold mb-2">{row.name}</h3>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,7 +153,7 @@ const expandableContent = (row: CostClassificationWithId) => (
     setIsLoading(true);
     try {
       const data = await costClassificationService.findAll();
-      setCostClassifications(data as CostClassificationWithId[]);
+      setCostClassifications(data as ICostClassification[]);
     } catch (error) {
       console.error("Error loading cost classifications:", error);
       toast({
@@ -324,14 +319,14 @@ const expandableContent = (row: CostClassificationWithId) => (
   };
 
   // Handle edit button click
-  const handleEditClick = (costClassification: CostClassificationWithId) => {
+  const handleEditClick = (costClassification: ICostClassification) => {
     setSelectedCostClassification(costClassification);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
 
   // Render action buttons for each row
-  const renderActions = (row: CostClassificationWithId) => {
+  const renderActions = (row: ICostClassification) => {
     return (
       <div className="flex items-center space-x-2">
         <Button

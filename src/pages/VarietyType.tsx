@@ -22,7 +22,7 @@ import DynamicForm, {
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { IVarietyType, ICropType } from "@eon-lib/eon-mongoose";
+import { IVarietyType, ICropType } from "@eon-lib/eon-mongoose/types";
 import varietyTypeService from "@/_services/varietyTypeService";
 import cropTypeService from "@/_services/cropTypeService";
 import propertyService from "@/_services/propertyService";

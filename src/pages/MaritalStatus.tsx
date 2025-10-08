@@ -23,7 +23,7 @@ import DynamicForm, {
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
 import maritalStatusService from "@/_services/maritalStatusService";
-import { IMaritalStatus } from "@eon-lib/eon-mongoose";
+import { IMaritalStatus } from "@eon-lib/eon-mongoose/types";
 import propertyService from "@/_services/propertyService";
 
 interface MaritalStatusProps {

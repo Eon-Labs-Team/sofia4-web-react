@@ -25,7 +25,7 @@ import DynamicForm, {
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ISoilAnalysis } from "@eon-lib/eon-mongoose";
+import { ISoilAnalysis } from "@eon-lib/eon-mongoose/types";
 import soilAnalysisService from "@/_services/soilAnalysisService";
 import { toast } from "@/components/ui/use-toast";
 

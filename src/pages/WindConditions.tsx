@@ -22,7 +22,7 @@ import DynamicForm, {
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { IWindCondition } from "@eon-lib/eon-mongoose";
+import { IWindCondition } from "@eon-lib/eon-mongoose/types";
 import windConditionService from "@/_services/windConditionService";
 import propertyService from "@/_services/propertyService";
 

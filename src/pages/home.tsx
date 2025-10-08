@@ -18,7 +18,7 @@ import {
   Warehouse,
   Settings,
 } from "lucide-react";
-import { IProperty } from "@eon-lib/eon-mongoose";
+import { IProperty } from "@eon-lib/eon-mongoose/types";
 import { toast } from "@/components/ui/use-toast";
 import {
   Table,

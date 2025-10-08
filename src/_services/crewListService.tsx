@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ICrewList } from '@eon-lib/eon-mongoose';
+import { ICrewList } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

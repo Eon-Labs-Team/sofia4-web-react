@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWaterAnalysis } from '@eon-lib/eon-mongoose';
+import { IWaterAnalysis } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

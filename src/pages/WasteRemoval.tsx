@@ -24,7 +24,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IWasteRemoval } from "@eon-lib/eon-mongoose";
+import { IWasteRemoval } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import wasteRemovalService from "@/_services/wasteRemovalService";
 import { toast } from "@/components/ui/use-toast";

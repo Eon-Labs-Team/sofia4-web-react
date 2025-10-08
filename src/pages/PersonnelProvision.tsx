@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IPersonnelProvision } from "@eon-lib/eon-mongoose";
+import { IPersonnelProvision } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import personnelProvisionService from "@/_services/personnelProvisionService";
 import { toast } from "@/components/ui/use-toast";

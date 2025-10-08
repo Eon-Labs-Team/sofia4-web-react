@@ -3,7 +3,7 @@ import { Grid } from "@/components/Grid/Grid";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, CheckCircle, XCircle, AlertTriangle, Ban } from "lucide-react";
 import type { Column } from "@/lib/store/gridStore";
-import type { IWork } from "@eon-lib/eon-mongoose";
+import type { IWork } from "@eon-lib/eon-mongoose/types";
 import { WORK_STATES, WorkType, WorkState } from "../types/workTypes";
 
 interface BaseWorkGridProps {

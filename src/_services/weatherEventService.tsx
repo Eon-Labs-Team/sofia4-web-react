@@ -1,5 +1,5 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
-import { IWeatherEvent } from '@eon-lib/eon-mongoose';
+import { IWeatherEvent } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

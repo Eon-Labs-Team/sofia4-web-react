@@ -22,7 +22,7 @@ import DynamicForm, {
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
-import { IProductSubcategory, IProductCategory } from "@eon-lib/eon-mongoose";
+import { IProductSubcategory, IProductCategory } from "@eon-lib/eon-mongoose/types";
 import productSubcategoryService from "@/_services/productSubcategoryService";
 import productCategoryService from "@/_services/productCategoryService";
 

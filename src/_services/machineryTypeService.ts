@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMachineryType } from '@eon-lib/eon-mongoose';
+import { IMachineryType } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 class MachineryTypeService {

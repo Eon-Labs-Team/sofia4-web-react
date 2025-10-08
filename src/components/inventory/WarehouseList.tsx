@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { IInventoryWarehouse } from "@eon-lib/eon-mongoose";
+import type { IInventoryWarehouse } from "@eon-lib/eon-mongoose/types";
 import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";

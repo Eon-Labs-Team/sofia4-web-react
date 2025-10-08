@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IVisitorLog } from '@eon-lib/eon-mongoose';
+import { IVisitorLog } from "@eon-lib/eon-mongoose/types";
 import { useAuthStore } from '@/lib/store/authStore';
 import authService from './authService';
 

@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMassBalance } from '@eon-lib/eon-mongoose';
+import { IMassBalance } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

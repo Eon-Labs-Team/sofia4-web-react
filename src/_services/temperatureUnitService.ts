@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { ITemperatureUnit } from '@eon-lib/eon-mongoose';
+import { ITemperatureUnit } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

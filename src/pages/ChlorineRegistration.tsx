@@ -24,7 +24,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IChlorineRegistration } from "@eon-lib/eon-mongoose";
+import { IChlorineRegistration } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import chlorineRegistrationService from "@/_services/chlorineRegistrationService";
 import { toast } from "@/components/ui/use-toast";

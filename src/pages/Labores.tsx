@@ -23,22 +23,13 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { ITask, AssociatedProductsType } from "@eon-lib/eon-mongoose";
+import { ITask, AssociatedProductsType } from "@eon-lib/eon-mongoose/types";
 import laborService from "@/_services/taskService";
 import { toast } from "@/components/ui/use-toast";
 import faenaService from "@/_services/taskTypeService";
-import { ITaskType } from "@eon-lib/eon-mongoose";
+import { ITaskType } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 
-// Extendemos la interfaz ITask para incluir _id que es usado en MongoDB
-interface ITaskWithId extends ITask {
-  _id: string;
-}
-
-// Extendemos la interfaz ITaskType para incluir _id que es usado en MongoDB
-interface ITaskTypeWithId extends ITaskType {
-  _id: string;
-}
 
 // Render function for the boolean values
 const renderBoolean = (value: boolean) => {
@@ -211,11 +202,11 @@ interface LaboresProps {
 
 const Labores = ({ isModal = false }: LaboresProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [labores, setLabores] = useState<ITaskWithId[]>([]);
+  const [labores, setLabores] = useState<ITask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedLabor, setSelectedLabor] = useState<ITaskWithId | null>(null);
+  const [selectedLabor, setSelectedLabor] = useState<ITask | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [taskTypes, setTaskTypes] = useState<ITaskTypeWithId[]>([]);
+  const [taskTypes, setTaskTypes] = useState<ITaskType[]>([]);
   
   // Form configuration for adding/editing labor
   const formSections: SectionConfig[] = [
@@ -396,7 +387,7 @@ const Labores = ({ isModal = false }: LaboresProps) => {
     try {
       const data = await laborService.findAll();
       // Cast the data to include _id since we know MongoDB adds it
-      setLabores(data as ITaskWithId[]);
+      setLabores(data as ITask[]);
     } catch (error) {
       console.error("Error loading labores:", error);
       toast({
@@ -413,7 +404,7 @@ const Labores = ({ isModal = false }: LaboresProps) => {
   const fetchTaskTypes = async () => {
     try {
       const data = await faenaService.findAll();
-      setTaskTypes(data as ITaskTypeWithId[]);
+      setTaskTypes(data as ITaskType[]);
     } catch (error) {
       console.error("Error loading faenas:", error);
       toast({
@@ -492,14 +483,14 @@ const Labores = ({ isModal = false }: LaboresProps) => {
   };
   
   // Function to handle edit button click
-  const handleEditClick = (labor: ITaskWithId) => {
+  const handleEditClick = (labor: ITask) => {
     setSelectedLabor(labor);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
   
   // Render function for action buttons
-  const renderActions = (row: ITaskWithId) => {
+  const renderActions = (row: ITask) => {
     return (
       <div className="flex space-x-2">
         <Button

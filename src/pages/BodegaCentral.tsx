@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { IInventoryProduct, IInventoryWarehouse, IInventoryLot } from "@eon-lib/eon-mongoose";
+import type { IInventoryProduct, IInventoryWarehouse, IInventoryLot } from "@eon-lib/eon-mongoose/types";
 import inventoryProductService from "@/_services/inventoryProductService";
 import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
 import inventoryMovementService from "@/_services/inventoryMovementService";

@@ -28,8 +28,8 @@ import workService from "@/_services/workService";
 import type {
   IWork,
   WorkSpecificData
-} from "@eon-lib/eon-mongoose";
-import { isApplicationWork } from "@eon-lib/eon-mongoose";
+} from "@eon-lib/eon-mongoose/types";
+import { isApplicationWork } from "@eon-lib/eon-mongoose/types";
 import {
   ChartContainer,
   ChartTooltip,

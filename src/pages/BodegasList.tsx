@@ -43,7 +43,7 @@ import {
 import {
   Badge,
 } from "@/components/ui/badge";
-import type { IInventoryWarehouse } from "@eon-lib/eon-mongoose";
+import type { IInventoryWarehouse } from "@eon-lib/eon-mongoose/types";
 import inventoryWarehouseService from "@/_services/inventoryWarehouseService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -51,7 +51,7 @@ import DynamicForm from "@/components/DynamicForm/DynamicForm";
 import inventoryLotService from "@/_services/inventoryLotService";
 import inventoryProductService from "@/_services/inventoryProductService";
 import inventoryMovementService from "@/_services/inventoryMovementService";
-import type { IInventoryLot, IInventoryProduct, IInventoryMovement } from "@eon-lib/eon-mongoose";
+import type { IInventoryLot, IInventoryProduct, IInventoryMovement } from "@eon-lib/eon-mongoose/types";
 import { 
   getInventoryProductFormSections,
   getInventoryWarehouseFormSections,

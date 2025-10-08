@@ -1,4 +1,4 @@
-import { IWorkerList } from '@eon-lib/eon-mongoose';
+import { IWorkerList } from "@eon-lib/eon-mongoose/types";
 
 export const workersMockup: IWorkerList[] = [
   // @ts-ignore

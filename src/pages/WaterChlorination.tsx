@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IChlorination } from "@eon-lib/eon-mongoose";
+import { IChlorination } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import chlorinationService from "@/_services/chlorinationService";
 import { toast } from "@/components/ui/use-toast";

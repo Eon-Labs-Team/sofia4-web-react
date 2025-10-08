@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWorkers } from "@eon-lib/eon-mongoose";
+import { IWorkers } from "@eon-lib/eon-mongoose/types";
 import workerService from "@/_services/workerService";
 import { toast } from "@/components/ui/use-toast";
 

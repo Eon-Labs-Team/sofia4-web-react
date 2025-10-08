@@ -16,7 +16,7 @@ import type {
   ICropType, 
   IVarietyType, 
   IOperationalArea 
-} from "@eon-lib/eon-mongoose";
+} from "@eon-lib/eon-mongoose/types";
 import type { WorkType, WorkMasterData, WorkComponentState } from "../types/workTypes";
 
 // Services imports

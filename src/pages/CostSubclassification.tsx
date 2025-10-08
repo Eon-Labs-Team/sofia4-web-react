@@ -21,16 +21,11 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICostSubclassification, ICostClassification } from "@eon-lib/eon-mongoose";
+import { ICostSubclassification, ICostClassification } from "@eon-lib/eon-mongoose/types";
 import costSubclassificationService from "@/_services/costSubclassificationService";
 import costClassificationService from "@/_services/costClassificationService";
 import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";
-
-// Extended interface for CostSubclassification with MongoDB _id
-interface CostSubclassificationWithId extends ICostSubclassification {
-  _id: string;
-}
 
 interface CostSubclassificationProps {
   isModal?: boolean;
@@ -53,11 +48,11 @@ const renderBoolean = (value: boolean) => {
 
 const CostSubclassification = ({ isModal = false }: CostSubclassificationProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [costSubclassifications, setCostSubclassifications] = useState<CostSubclassificationWithId[]>([]);
+  const [costSubclassifications, setCostSubclassifications] = useState<ICostSubclassification[]>([]);
   const [costClassifications, setCostClassifications] = useState<ICostClassification[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCostSubclassification, setSelectedCostSubclassification] = useState<CostSubclassificationWithId | null>(null);
+  const [selectedCostSubclassification, setSelectedCostSubclassification] = useState<ICostSubclassification | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Column configuration for the grid
@@ -119,7 +114,7 @@ const CostSubclassification = ({ isModal = false }: CostSubclassificationProps) 
   ];
 
   // Expandable content for each row
-  const expandableContent = (row: CostSubclassificationWithId) => {
+  const expandableContent = (row: ICostSubclassification) => {
     const parentClassification = costClassifications.find(cls => cls._id === row.costClassificationId);
     
     return (
@@ -179,7 +174,7 @@ const CostSubclassification = ({ isModal = false }: CostSubclassificationProps) 
     setIsLoading(true);
     try {
       const data = await costSubclassificationService.findAll();
-      setCostSubclassifications(data as CostSubclassificationWithId[]);
+      setCostSubclassifications(data as ICostSubclassification[]);
     } catch (error) {
       console.error("Error loading cost subclassifications:", error);
       toast({
@@ -374,14 +369,14 @@ const CostSubclassification = ({ isModal = false }: CostSubclassificationProps) 
   };
 
   // Handle edit button click
-  const handleEditClick = (costSubclassification: CostSubclassificationWithId) => {
+  const handleEditClick = (costSubclassification: ICostSubclassification) => {
     setSelectedCostSubclassification(costSubclassification);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
 
   // Render action buttons for each row
-  const renderActions = (row: CostSubclassificationWithId) => {
+  const renderActions = (row: ICostSubclassification) => {
     return (
       <div className="flex items-center space-x-2">
         <Button

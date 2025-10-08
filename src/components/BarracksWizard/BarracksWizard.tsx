@@ -8,7 +8,7 @@ import { Sprout, Building2, ArrowLeft } from "lucide-react";
 import cropTypeService from "@/_services/cropTypeService";
 import varietyTypeService from "@/_services/varietyTypeService";
 import { createBarracksRules } from "@/lib/fieldRules/barracksRules";
-import type { ICropType, IVarietyType } from '@eon-lib/eon-mongoose';
+import type { ICropType, IVarietyType } from "@eon-lib/eon-mongoose/types";
 
 interface BarracksWizardProps {
   onSubmit: (data: any) => void;

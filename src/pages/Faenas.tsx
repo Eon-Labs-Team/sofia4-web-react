@@ -25,7 +25,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ITaskType, TaskTypeWorkType, UsageScope } from "@eon-lib/eon-mongoose";
+import { ITaskType, TaskTypeWorkType, UsageScope } from "@eon-lib/eon-mongoose/types";
 import faenaService from "@/_services/taskTypeService";
 import propertyService from "@/_services/propertyService";
 import { toast } from "@/components/ui/use-toast";

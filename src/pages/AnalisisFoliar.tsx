@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ILeafAnalysisRecord } from "@eon-lib/eon-mongoose";
+import { ILeafAnalysisRecord } from "@eon-lib/eon-mongoose/types";
 import leafAnalysisService from "@/_services/leafAnalysisService";
 import { toast } from "@/components/ui/use-toast";
 

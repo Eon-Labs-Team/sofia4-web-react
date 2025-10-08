@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IWeedMonitoring } from '@eon-lib/eon-mongoose';
+import { IWeedMonitoring } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 interface ApiResponse<T> {

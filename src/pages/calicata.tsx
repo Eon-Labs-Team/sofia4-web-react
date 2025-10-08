@@ -24,7 +24,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICalicata } from "@eon-lib/eon-mongoose";
+import { ICalicata } from "@eon-lib/eon-mongoose/types";
 import calicataService from "@/_services/calicataService";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";

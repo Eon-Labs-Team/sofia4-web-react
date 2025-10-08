@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IChlorination } from '@eon-lib/eon-mongoose';
+import { IChlorination } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IVisitorLog } from "@eon-lib/eon-mongoose";
+import { IVisitorLog } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import visitorLogService from "@/_services/visitorLogService";
 import { toast } from "@/components/ui/use-toast";

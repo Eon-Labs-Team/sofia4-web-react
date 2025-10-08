@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IMassBalance } from "@eon-lib/eon-mongoose";
+import { IMassBalance } from "@eon-lib/eon-mongoose/types";
 import massBalanceService from "@/_services/massBalanceService";
 import { toast } from "@/components/ui/use-toast";
 

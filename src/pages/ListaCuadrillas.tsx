@@ -24,7 +24,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ICrewList } from "@eon-lib/eon-mongoose";
+import { ICrewList } from "@eon-lib/eon-mongoose/types";
 import crewListService from "@/_services/crewListService";
 import { toast } from "@/components/ui/use-toast";
 

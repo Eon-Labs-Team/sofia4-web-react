@@ -1,5 +1,5 @@
 import { ENDPOINTS, API_BASE_URL } from '@/lib/constants';
-import { IWasteManagement } from '@eon-lib/eon-mongoose';
+import { IWasteManagement } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

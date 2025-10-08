@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import equipmentCalibrationService from "@/_services/equipmentCalibrationService";
-import { IEquipmentCalibration } from "@eon-lib/eon-mongoose";
+import { IEquipmentCalibration } from "@eon-lib/eon-mongoose/types";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 
 // Columns configuration for the grid

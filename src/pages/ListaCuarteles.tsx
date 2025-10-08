@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IOperationalArea } from "@eon-lib/eon-mongoose";
+import { IOperationalArea } from "@eon-lib/eon-mongoose/types";
 import listaCuartelesService from "@/_services/listaCuartelesService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";

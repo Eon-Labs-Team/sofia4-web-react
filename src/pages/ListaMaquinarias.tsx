@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IMachineryList } from "@eon-lib/eon-mongoose";
+import { IMachineryList } from "@eon-lib/eon-mongoose/types";
 import listaMaquinariasService from "@/_services/machineryListService";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/lib/store/authStore";

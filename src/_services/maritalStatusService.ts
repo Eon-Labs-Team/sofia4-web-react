@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IMaritalStatus } from '@eon-lib/eon-mongoose';
+import { IMaritalStatus } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 class MaritalStatusService {

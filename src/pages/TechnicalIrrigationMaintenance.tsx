@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { ITechnicalIrrigationMaintenance } from "@eon-lib/eon-mongoose";
+import { ITechnicalIrrigationMaintenance } from "@eon-lib/eon-mongoose/types";
 import technicalIrrigationMaintenanceService from "@/_services/technicalIrrigationMaintenanceService";
 import { toast } from "@/components/ui/use-toast";
 

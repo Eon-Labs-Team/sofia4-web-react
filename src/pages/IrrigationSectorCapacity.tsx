@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IIrrigationSectorCapacity } from "@eon-lib/eon-mongoose";
+import { IIrrigationSectorCapacity } from "@eon-lib/eon-mongoose/types";
 import irrigationSectorCapacityService from "@/_services/irrigationSectorCapacityService";
 import { toast } from "@/components/ui/use-toast";
 

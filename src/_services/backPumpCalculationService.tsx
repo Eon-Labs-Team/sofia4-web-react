@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import { IBackPumpCalculation } from '@eon-lib/eon-mongoose';
+import { IBackPumpCalculation } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

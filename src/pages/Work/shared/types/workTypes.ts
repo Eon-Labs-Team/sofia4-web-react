@@ -13,7 +13,7 @@ import type {
   ICropType, 
   IVarietyType, 
   IOperationalArea
-} from "@eon-lib/eon-mongoose";
+} from "@eon-lib/eon-mongoose/types";
 
 // Tipos de trabajo específicos para nuestro sistema
 export type WorkType = 'A' | 'C' | 'T';

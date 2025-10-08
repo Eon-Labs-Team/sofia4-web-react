@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IWaterAnalysis } from "@eon-lib/eon-mongoose";
+import { IWaterAnalysis } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import waterAnalysisService from "@/_services/waterAnalysisService";
 import { toast } from "@/components/ui/use-toast";

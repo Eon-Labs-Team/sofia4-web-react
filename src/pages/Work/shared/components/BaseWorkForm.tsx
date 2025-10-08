@@ -19,8 +19,8 @@ import type {
   IProducts,
   WorkSpecificData,
   IApplicationSpecificData
-} from "@eon-lib/eon-mongoose";
-import { isApplicationWork } from "@eon-lib/eon-mongoose";
+} from "@eon-lib/eon-mongoose/types";
+import { isApplicationWork } from "@eon-lib/eon-mongoose/types";
 import type { FormGridRules } from "@/lib/validationSchemas";
 import type { WorkMasterData, WorkType } from "../types/workTypes";
 import type { Column } from "@/lib/store/gridStore";

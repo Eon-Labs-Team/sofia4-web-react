@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import authService from './authService';
-import { IGenericTreatment } from '@eon-lib/eon-mongoose';
+import { IGenericTreatment } from "@eon-lib/eon-mongoose/types";
 
 /**
  * Service for managing generic treatments

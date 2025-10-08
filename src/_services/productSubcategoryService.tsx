@@ -1,6 +1,6 @@
 import { ENDPOINTS } from '@/lib/constants';
 import authService from './authService';
-import { IProductSubcategory } from '@eon-lib/eon-mongoose';
+import { IProductSubcategory } from "@eon-lib/eon-mongoose/types";
 
 /**
  * Service for managing product subcategories

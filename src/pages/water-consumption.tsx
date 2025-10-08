@@ -22,7 +22,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWaterConsumption } from "@eon-lib/eon-mongoose";
+import { IWaterConsumption } from "@eon-lib/eon-mongoose/types";
 import waterConsumptionService from "@/_services/waterConsumptionService";
 import { toast } from "@/components/ui/use-toast";
 

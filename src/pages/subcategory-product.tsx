@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { ISubCategoryProduct } from "@eon-lib/eon-mongoose";
+import { ISubCategoryProduct } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import subcategoryProductService from "@/_services/subcategoryProductService";
 import { toast } from "@/components/ui/use-toast";

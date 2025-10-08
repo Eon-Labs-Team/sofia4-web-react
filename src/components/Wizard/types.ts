@@ -2,7 +2,7 @@ import React from "react";
 import { z } from "zod";
 import { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { FormGridRules } from "@/lib/validationSchemas";
-import type { IWork } from '@eon-lib/eon-mongoose';
+import type { IWork } from "@eon-lib/eon-mongoose/types";
 
 export interface WizardStepConfig {
   id: string;

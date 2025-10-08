@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
   FieldType,
 } from "@/components/DynamicForm/DynamicForm";
-import { IBackPumpCalculation } from "@eon-lib/eon-mongoose";
+import { IBackPumpCalculation } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import backPumpCalculationService from "@/_services/backPumpCalculationService";
 import { toast } from "@/components/ui/use-toast";

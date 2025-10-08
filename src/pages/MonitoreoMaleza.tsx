@@ -23,7 +23,7 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWeedMonitoring } from "@eon-lib/eon-mongoose";
+import { IWeedMonitoring } from "@eon-lib/eon-mongoose/types";
 import weedMonitoringService from "@/_services/weedMonitoringService";
 import { toast } from "@/components/ui/use-toast";
 

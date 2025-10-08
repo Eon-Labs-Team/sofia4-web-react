@@ -23,7 +23,7 @@ import DynamicForm, {
 import { z } from "zod";
 import { toast } from "@/components/ui/use-toast";
 import machineryBrandService from "@/_services/machineryBrandService";
-import { IMachineryBrand } from "@eon-lib/eon-mongoose";
+import { IMachineryBrand } from "@eon-lib/eon-mongoose/types";
 import propertyService from "@/_services/propertyService";
 
 interface MachineryBrandProps {

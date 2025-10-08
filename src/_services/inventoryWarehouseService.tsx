@@ -1,5 +1,5 @@
 import { ENDPOINTS } from '@/lib/constants';
-import type { IInventoryWarehouse } from '@eon-lib/eon-mongoose';
+import type { IInventoryWarehouse } from "@eon-lib/eon-mongoose/types";
 import authService from './authService';
 
 /**

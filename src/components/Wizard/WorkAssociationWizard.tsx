@@ -6,7 +6,7 @@ import { FormGrid } from "@/components/Grid/FormGrid";
 import { Column } from "@/lib/store/gridStore";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import type { IWork, IWorkers, IMachinery, IProducts } from '@eon-lib/eon-mongoose';
+import type { IWork, IWorkers, IMachinery, IProducts } from "@eon-lib/eon-mongoose/types";
 import { 
   workerFormSchema, 
   machineryFormSchema, 
