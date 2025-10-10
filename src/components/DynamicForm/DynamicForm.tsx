@@ -26,7 +26,8 @@ export type FieldType =
   | "autocomplete"
   | "grid"
   | "selectableGrid"
-  | "signature";
+  | "signature"
+  | "arrayObject"; // New composite field type representing an array of objects
 
 export interface FieldOption {
   label: string;
@@ -56,6 +57,18 @@ export interface FieldConfig {
   helperText?: string;
   gridConfig?: any; // Configuration for nested grid
   onChange?: (value: any, setValue: any, getValues?: any) => void; // Custom onChange handler
+  // ArrayObject configuration (optional, only used when type === 'arrayObject')
+  subFields?: Array<{
+    type: Exclude<FieldType, "grid" | "selectableGrid" | "arrayObject">; // simple subfield types
+    name: string; // property name inside each object
+    label?: string;
+    rows?: number; // for textarea convenience
+  }>;
+  items?: Array<{
+    title?: string; // label/title per row (read-only label)
+    defaultValue?: Record<string, any>;
+  }>; // when provided with fixedLength arrays
+  fixedLength?: boolean; // if true, items length is fixed and add/remove is disabled
 }
 
 export interface SectionConfig {

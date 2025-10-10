@@ -32,6 +32,22 @@ import { z } from "zod";
 import { ITrainingTalks } from "@eon-lib/eon-mongoose/types";
 import trainingTalksService from "@/_services/trainingTalksService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -309,7 +325,19 @@ const Capacitaciones = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTrainingTalk, setSelectedTrainingTalk] = useState<ITrainingTalks | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingTrainingTalkData, setPendingTrainingTalkData] = useState<Partial<ITrainingTalks> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -328,8 +356,35 @@ const Capacitaciones = () => {
   useEffect(() => {
     if (propertyId) {
       fetchTrainingTalks();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch training talks data
   const fetchTrainingTalks = async () => {
@@ -351,42 +406,148 @@ const Capacitaciones = () => {
   
   // Function to handle adding a new training talk
   const handleAddTrainingTalk = async (data: any) => {
+    // Prepare participants data
+    const trainingTalkData: Partial<ITrainingTalks> = {
+      talkType: data.talkType,
+      instructor: data.instructor,
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      topicOrObjective: data.topicOrObjective,
+      materials: data.materials,
+      observations: data.observations,
+      sessionDuration: data.sessionDuration,
+      participants: data.participants,
+      state: data.state !== undefined ? data.state : true
+    };
+
+    // Store the data and show the work association question
+    setPendingTrainingTalkData(trainingTalkData);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      // Prepare participants data
-      const trainingTalkData: Partial<ITrainingTalks> = {
-        talkType: data.talkType,
-        instructor: data.instructor,
-        date: data.date,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        topicOrObjective: data.topicOrObjective,
-        materials: data.materials,
-        observations: data.observations,
-        sessionDuration: data.sessionDuration,
-        participants: data.participants,
-        state: data.state !== undefined ? data.state : true
-      };
-      
-      await trainingTalksService.createTrainingTalk(trainingTalkData);
-      
-      toast({
-        title: "Éxito",
-        description: "Capacitación agregada correctamente",
-      });
-      
-      // Refresh the data
+      if (!pendingTrainingTalkData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create training talk with associated work
+        const result = await createTrainingTalkWithWork(pendingTrainingTalkData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'TRAINING_TALKS',
+          "Capacitación creada correctamente"
+        );
+      } else {
+        // Create training talk without work
+        const result = await createTrainingTalkWithoutWork(pendingTrainingTalkData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'TRAINING_TALKS',
+          "Capacitación creada correctamente"
+        );
+      }
+
       fetchTrainingTalks();
-      // Close the dialog
-      setIsDialogOpen(false);
-      
+      setShowWorkWizard(false);
+      setPendingTrainingTalkData(null);
+
     } catch (error) {
-      console.error("Error adding training talk:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo agregar la capacitación",
-        variant: "destructive",
-      });
+      console.error("Error creating training talk with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'TRAINING_TALKS',
+        "No se pudo crear la capacitación"
+      );
     }
+  };
+
+  // Create training talk without associated work
+  const createTrainingTalkWithoutWork = async (data: Partial<ITrainingTalks>) => {
+    await trainingTalksService.createTrainingTalk(data);
+  };
+
+  // Create training talk with associated work
+  const createTrainingTalkWithWork = async (
+    trainingTalkData: Partial<ITrainingTalks>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "TRAINING_TALKS",
+      trainingTalkData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingTrainingTalkData) return;
+
+      const result = await createTrainingTalkWithoutWork(pendingTrainingTalkData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'TRAINING_TALKS',
+        "Capacitación creada correctamente"
+      );
+
+      fetchTrainingTalks();
+      setShowConfirmation(false);
+      setPendingTrainingTalkData(null);
+
+    } catch (error) {
+      console.error("Error creating training talk:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'TRAINING_TALKS',
+        "No se pudo crear la capacitación"
+      );
+    }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingTrainingTalkData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingTrainingTalkData(null);
   };
   
   // Function to handle updating a training talk
@@ -405,29 +566,30 @@ const Capacitaciones = () => {
         participants: data.participants,
         state: data.state
       };
-      
-      await trainingTalksService.updateTrainingTalk(id, trainingTalkData);
-      
-      toast({
-        title: "Éxito",
-        description: "Capacitación actualizada correctamente",
-      });
-      
-      // Refresh the data
+
+      const result = await trainingTalksService.updateTrainingTalk(id, trainingTalkData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'TRAINING_TALKS',
+        "Capacitación actualizada correctamente"
+      );
+
       fetchTrainingTalks();
-      // Close the dialog
       setIsDialogOpen(false);
-      // Reset selected training talk and edit mode
-      setSelectedTrainingTalk(null);
       setIsEditMode(false);
-      
+      setSelectedTrainingTalk(null);
     } catch (error) {
       console.error(`Error updating training talk ${id}:`, error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la capacitación",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'TRAINING_TALKS',
+        "No se pudo actualizar la capacitación"
+      );
     }
   };
   
@@ -517,7 +679,7 @@ const Capacitaciones = () => {
       />
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Capacitación" : "Agregar Nueva Capacitación"}
@@ -526,7 +688,7 @@ const Capacitaciones = () => {
               Complete el formulario. Haga clic en guardar cuando termine.
             </DialogDescription>
           </DialogHeader>
-          
+
           <DynamicForm
             sections={formSections}
             validationSchema={formValidationSchema}
@@ -545,6 +707,93 @@ const Capacitaciones = () => {
                   }
             }
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear la capacitación sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingTrainingTalkData && (
+            <WorkAssociationWizard
+              entityType="capacitaciones"
+              entityData={{
+                id: "new-training-talk"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

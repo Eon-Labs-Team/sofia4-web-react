@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -16,6 +17,19 @@ import { Column } from "@/lib/store/gridStore";
 import { IIrrigationRecord } from "@eon-lib/eon-mongoose/types";
 import irrigationRecordService from "@/_services/irrigationRecordService";
 import { z } from "zod";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+} from "@/lib/utils/responseHandler";
 
 // Grid column configuration - maps directly to the model fields
 const columns: Column[] = [
@@ -283,7 +297,19 @@ const IrrigationRecord = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<IIrrigationRecord | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingData, setPendingData] = useState<Partial<IIrrigationRecord> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -302,8 +328,35 @@ const IrrigationRecord = () => {
   useEffect(() => {
     if (propertyId) {
       fetchIrrigationRecords();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch irrigation records data
   const fetchIrrigationRecords = async () => {
@@ -329,43 +382,161 @@ const IrrigationRecord = () => {
   
   // Function to handle adding a new irrigation record
   const handleAddIrrigationRecord = async (data: Partial<IIrrigationRecord>) => {
+    // Store the data and show the work association question
+    setPendingData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      const newIrrigationRecord = await irrigationRecordService.createIrrigationRecord(data);
-      await fetchIrrigationRecords();
-      setIsDialogOpen(false);
-      toast({
-        title: "Registro creado",
-        description: `El registro de riego para el cuartel ${data.barracks} ha sido creado exitosamente.`,
-      });
+      if (!pendingData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create irrigation record with associated work
+        const result = await createEntityWithWork(pendingData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'IRRIGATION_RECORD',
+          "Registro de riego creado correctamente"
+        );
+      } else {
+        // Create irrigation record without work
+        const result = await createEntityWithoutWork(pendingData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'IRRIGATION_RECORD',
+          "Registro de riego creado correctamente"
+        );
+      }
+
+      fetchIrrigationRecords();
+      setShowWorkWizard(false);
+      setPendingData(null);
+
+    } catch (error) {
+      console.error("Error creating irrigation record with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'IRRIGATION_RECORD',
+        "No se pudo crear el registro de riego"
+      );
+    }
+  };
+
+  // Create irrigation record without associated work
+  const createEntityWithoutWork = async (data: Partial<IIrrigationRecord>) => {
+    await irrigationRecordService.createIrrigationRecord(data);
+  };
+
+  // Create irrigation record with associated work
+  const createEntityWithWork = async (
+    entityData: Partial<IIrrigationRecord>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "IRRIGATION_RECORD",
+      entityData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingData) return;
+
+      const result = await createEntityWithoutWork(pendingData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'IRRIGATION_RECORD',
+        "Registro de riego creado correctamente"
+      );
+
+      fetchIrrigationRecords();
+      setShowConfirmation(false);
+      setPendingData(null);
+
     } catch (error) {
       console.error("Error creating irrigation record:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el registro de riego. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'IRRIGATION_RECORD',
+        "No se pudo crear el registro de riego"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingData(null);
   };
 
   // Function to handle updating an existing irrigation record
   const handleUpdateIrrigationRecord = async (id: string | number, data: Partial<IIrrigationRecord>) => {
     try {
-      await irrigationRecordService.updateIrrigationRecord(id, data);
-      await fetchIrrigationRecords();
+      const result = await irrigationRecordService.updateIrrigationRecord(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'IRRIGATION_RECORD',
+        "Registro de riego actualizado correctamente"
+      );
+
+      fetchIrrigationRecords();
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedRecord(null);
-      toast({
-        title: "Registro actualizado",
-        description: `El registro de riego para el cuartel ${data.barracks} ha sido actualizado exitosamente.`,
-      });
     } catch (error) {
-      console.error("Error updating irrigation record:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el registro de riego. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+      console.error(`Error updating irrigation record ${id}:`, error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'IRRIGATION_RECORD',
+        "No se pudo actualizar el registro de riego"
+      );
     }
   };
 
@@ -449,8 +620,8 @@ const IrrigationRecord = () => {
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Editar Registro de Riego" : "Añadir Nuevo Registro de Riego"}</DialogTitle>
             <DialogDescription>
-              {isEditMode 
-                ? "Modifique el formulario para actualizar el registro de riego." 
+              {isEditMode
+                ? "Modifique el formulario para actualizar el registro de riego."
                 : "Complete el formulario para añadir un nuevo registro de riego al sistema."
               }
             </DialogDescription>
@@ -460,7 +631,7 @@ const IrrigationRecord = () => {
             onSubmit={handleFormSubmit}
             validationSchema={formValidationSchema}
             defaultValues={
-              isEditMode && selectedRecord 
+              isEditMode && selectedRecord
                 ? {
                     classification: selectedRecord.classification,
                     barracks: selectedRecord.barracks,
@@ -480,6 +651,93 @@ const IrrigationRecord = () => {
                 : { state: true }
             }
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear el registro de riego sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingData && (
+            <WorkAssociationWizard
+              entityType="irrigationRecord"
+              entityData={{
+                id: "new-irrigation-record"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

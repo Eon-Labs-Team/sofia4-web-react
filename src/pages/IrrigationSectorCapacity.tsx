@@ -26,6 +26,19 @@ import { z } from "zod";
 import { IIrrigationSectorCapacity } from "@eon-lib/eon-mongoose/types";
 import irrigationSectorCapacityService from "@/_services/irrigationSectorCapacityService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -276,7 +289,19 @@ const IrrigationSectorCapacity = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIrrigationSectorCapacity, setSelectedIrrigationSectorCapacity] = useState<IIrrigationSectorCapacity | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingData, setPendingData] = useState<Partial<IIrrigationSectorCapacity> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -295,8 +320,35 @@ const IrrigationSectorCapacity = () => {
   useEffect(() => {
     if (propertyId) {
       fetchIrrigationSectorCapacities();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch irrigation sector capacities data
   const fetchIrrigationSectorCapacities = async () => {
@@ -324,60 +376,170 @@ const IrrigationSectorCapacity = () => {
   
   // Function to handle adding a new irrigation sector capacity
   const handleAddIrrigationSectorCapacity = async (data: Partial<IIrrigationSectorCapacity>) => {
+    // Store the data and show the work association question
+    setPendingData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      // Add current date as createDate if not provided
-      if (!data.createDate) {
-        data.createDate = new Date().toISOString().split('T')[0];
+      if (!pendingData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create entity with associated work
+        const result = await createEntityWithWork(pendingData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'IRRIGATION_SECTOR_CAPACITY',
+          "Aforo por sector de riego creado correctamente"
+        );
+      } else {
+        // Create entity without work
+        const result = await createEntityWithoutWork(pendingData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'IRRIGATION_SECTOR_CAPACITY',
+          "Aforo por sector de riego creado correctamente"
+        );
       }
 
-      await irrigationSectorCapacityService.createIrrigationSectorCapacity(data);
-      
-      toast({
-        title: "Éxito",
-        description: "Aforo por sector de riego añadido correctamente",
-        variant: "default",
-      });
-      
-      // Refresh the list
       fetchIrrigationSectorCapacities();
-      
-      // Close the dialog
-      setIsDialogOpen(false);
+      setShowWorkWizard(false);
+      setPendingData(null);
+
+    } catch (error) {
+      console.error("Error creating irrigation sector capacity with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'IRRIGATION_SECTOR_CAPACITY',
+        "No se pudo crear el aforo por sector de riego"
+      );
+    }
+  };
+
+  // Create entity without associated work
+  const createEntityWithoutWork = async (data: Partial<IIrrigationSectorCapacity>) => {
+    // Add current date as createDate if not provided
+    if (!data.createDate) {
+      data.createDate = new Date().toISOString().split('T')[0];
+    }
+    await irrigationSectorCapacityService.createIrrigationSectorCapacity(data);
+  };
+
+  // Create entity with associated work
+  const createEntityWithWork = async (
+    entityData: Partial<IIrrigationSectorCapacity>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Add current date as createDate if not provided
+    if (!entityData.createDate) {
+      entityData.createDate = new Date().toISOString().split('T')[0];
+    }
+
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "IRRIGATION_SECTOR_CAPACITY",
+      entityData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingData) return;
+
+      const result = await createEntityWithoutWork(pendingData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'IRRIGATION_SECTOR_CAPACITY',
+        "Aforo por sector de riego creado correctamente"
+      );
+
+      fetchIrrigationSectorCapacities();
+      setShowConfirmation(false);
+      setPendingData(null);
+
     } catch (error) {
       console.error("Error creating irrigation sector capacity:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el aforo por sector de riego",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'IRRIGATION_SECTOR_CAPACITY',
+        "No se pudo crear el aforo por sector de riego"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingData(null);
   };
   
   // Function to handle updating an irrigation sector capacity
   const handleUpdateIrrigationSectorCapacity = async (id: string | number, data: Partial<IIrrigationSectorCapacity>) => {
     try {
-      await irrigationSectorCapacityService.updateIrrigationSectorCapacity(id, data);
-      
-      toast({
-        title: "Éxito",
-        description: "Aforo por sector de riego actualizado correctamente",
-        variant: "default",
-      });
-      
-      // Refresh the list
+      const result = await irrigationSectorCapacityService.updateIrrigationSectorCapacity(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'IRRIGATION_SECTOR_CAPACITY',
+        "Aforo por sector de riego actualizado correctamente"
+      );
+
       fetchIrrigationSectorCapacities();
-      
-      // Close the dialog
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedIrrigationSectorCapacity(null);
     } catch (error) {
       console.error(`Error updating irrigation sector capacity ${id}:`, error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el aforo por sector de riego",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'IRRIGATION_SECTOR_CAPACITY',
+        "No se pudo actualizar el aforo por sector de riego"
+      );
     }
   };
   
@@ -475,7 +637,7 @@ const IrrigationSectorCapacity = () => {
       />
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Aforo por Sector de Riego" : "Agregar Aforo por Sector de Riego"}
@@ -486,14 +648,14 @@ const IrrigationSectorCapacity = () => {
                 : "Complete el formulario para agregar un nuevo aforo por sector de riego."}
             </DialogDescription>
           </DialogHeader>
-          
+
           <DynamicForm
             sections={formSections}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
             defaultValues={isEditMode ? selectedIrrigationSectorCapacity || {} : {}}
           />
-          
+
           <DialogFooter className="flex justify-end gap-2 mt-4">
             <Button
               variant="outline"
@@ -506,6 +668,93 @@ const IrrigationSectorCapacity = () => {
               Cancelar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear el aforo por sector de riego sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingData && (
+            <WorkAssociationWizard
+              entityType="irrigationSectorCapacity"
+              entityData={{
+                id: "new-irrigation-sector-capacity"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

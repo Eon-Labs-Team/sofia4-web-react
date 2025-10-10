@@ -67,6 +67,10 @@ import FaenasAgricolas from "./pages/FaenasAgricolas";
 import { useSidebarStore } from "./lib/store/sidebarStore";
 import Cosechas from "./pages/Cosecha";
 import DashboardPage from "./pages/DashboardPage";
+import Claims from "./pages/Claims";
+import SafetyClearance from "./pages/SafetyClearance";
+import ContainerCleaning from "./pages/ContainerCleaning";
+import PlaguePerPostharvestZone from "./pages/PlaguePerPostharvestZone";
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -97,9 +101,19 @@ function App() {
       'monitoreo-estado-fenologico': 'Monitoreo Estado Fenológico',
       'analisis-suelo': 'Análisis de Suelo',
       'fertilizacion-suelo': 'Fertilización de Suelo',
-      'registro-riego': 'Registro de Riego',
+      'irrigation-record': 'Registro simple de Riego',
       'analisis-foliar': 'Análisis Foliar',
       'eventos-climaticos': 'Eventos Climáticos',
+      'chlorine-registration': 'Registro de Cloro en Láminas de Espuma',
+      'calicata': 'Calicata',
+      'back-pump-calculation': 'Cálculo Bomba de Espalda',
+      'reclamos': 'Reclamos',
+      'liberacion-inocuidad': 'Liberación de Inocuidad',
+      'limpieza-contenedores': 'Limpieza de Contenedores',
+      'plaga-zona-postcosecha': 'Plaga por Zona de Postcosecha',
+      'container-cleaning': 'Limpieza de recipientes',
+      'facility-cleaning': 'Limpieza de instalaciones',
+
       // Agregar más mapeos según sea necesario
     };
 
@@ -326,7 +340,7 @@ function App() {
         />
         
         <Route
-          path="/registro-riego"
+          path="/irrigation-record"
           element={
             <ProtectedRoute>
               <PropertyRoute>
@@ -405,7 +419,7 @@ function App() {
         />
         
         <Route
-          path="/calibrar-aspersion"
+          path="/calibrate-sprinklers"
           element={
             <ProtectedRoute>
               <PropertyRoute>
@@ -496,7 +510,7 @@ function App() {
         />
         
         <Route
-          path="/calibracion-equipos"
+          path="/equipment-calibration"
           element={
             <ProtectedRoute>
               <PropertyRoute>
@@ -509,7 +523,7 @@ function App() {
         />
         
         <Route
-          path="/calibracion-equipos-medicion"
+          path="/calibration-measuring-equipment"
           element={
             <ProtectedRoute>
               <PropertyRoute>
@@ -663,7 +677,72 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
+        <Route
+          path="/reclamos"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <Claims />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/liberacion-inocuidad"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <SafetyClearance />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/container-cleaning"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <ContainerCleaning />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/plaga-zona-postcosecha"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <PlaguePerPostharvestZone />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
+<Route
+          path="/facility-cleaning"
+          element={
+            <ProtectedRoute>
+              <PropertyRoute>
+                <AuthenticatedLayout>
+                  <FacilityCleaning />
+                </AuthenticatedLayout>
+              </PropertyRoute>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/subcategory-product"
           element={

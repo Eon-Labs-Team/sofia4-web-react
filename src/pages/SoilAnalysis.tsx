@@ -28,6 +28,22 @@ import { z } from "zod";
 import { ISoilAnalysis } from "@eon-lib/eon-mongoose/types";
 import soilAnalysisService from "@/_services/soilAnalysisService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -579,10 +595,22 @@ const SoilAnalysis = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSoilAnalysis, setSelectedSoilAnalysis] = useState<ISoilAnalysis | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingSoilAnalysisData, setPendingSoilAnalysisData] = useState<Partial<ISoilAnalysis> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
-  
+
   // Redirect to homepage if no propertyId is available
   useEffect(() => {
     if (!propertyId) {
@@ -593,13 +621,40 @@ const SoilAnalysis = () => {
       });
     }
   }, [propertyId]);
-  
+
   // Fetch soil analyses on component mount and when propertyId changes
   useEffect(() => {
     if (propertyId) {
       fetchSoilAnalyses();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch soil analyses data
   const fetchSoilAnalyses = async () => {
@@ -619,43 +674,161 @@ const SoilAnalysis = () => {
   
   // Function to handle adding a new soil analysis
   const handleAddSoilAnalysis = async (data: Partial<ISoilAnalysis>) => {
+    // Store the data and show the work association question
+    setPendingSoilAnalysisData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      await soilAnalysisService.createSoilAnalysis(data);
-      toast({
-        title: "Análisis de suelo creado",
-        description: "El análisis de suelo se ha creado correctamente",
-      });
+      if (!pendingSoilAnalysisData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create soil analysis with associated work
+        const result = await createSoilAnalysisWithWork(pendingSoilAnalysisData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'SOIL_ANALYSIS',
+          "Análisis de suelo creado correctamente"
+        );
+      } else {
+        // Create soil analysis without work
+        const result = await createSoilAnalysisWithoutWork(pendingSoilAnalysisData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'SOIL_ANALYSIS',
+          "Análisis de suelo creado correctamente"
+        );
+      }
+
       fetchSoilAnalyses();
-      setIsDialogOpen(false);
+      setShowWorkWizard(false);
+      setPendingSoilAnalysisData(null);
+
+    } catch (error) {
+      console.error("Error creating soil analysis with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'SOIL_ANALYSIS',
+        "No se pudo crear el análisis de suelo"
+      );
+    }
+  };
+
+  // Create soil analysis without associated work
+  const createSoilAnalysisWithoutWork = async (data: Partial<ISoilAnalysis>) => {
+    await soilAnalysisService.createSoilAnalysis(data);
+  };
+
+  // Create soil analysis with associated work
+  const createSoilAnalysisWithWork = async (
+    soilAnalysisData: Partial<ISoilAnalysis>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "SOIL_ANALYSIS",
+      soilAnalysisData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingSoilAnalysisData) return;
+
+      const result = await createSoilAnalysisWithoutWork(pendingSoilAnalysisData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'SOIL_ANALYSIS',
+        "Análisis de suelo creado correctamente"
+      );
+
+      fetchSoilAnalyses();
+      setShowConfirmation(false);
+      setPendingSoilAnalysisData(null);
+
     } catch (error) {
       console.error("Error creating soil analysis:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el análisis de suelo",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'SOIL_ANALYSIS',
+        "No se pudo crear el análisis de suelo"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingSoilAnalysisData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingSoilAnalysisData(null);
   };
   
   // Function to handle updating a soil analysis
   const handleUpdateSoilAnalysis = async (id: string | number, data: Partial<ISoilAnalysis>) => {
     try {
-      await soilAnalysisService.updateSoilAnalysis(id, data);
-      toast({
-        title: "Análisis de suelo actualizado",
-        description: "El análisis de suelo se ha actualizado correctamente",
-      });
+      const result = await soilAnalysisService.updateSoilAnalysis(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'SOIL_ANALYSIS',
+        "Análisis de suelo actualizado correctamente"
+      );
+
       fetchSoilAnalyses();
       setIsDialogOpen(false);
       setSelectedSoilAnalysis(null);
       setIsEditMode(false);
     } catch (error) {
       console.error(`Error updating soil analysis ${id}:`, error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el análisis de suelo",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'SOIL_ANALYSIS',
+        "No se pudo actualizar el análisis de suelo"
+      );
     }
   };
   
@@ -772,13 +945,13 @@ const SoilAnalysis = () => {
                 : "Complete el formulario para agregar un nuevo análisis de suelo"}
             </DialogDescription>
           </DialogHeader>
-          
+
           <DynamicForm
             sections={formSections}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
             defaultValues={
-              isEditMode && selectedSoilAnalysis 
+              isEditMode && selectedSoilAnalysis
                 ? {
                     classification: selectedSoilAnalysis.classification,
                     barracks: selectedSoilAnalysis.barracks,
@@ -810,12 +983,99 @@ const SoilAnalysis = () => {
                 : { state: false }
             }
           />
-          
+
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear el análisis de suelo sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingSoilAnalysisData && (
+            <WorkAssociationWizard
+              entityType="soilAnalysis"
+              entityData={{
+                id: "new-soil-analysis"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

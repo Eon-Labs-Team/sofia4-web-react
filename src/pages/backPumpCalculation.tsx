@@ -27,6 +27,22 @@ import { IBackPumpCalculation } from "@eon-lib/eon-mongoose/types";
 import { z } from "zod";
 import backPumpCalculationService from "@/_services/backPumpCalculationService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -317,7 +333,19 @@ const BackPumpCalculation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedBackPumpCalculation, setSelectedBackPumpCalculation] = useState<IBackPumpCalculation | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingData, setPendingData] = useState<Partial<IBackPumpCalculation> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -336,8 +364,35 @@ const BackPumpCalculation = () => {
   useEffect(() => {
     if (propertyId) {
       fetchBackPumpCalculations();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch back pump calculations data
   const fetchBackPumpCalculations = async () => {
@@ -367,44 +422,162 @@ const BackPumpCalculation = () => {
   };
   
   // Function to handle adding a new back pump calculation
-  const handleAddBackPumpCalculation = async (data: Partial<IBackPumpCalculation>) => {
+  const handleAdd = async (data: Partial<IBackPumpCalculation>) => {
+    // Store the data and show the work association question
+    setPendingData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      await backPumpCalculationService.createBackPumpCalculation(data);
-      toast({
-        title: "Éxito",
-        description: "Cálculo de bomba de espalda agregado correctamente",
-      });
+      if (!pendingData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create entity with associated work
+        const result = await createEntityWithWork(pendingData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'BACK_PUMP_CALCULATION',
+          "Cálculo de bomba de espalda creado correctamente"
+        );
+      } else {
+        // Create entity without work
+        const result = await createEntityWithoutWork(pendingData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'BACK_PUMP_CALCULATION',
+          "Cálculo de bomba de espalda creado correctamente"
+        );
+      }
+
       fetchBackPumpCalculations();
-      setIsDialogOpen(false);
+      setShowWorkWizard(false);
+      setPendingData(null);
+
+    } catch (error) {
+      console.error("Error creating back pump calculation with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'BACK_PUMP_CALCULATION',
+        "No se pudo crear el cálculo de bomba de espalda"
+      );
+    }
+  };
+
+  // Create entity without associated work
+  const createEntityWithoutWork = async (data: Partial<IBackPumpCalculation>) => {
+    await backPumpCalculationService.createBackPumpCalculation(data);
+  };
+
+  // Create entity with associated work
+  const createEntityWithWork = async (
+    entityData: Partial<IBackPumpCalculation>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "BACK_PUMP_CALCULATION",
+      entityData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingData) return;
+
+      const result = await createEntityWithoutWork(pendingData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'BACK_PUMP_CALCULATION',
+        "Cálculo de bomba de espalda creado correctamente"
+      );
+
+      fetchBackPumpCalculations();
+      setShowConfirmation(false);
+      setPendingData(null);
+
     } catch (error) {
       console.error("Error creating back pump calculation:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el cálculo de bomba de espalda",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'BACK_PUMP_CALCULATION',
+        "No se pudo crear el cálculo de bomba de espalda"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingData(null);
   };
   
   // Function to handle updating a back pump calculation
-  const handleUpdateBackPumpCalculation = async (id: string | number, data: Partial<IBackPumpCalculation>) => {
+  const handleUpdate = async (id: string | number, data: Partial<IBackPumpCalculation>) => {
     try {
-      await backPumpCalculationService.updateBackPumpCalculation(id, data);
-      toast({
-        title: "Éxito",
-        description: "Cálculo de bomba de espalda actualizado correctamente",
-      });
+      const result = await backPumpCalculationService.updateBackPumpCalculation(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'BACK_PUMP_CALCULATION',
+        "Cálculo de bomba de espalda actualizado correctamente"
+      );
+
       fetchBackPumpCalculations();
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedBackPumpCalculation(null);
     } catch (error) {
       console.error(`Error updating back pump calculation ${id}:`, error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el cálculo de bomba de espalda",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'BACK_PUMP_CALCULATION',
+        "No se pudo actualizar el cálculo de bomba de espalda"
+      );
     }
   };
   
@@ -432,9 +605,9 @@ const BackPumpCalculation = () => {
   // Function to handle form submission
   const handleFormSubmit = (data: Partial<IBackPumpCalculation>) => {
     if (isEditMode && selectedBackPumpCalculation) {
-      handleUpdateBackPumpCalculation(selectedBackPumpCalculation._id, data);
+      handleUpdate(selectedBackPumpCalculation._id, data);
     } else {
-      handleAddBackPumpCalculation(data);
+      handleAdd(data);
     }
   };
   
@@ -505,7 +678,7 @@ const BackPumpCalculation = () => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar" : "Agregar"} Cálculo Bomba de Espalda
@@ -523,17 +696,97 @@ const BackPumpCalculation = () => {
           />
 
           <DialogFooter>
+            <Button type="submit" form="dynamic-form">
+              {isEditMode ? "Actualizar" : "Agregar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                setIsDialogOpen(false);
-                setIsEditMode(false);
-                setSelectedBackPumpCalculation(null);
-              }}
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear el cálculo de bomba de espalda sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
             >
               Cancelar
             </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingData && (
+            <WorkAssociationWizard
+              entityType="backPumpCalculation"
+              entityData={{
+                id: "new-back-pump-calculation"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

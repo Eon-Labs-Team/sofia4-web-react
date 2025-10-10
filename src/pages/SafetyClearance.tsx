@@ -7,7 +7,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  GalleryVerticalEnd,
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
 import { Button } from "@/components/ui/button";
@@ -23,8 +22,8 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWeedMonitoring } from "@eon-lib/eon-mongoose/types";
-import weedMonitoringService from "@/_services/weedMonitoringService";
+import { ISafetyClearance } from "@eon-lib/eon-mongoose/types";
+import safetyClearanceService from "@/_services/safetyClearanceService";
 import { toast } from "@/components/ui/use-toast";
 import { WorkAssociationWizard } from "@/components/Wizard";
 import { WorkAssociationData } from "@/components/Wizard/types";
@@ -55,33 +54,6 @@ const renderState = (value: boolean) => {
   );
 };
 
-// Render function for images
-const renderImages = (value: string) => {
-  if (!value) return <span>Sin imagen</span>;
-  return (
-    <div className="flex items-center">
-      <GalleryVerticalEnd className="h-4 w-4 mr-2" />
-      <span>Ver imagen</span>
-    </div>
-  );
-};
-
-// Render function for development level
-const renderDevelopmentLevel = (value: number) => {
-  const getColor = (level: number) => {
-    if (level <= 3) return "text-green-500";
-    if (level <= 6) return "text-yellow-500";
-    return "text-red-500";
-  };
-  
-  return (
-    <div className="flex items-center">
-      <span className={`font-medium ${getColor(value)}`}>{value}</span>
-      <span className="ml-2">/ 10</span>
-    </div>
-  );
-};
-
 // Column configuration for the grid
 const columns: Column[] = [
   {
@@ -92,95 +64,58 @@ const columns: Column[] = [
     sortable: true,
   },
   {
-    id: "date",
-    header: "Fecha",
-    accessor: "date",
+    id: "code",
+    header: "Código",
+    accessor: "code",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "barracks",
-    header: "Cuartel",
-    accessor: "barracks",
+    id: "area",
+    header: "Área",
+    accessor: "area",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "crop",
-    header: "Cultivo",
-    accessor: "crop",
+    id: "companyName",
+    header: "Empresa",
+    accessor: "companyName",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "variety",
-    header: "Variedad",
-    accessor: "variety",
+    id: "startDate",
+    header: "Fecha de Inicio",
+    accessor: "startDate",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "sector",
-    header: "Sector",
-    accessor: "sector",
+    id: "from",
+    header: "Desde",
+    accessor: "from",
+    visible: true,
+    sortable: true,
+  },
+  {
+    id: "to",
+    header: "Hasta",
+    accessor: "to",
+    visible: true,
+    sortable: true,
+  },
+  {
+    id: "reviewer",
+    header: "Revisor",
+    accessor: "reviewer",
     visible: true,
     sortable: true,
     groupable: true,
-  },
-  {
-    id: "weedType",
-    header: "Tipo de maleza",
-    accessor: "weedType",
-    visible: true,
-    sortable: true,
-    groupable: true,
-  },
-  {
-    id: "developmentLevel",
-    header: "Nivel de desarrollo",
-    accessor: "developmentLevel",
-    visible: true,
-    sortable: true,
-    render: renderDevelopmentLevel,
-  },
-  {
-    id: "responsible",
-    header: "Responsable",
-    accessor: "responsible",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "observation",
-    header: "Observación",
-    accessor: "observation",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "image1",
-    header: "Imagen 1",
-    accessor: "image1",
-    visible: true,
-    render: renderImages,
-  },
-  {
-    id: "image2",
-    header: "Imagen 2",
-    accessor: "image2",
-    visible: true,
-    render: renderImages,
-  },
-  {
-    id: "image3",
-    header: "Imagen 3",
-    accessor: "image3",
-    visible: true,
-    render: renderImages,
   },
   {
     id: "state",
@@ -196,150 +131,154 @@ const columns: Column[] = [
 // Expandable content for each row
 const expandableContent = (row: any) => (
   <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">Detalles de Monitoreo de Maleza</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <h3 className="text-lg font-semibold mb-4">Detalle de Liberación de Inocuidad</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div>
-        <p><strong>Fecha:</strong> {row.date}</p>
-        <p><strong>Cuartel:</strong> {row.barracks}</p>
-        <p><strong>Cultivo:</strong> {row.crop}</p>
-        <p><strong>Variedad:</strong> {row.variety}</p>
-        <p><strong>Sector:</strong> {row.sector}</p>
-        <p><strong>Tipo de maleza:</strong> {row.weedType}</p>
-        <p><strong>Nivel de desarrollo:</strong> {row.developmentLevel}/10</p>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Información General</h4>
+        <p className="text-sm"><strong>Código:</strong> {row.code}</p>
+        <p className="text-sm"><strong>Área:</strong> {row.area}</p>
+        <p className="text-sm"><strong>Empresa:</strong> {row.companyName}</p>
+        <p className="text-sm"><strong>Fecha Inicio:</strong> {row.startDate}</p>
       </div>
       <div>
-        <p><strong>Responsable:</strong> {row.responsible}</p>
-        <p><strong>Observación:</strong> {row.observation}</p>
-        <p><strong>Estado:</strong> {row.state ? "Activo" : "Inactivo"}</p>
-        <div className="mt-4">
-          <h4 className="text-md font-semibold mb-2">Imágenes</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {row.image1 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 1</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-            {row.image2 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 2</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-            {row.image3 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 3</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Período</h4>
+        <p className="text-sm"><strong>Desde:</strong> {row.from}</p>
+        <p className="text-sm"><strong>Hasta:</strong> {row.to}</p>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Responsables</h4>
+        <p className="text-sm"><strong>Revisor:</strong> {row.reviewer}</p>
+        <p className="text-sm"><strong>Firma Responsable:</strong> {row.responsibleSignature}</p>
+        <p className="text-sm"><strong>Firma Superior:</strong> {row.superiorSignature}</p>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Observaciones</h4>
+        <p className="text-sm">{row.observation}</p>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Imágenes</h4>
+        <p className="text-sm"><strong>Imagen 1:</strong> {row.image1}</p>
+        <p className="text-sm"><strong>Imagen 2:</strong> {row.image2}</p>
+        <p className="text-sm"><strong>Imagen 3:</strong> {row.image3}</p>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Verificaciones</h4>
+        <p className="text-sm"><strong>Checks:</strong> {row.checks ? `${row.checks.filter((c: boolean) => c).length} de ${row.checks.length}` : '0'}</p>
       </div>
     </div>
   </div>
 );
 
-// Form configuration for adding new weed monitoring record
+// Form configuration for adding new safety clearance
 const formSections: SectionConfig[] = [
   {
-    id: "weed-monitoring-info",
-    title: "Información del Monitoreo de Maleza",
-    description: "Ingrese los datos del nuevo monitoreo de maleza",
+    id: "general-info",
+    title: "Información General",
+    description: "Datos generales de la liberación de inocuidad",
     fields: [
       {
-        id: "date",
+        id: "code",
+        type: "text",
+        label: "Código",
+        name: "code",
+        placeholder: "Ingrese el código",
+        required: true,
+        helperText: "Código único de la liberación"
+      },
+      {
+        id: "area",
+        type: "text",
+        label: "Área",
+        name: "area",
+        placeholder: "Ingrese el área",
+        required: true,
+        helperText: "Área donde se realiza la liberación"
+      },
+      {
+        id: "companyName",
+        type: "text",
+        label: "Nombre de la Empresa",
+        name: "companyName",
+        placeholder: "Ingrese el nombre de la empresa",
+        required: true,
+        helperText: "Empresa responsable"
+      },
+      {
+        id: "startDate",
         type: "date",
-        label: "Fecha",
-        name: "date",
-        placeholder: "Seleccione una fecha",
+        label: "Fecha de Inicio",
+        name: "startDate",
+        placeholder: "Seleccione la fecha",
         required: true,
-        helperText: "Fecha del monitoreo"
-      },
-      {
-        id: "barracks",
-        type: "text",
-        label: "Cuartel",
-        name: "barracks",
-        placeholder: "Nombre del cuartel",
-        required: true,
-        helperText: "Cuartel donde se realizó el monitoreo"
-      },
-      {
-        id: "crop",
-        type: "text",
-        label: "Cultivo",
-        name: "crop",
-        placeholder: "Tipo de cultivo",
-        required: true,
-        helperText: "Cultivo monitoreado"
-      },
-      {
-        id: "variety",
-        type: "text",
-        label: "Variedad",
-        name: "variety",
-        placeholder: "Variedad del cultivo",
-        required: true,
-        helperText: "Variedad del cultivo"
-      },
-      {
-        id: "sector",
-        type: "text",
-        label: "Sector",
-        name: "sector",
-        placeholder: "Sector del cuartel",
-        required: true,
-        helperText: "Sector específico donde se realizó el monitoreo"
-      },
-      {
-        id: "weedType",
-        type: "text",
-        label: "Tipo de maleza",
-        name: "weedType",
-        placeholder: "Tipo de maleza observada",
-        required: true,
-        helperText: "Tipo o especie de maleza identificada"
-      },
-      {
-        id: "developmentLevel",
-        type: "number",
-        label: "Nivel de desarrollo",
-        name: "developmentLevel",
-        placeholder: "Escala del 1 al 10",
-        required: true,
-        helperText: "Nivel de desarrollo de la maleza (1-10)"
+        helperText: "Fecha de inicio de la liberación",
+        defaultValue: new Date().toISOString().split('T')[0],
       },
     ]
   },
   {
-    id: "additional-info",
-    title: "Información adicional",
-    description: "Ingrese información adicional del monitoreo",
+    id: "period-info",
+    title: "Período",
+    description: "Información del período de validez",
     fields: [
       {
-        id: "responsible",
+        id: "from",
         type: "text",
-        label: "Responsable",
-        name: "responsible",
-        placeholder: "Nombre del responsable",
+        label: "Desde",
+        name: "from",
+        placeholder: "Ej: 08:00",
         required: true,
-        helperText: "Persona responsable del monitoreo"
+        helperText: "Hora de inicio"
       },
       {
-        id: "observation",
-        type: "textarea",
-        label: "Observación",
-        name: "observation",
-        placeholder: "Ingrese sus observaciones",
+        id: "to",
+        type: "text",
+        label: "Hasta",
+        name: "to",
+        placeholder: "Ej: 18:00",
         required: true,
-        helperText: "Observaciones detalladas del monitoreo"
+        helperText: "Hora de término"
       },
+    ]
+  },
+  {
+    id: "responsible-info",
+    title: "Información de Responsables",
+    description: "Datos de las personas responsables",
+    fields: [
+      {
+        id: "reviewer",
+        type: "text",
+        label: "Revisor",
+        name: "reviewer",
+        placeholder: "Nombre del revisor",
+        required: true,
+        helperText: "Persona que revisa la liberación"
+      },
+      {
+        id: "responsibleSignature",
+        type: "text",
+        label: "Firma del Responsable",
+        name: "responsibleSignature",
+        placeholder: "Firma o código del responsable",
+        required: true,
+        helperText: "Firma del responsable"
+      },
+      {
+        id: "superiorSignature",
+        type: "text",
+        label: "Firma del Superior",
+        name: "superiorSignature",
+        placeholder: "Firma o código del superior",
+        required: true,
+        helperText: "Firma del superior jerárquico"
+      },
+    ]
+  },
+  {
+    id: "images",
+    title: "Imágenes de Evidencia",
+    description: "URLs de las imágenes de evidencia",
+    fields: [
       {
         id: "image1",
         type: "text",
@@ -347,7 +286,7 @@ const formSections: SectionConfig[] = [
         name: "image1",
         placeholder: "URL de la imagen 1",
         required: true,
-        helperText: "URL de la primera imagen"
+        helperText: "URL de la primera imagen de evidencia"
       },
       {
         id: "image2",
@@ -356,7 +295,7 @@ const formSections: SectionConfig[] = [
         name: "image2",
         placeholder: "URL de la imagen 2",
         required: true,
-        helperText: "URL de la segunda imagen"
+        helperText: "URL de la segunda imagen de evidencia"
       },
       {
         id: "image3",
@@ -365,15 +304,49 @@ const formSections: SectionConfig[] = [
         name: "image3",
         placeholder: "URL de la imagen 3",
         required: true,
-        helperText: "URL de la tercera imagen"
+        helperText: "URL de la tercera imagen de evidencia"
+      },
+    ]
+  },
+  {
+    id: "checks-info",
+    title: "Verificaciones",
+    description: "Lista de verificaciones realizadas",
+    fields: [
+      {
+        id: "checks",
+        type: "text",
+        label: "Checks (separados por coma)",
+        name: "checks",
+        placeholder: "Ej: true,false,true",
+        required: true,
+        helperText: "Lista de verificaciones (true/false separados por coma)"
+      },
+    ]
+  },
+  {
+    id: "observation-info",
+    title: "Observaciones",
+    description: "Observaciones adicionales",
+    fields: [
+      {
+        id: "observation",
+        type: "textarea",
+        label: "Observaciones",
+        name: "observation",
+        placeholder: "Ingrese observaciones adicionales",
+        required: true,
+        rows: 3,
+        helperText: "Observaciones sobre la liberación"
       },
       {
         id: "state",
         type: "checkbox",
         label: "Activo",
         name: "state",
-        required: true,
-        helperText: "Indica si el registro está activo"
+        required: false,
+        defaultValue: true,
+        helperText: "Indica si la liberación está activa"
       },
     ]
   }
@@ -381,31 +354,33 @@ const formSections: SectionConfig[] = [
 
 // Form validation schema
 const formValidationSchema = z.object({
-  date: z.string().min(1, { message: "La fecha es obligatoria" }),
-  barracks: z.string().min(1, { message: "El cuartel es obligatorio" }),
-  crop: z.string().min(1, { message: "El cultivo es obligatorio" }),
-  variety: z.string().min(1, { message: "La variedad es obligatoria" }),
-  sector: z.string().min(1, { message: "El sector es obligatorio" }),
-  weedType: z.string().min(1, { message: "El tipo de maleza es obligatorio" }),
-  developmentLevel: z.coerce.number().min(1).max(10, { message: "El nivel debe estar entre 1 y 10" }),
-  responsible: z.string().min(1, { message: "El responsable es obligatorio" }),
-  observation: z.string().min(1, { message: "La observación es obligatoria" }),
+  code: z.string().min(1, { message: "El código es obligatorio" }),
+  area: z.string().min(1, { message: "El área es obligatoria" }),
+  companyName: z.string().min(1, { message: "El nombre de la empresa es obligatorio" }),
+  from: z.string().min(1, { message: "La hora de inicio es obligatoria" }),
+  to: z.string().min(1, { message: "La hora de término es obligatoria" }),
+  startDate: z.string().min(1, { message: "La fecha de inicio es obligatoria" }),
+  checks: z.string().min(1, { message: "Las verificaciones son obligatorias" }),
+  responsibleSignature: z.string().min(1, { message: "La firma del responsable es obligatoria" }),
+  superiorSignature: z.string().min(1, { message: "La firma del superior es obligatoria" }),
+  reviewer: z.string().min(1, { message: "El revisor es obligatorio" }),
   image1: z.string().min(1, { message: "La imagen 1 es obligatoria" }),
   image2: z.string().min(1, { message: "La imagen 2 es obligatoria" }),
   image3: z.string().min(1, { message: "La imagen 3 es obligatoria" }),
-  state: z.boolean().default(true),
+  observation: z.string().min(1, { message: "Las observaciones son obligatorias" }),
+  state: z.boolean().default(true)
 });
 
-const MonitoreoMaleza = () => {
+const SafetyClearance = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [weedMonitoringRecords, setWeedMonitoringRecords] = useState<IWeedMonitoring[]>([]);
+  const [safetyClearanceData, setSafetyClearanceData] = useState<ISafetyClearance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedWeedMonitoring, setSelectedWeedMonitoring] = useState<IWeedMonitoring | null>(null);
+  const [selectedSafetyClearance, setSelectedSafetyClearance] = useState<ISafetyClearance | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showWorkQuestion, setShowWorkQuestion] = useState(false);
   const [showWorkWizard, setShowWorkWizard] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingWeedMonitoringData, setPendingWeedMonitoringData] = useState<Partial<IWeedMonitoring> | null>(null);
+  const [pendingData, setPendingData] = useState<Partial<ISafetyClearance> | null>(null);
   const [workWizardData, setWorkWizardData] = useState({
     workerList: [],
     cuarteles: [],
@@ -417,7 +392,7 @@ const MonitoreoMaleza = () => {
 
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
-  
+
   // Redirect to homepage if no propertyId is available
   useEffect(() => {
     if (!propertyId) {
@@ -428,11 +403,11 @@ const MonitoreoMaleza = () => {
       });
     }
   }, [propertyId]);
-  
-  // Fetch weed monitoring records on component mount and when propertyId changes
+
+  // Fetch safety clearance data on component mount and when propertyId changes
   useEffect(() => {
     if (propertyId) {
-      fetchWeedMonitoringRecords();
+      fetchSafetyClearance();
       loadWorkWizardData();
     }
   }, [propertyId]);
@@ -462,38 +437,41 @@ const MonitoreoMaleza = () => {
       console.error("Error loading work wizard data:", error);
     }
   };
-  
-  // Function to fetch weed monitoring records data
-  const fetchWeedMonitoringRecords = async () => {
+
+  // Function to fetch safety clearance data
+  const fetchSafetyClearance = async () => {
     setIsLoading(true);
     try {
-      const response = await weedMonitoringService.findAll();
+      const response = await safetyClearanceService.findAll();
       // Handle different response structures
       if (Array.isArray(response)) {
-        setWeedMonitoringRecords(response);
+        setSafetyClearanceData(response);
       } else if (response && typeof response === 'object') {
-        const data = response.data || [];
-        setWeedMonitoringRecords(Array.isArray(data) ? data : []);
+        const data = (response as any).data || [];
+        setSafetyClearanceData(Array.isArray(data) ? data : []);
       } else {
-        setWeedMonitoringRecords([]);
+        setSafetyClearanceData([]);
       }
     } catch (error) {
-      console.error("Error loading weed monitoring records:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los registros de monitoreo de maleza",
-        variant: "destructive",
-      });
-      setWeedMonitoringRecords([]);
+      console.error("Error loading safety clearance:", error);
+      setSafetyClearanceData([]);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Function to handle adding a new weed monitoring record
-  const handleAddWeedMonitoring = async (data: Partial<IWeedMonitoring>) => {
+
+  // Function to handle adding a new safety clearance
+  const handleAddSafetyClearance = async (data: any) => {
+    // Convert checks string to array of booleans
+    const checksArray = data.checks.split(',').map((c: string) => c.trim().toLowerCase() === 'true');
+
+    const safetyClearanceData = {
+      ...data,
+      checks: checksArray
+    };
+
     // Store the data and show the work association question
-    setPendingWeedMonitoringData(data);
+    setPendingData(safetyClearanceData);
     setIsDialogOpen(false);
     setShowWorkQuestion(true);
   };
@@ -501,62 +479,59 @@ const MonitoreoMaleza = () => {
   // Function to handle work association completion
   const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      if (!pendingWeedMonitoringData) return;
+      if (!pendingData) return;
 
       if (workAssociationData.associateWork) {
-        // Create weed monitoring with associated work
-        const result = await createWeedMonitoringWithWork(pendingWeedMonitoringData, workAssociationData);
+        // Create safety clearance with associated work
+        const result = await createSafetyClearanceWithWork(pendingData, workAssociationData);
 
-        // Handle enhanced response format
         handleResponseWithFallback(
           result,
           'creation',
-          'WEED_MONITORING',
-          "Monitoreo de maleza creado correctamente"
+          'SAFETY_CLEARANCE',
+          "Liberación de inocuidad creada correctamente"
         );
       } else {
-        // Create weed monitoring without work
-        const result = await createWeedMonitoringWithoutWork(pendingWeedMonitoringData);
+        // Create safety clearance without work
+        const result = await createSafetyClearanceWithoutWork(pendingData);
 
-        // Handle enhanced response format for single entity creation
         handleResponseWithFallback(
           result,
           'creation',
-          'WEED_MONITORING',
-          "Monitoreo de maleza creado correctamente"
+          'SAFETY_CLEARANCE',
+          "Liberación de inocuidad creada correctamente"
         );
       }
 
-      fetchWeedMonitoringRecords();
+      fetchSafetyClearance();
       setShowWorkWizard(false);
-      setPendingWeedMonitoringData(null);
+      setPendingData(null);
 
     } catch (error) {
-      console.error("Error creating weed monitoring with work association:", error);
+      console.error("Error creating safety clearance with work association:", error);
 
       handleErrorWithEnhancedFormat(
         error,
         'creation',
-        'WEED_MONITORING',
-        "No se pudo crear el monitoreo de maleza"
+        'SAFETY_CLEARANCE',
+        "No se pudo crear la liberación de inocuidad"
       );
     }
   };
 
-  // Create weed monitoring without associated work
-  const createWeedMonitoringWithoutWork = async (data: Partial<IWeedMonitoring>) => {
-    await weedMonitoringService.createWeedMonitoring(data);
+  // Create safety clearance without associated work
+  const createSafetyClearanceWithoutWork = async (data: Partial<ISafetyClearance>) => {
+    await safetyClearanceService.createSafetyClearance(data);
   };
 
-  // Create weed monitoring with associated work
-  const createWeedMonitoringWithWork = async (
-    weedMonitoringData: Partial<IWeedMonitoring>,
+  // Create safety clearance with associated work
+  const createSafetyClearanceWithWork = async (
+    safetyClearanceData: Partial<ISafetyClearance>,
     workAssociationData: WorkAssociationData
   ) => {
-    // Create work with entity using the new endpoint
     const result = await workService.createWorkWithEntity(
-      "WEED_MONITORING",
-      weedMonitoringData,
+      "SAFETY_CLEARANCE",
+      safetyClearanceData,
       workAssociationData.workData
     );
 
@@ -568,10 +543,8 @@ const MonitoreoMaleza = () => {
     setShowWorkQuestion(false);
 
     if (associateWork) {
-      // Show the full wizard
       setShowWorkWizard(true);
     } else {
-      // Show confirmation dialog for direct insertion
       setShowConfirmation(true);
     }
   };
@@ -579,30 +552,29 @@ const MonitoreoMaleza = () => {
   // Function to handle confirmation of direct insertion
   const handleConfirmInsertion = async () => {
     try {
-      if (!pendingWeedMonitoringData) return;
+      if (!pendingData) return;
 
-      const result = await createWeedMonitoringWithoutWork(pendingWeedMonitoringData);
+      const result = await createSafetyClearanceWithoutWork(pendingData);
 
-      // Handle enhanced response format
       handleResponseWithFallback(
         result,
         'creation',
-        'WEED_MONITORING',
-        "Monitoreo de maleza creado correctamente"
+        'SAFETY_CLEARANCE',
+        "Liberación de inocuidad creada correctamente"
       );
 
-      fetchWeedMonitoringRecords();
+      fetchSafetyClearance();
       setShowConfirmation(false);
-      setPendingWeedMonitoringData(null);
+      setPendingData(null);
 
     } catch (error) {
-      console.error("Error creating weed monitoring:", error);
+      console.error("Error creating safety clearance:", error);
 
       handleErrorWithEnhancedFormat(
         error,
         'creation',
-        'WEED_MONITORING',
-        "No se pudo crear el monitoreo de maleza"
+        'SAFETY_CLEARANCE',
+        "No se pudo crear la liberación de inocuidad"
       );
     }
   };
@@ -610,7 +582,7 @@ const MonitoreoMaleza = () => {
   // Function to handle work wizard cancellation
   const handleWorkWizardCancel = () => {
     setShowWorkWizard(false);
-    setPendingWeedMonitoringData(null);
+    setPendingData(null);
   };
 
   // Function to cancel all operations
@@ -618,75 +590,87 @@ const MonitoreoMaleza = () => {
     setShowWorkQuestion(false);
     setShowWorkWizard(false);
     setShowConfirmation(false);
-    setPendingWeedMonitoringData(null);
+    setPendingData(null);
   };
-  
-  // Function to handle updating a weed monitoring record
-  const handleUpdateWeedMonitoring = async (id: string | number, data: Partial<IWeedMonitoring>) => {
-    try {
-      const result = await weedMonitoringService.updateWeedMonitoring(id, data);
 
-      // Handle enhanced response format
+  // Function to handle updating a safety clearance
+  const handleUpdateSafetyClearance = async (id: string | number, data: any) => {
+    try {
+      // Convert checks string to array of booleans if it's a string
+      const safetyClearanceData = typeof data.checks === 'string'
+        ? {
+            ...data,
+            checks: data.checks.split(',').map((c: string) => c.trim().toLowerCase() === 'true')
+          }
+        : data;
+
+      const result = await safetyClearanceService.updateSafetyClearance(id, safetyClearanceData);
+
       handleResponseWithFallback(
         result,
         'update',
-        'WEED_MONITORING',
-        "Monitoreo de maleza actualizado correctamente"
+        'SAFETY_CLEARANCE',
+        "Liberación de inocuidad actualizada correctamente"
       );
 
-      fetchWeedMonitoringRecords();
+      fetchSafetyClearance();
       setIsDialogOpen(false);
       setIsEditMode(false);
-      setSelectedWeedMonitoring(null);
+      setSelectedSafetyClearance(null);
     } catch (error) {
-      console.error(`Error updating weed monitoring record ${id}:`, error);
+      console.error(`Error updating safety clearance ${id}:`, error);
 
       handleErrorWithEnhancedFormat(
         error,
         'update',
-        'WEED_MONITORING',
-        "No se pudo actualizar el monitoreo de maleza"
+        'SAFETY_CLEARANCE',
+        "No se pudo actualizar la liberación de inocuidad"
       );
     }
   };
-  
-  // Function to handle deleting a weed monitoring record
-  const handleDeleteWeedMonitoring = async (id: string | number) => {
+
+  // Function to handle deleting a safety clearance
+  const handleDeleteSafetyClearance = async (id: string | number) => {
     try {
-      await weedMonitoringService.softDeleteWeedMonitoring(id);
+      await safetyClearanceService.softDeleteSafetyClearance(id);
       toast({
         title: "Éxito",
-        description: "Monitoreo de maleza eliminado correctamente",
+        description: "Liberación de inocuidad eliminada correctamente",
       });
-      fetchWeedMonitoringRecords();
+      fetchSafetyClearance();
     } catch (error) {
-      console.error(`Error deleting weed monitoring record ${id}:`, error);
+      console.error(`Error deleting safety clearance ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar el monitoreo de maleza",
+        description: "No se pudo eliminar la liberación de inocuidad",
         variant: "destructive",
       });
     }
   };
-  
+
   // Function to handle form submission
-  const handleFormSubmit = (data: Partial<IWeedMonitoring>) => {
-    if (isEditMode && selectedWeedMonitoring && selectedWeedMonitoring._id) {
-      handleUpdateWeedMonitoring(selectedWeedMonitoring._id, data);
+  const handleFormSubmit = (data: any) => {
+    if (isEditMode && selectedSafetyClearance && selectedSafetyClearance._id) {
+      handleUpdateSafetyClearance(selectedSafetyClearance._id, data);
     } else {
-      handleAddWeedMonitoring(data);
+      handleAddSafetyClearance(data);
     }
   };
-  
+
   // Function to handle edit click
-  const handleEditClick = (weedMonitoring: IWeedMonitoring) => {
-    setSelectedWeedMonitoring(weedMonitoring);
+  const handleEditClick = (safetyClearance: ISafetyClearance) => {
+    // Convert checks array to string for form
+    const formData = {
+      ...safetyClearance,
+      checks: safetyClearance.checks ? safetyClearance.checks.join(',') : ''
+    };
+    setSelectedSafetyClearance(formData as any);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
-  
+
   // Function to render action buttons for each row
-  const renderActions = (row: IWeedMonitoring) => {
+  const renderActions = (row: ISafetyClearance) => {
     return (
       <div className="flex space-x-2">
         <Button
@@ -699,30 +683,30 @@ const MonitoreoMaleza = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => handleDeleteWeedMonitoring(row._id as string)}
+          onClick={() => handleDeleteSafetyClearance(row._id as string)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     );
   };
-  
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Monitoreo de Maleza</h1>
+        <h1 className="text-2xl font-bold">Gestión de Liberación de Inocuidad</h1>
         <Button onClick={() => {
           setIsEditMode(false);
-          setSelectedWeedMonitoring(null);
+          setSelectedSafetyClearance(null);
           setIsDialogOpen(true);
         }}>
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Monitoreo
+          Agregar Liberación
         </Button>
       </div>
-      
+
       <Grid
-        data={weedMonitoringRecords}
+        data={safetyClearanceData}
         columns={[...columns, {
           id: "actions",
           header: "Acciones",
@@ -730,22 +714,22 @@ const MonitoreoMaleza = () => {
           visible: true,
           render: renderActions,
         }]}
-        gridId="monitoreo-maleza"
-        title="Registros de Monitoreo de Maleza"
+        gridId="safety-clearance-grid"
+        title="Registros de Liberación de Inocuidad"
         expandableContent={expandableContent}
         actions={renderActions}
       />
-      
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Editar Monitoreo de Maleza" : "Agregar Nuevo Monitoreo de Maleza"}
+              {isEditMode ? "Editar Liberación de Inocuidad" : "Agregar Nueva Liberación de Inocuidad"}
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? "Modifique la información del monitoreo de maleza existente"
-                : "Complete la información para crear un nuevo monitoreo de maleza"}
+                ? "Modifique la información de la liberación de inocuidad existente"
+                : "Complete la información para crear una nueva liberación de inocuidad"}
             </DialogDescription>
           </DialogHeader>
 
@@ -753,7 +737,7 @@ const MonitoreoMaleza = () => {
             sections={formSections}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
-            defaultValues={isEditMode && selectedWeedMonitoring ? selectedWeedMonitoring : undefined}
+            defaultValues={isEditMode && selectedSafetyClearance ? selectedSafetyClearance : undefined}
           />
 
           <DialogFooter>
@@ -798,7 +782,7 @@ const MonitoreoMaleza = () => {
           <DialogHeader>
             <DialogTitle>Confirmar Inserción</DialogTitle>
             <DialogDescription>
-              ¿Está seguro que desea crear el monitoreo de maleza sin asociar un trabajo?
+              ¿Está seguro que desea crear la liberación de inocuidad sin asociar un trabajo?
             </DialogDescription>
           </DialogHeader>
 
@@ -832,11 +816,11 @@ const MonitoreoMaleza = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {showWorkWizard && pendingWeedMonitoringData && (
+          {showWorkWizard && pendingData && (
             <WorkAssociationWizard
-              entityType="monitoreoMaleza"
+              entityType="safetyClearance"
               entityData={{
-                id: "new-weed-monitoring"
+                id: "new-safety-clearance"
               }}
               onComplete={handleWorkAssociation}
               onCancel={handleWorkWizardCancel}
@@ -854,4 +838,4 @@ const MonitoreoMaleza = () => {
   );
 };
 
-export default MonitoreoMaleza; 
+export default SafetyClearance;

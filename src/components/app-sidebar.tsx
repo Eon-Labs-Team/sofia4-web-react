@@ -33,6 +33,10 @@ import {
   Bot,
   TestTubeDiagonal,
   TrendingUp,
+  AlertCircle,
+  ShieldCheck,
+  Package,
+  Bug,
 } from "lucide-react"
 
 import {
@@ -83,17 +87,7 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
         { icon: <TestTubeDiagonal size={16} />, label: "Ordenes de aplicación", path: "/orden-aplicacion-new" },
         { icon: <BarChart3 size={16} />, label: "Faenas Agrícolas", path: "/faenas-agricolas" },
         { icon: <BarChart3 size={16} />, label: "Cosechas", path: "/cosechas" },
-        { icon: <BarChart3 size={16} />, label: "Trabajos realizados", path: "/trabajos-realizados" },
-        {
-          icon: <FileText size={20} />,
-          label: "Registros de control",
-          children: [
-            { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
-            { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
-            { icon: <Presentation size={16} />, label: "Capacitaciones", path: "/capacitaciones" }
-          ],
-          isExpanded: false
-        },
+        // { icon: <BarChart3 size={16} />, label: "Trabajos realizados", path: "/trabajos-realizados" },
         {
           icon: <FileText size={20} />,
           label: "Registros de campo",
@@ -102,21 +96,51 @@ const generateMenuForAction = (actionId: string, propertyId: string | number): N
             { icon: <Building2 size={16} />, label: "Monitoreo de Maleza", path: "/monitoreo-maleza" },
             { icon: <Beaker size={16} />, label: "Análisis de Suelo", path: "/analisis-suelo" },
             { icon: <Beaker size={16} />, label: "Fertilización de Suelo", path: "/fertilizacion-suelo" },
-            { icon: <Droplets size={16} />, label: "Registro de Riego", path: "/registro-riego" },
+            { icon: <Droplets size={16} />, label: "Registro simple de Riego", path: "/irrigation-record" },
             { icon: <Leaf size={16} />, label: "Análisis Foliar", path: "/analisis-foliar" },
             { icon: <CloudRain size={16} />, label: "Eventos Climáticos", path: "/eventos-climaticos" },
-            { icon: <Trash size={16} />, label: "Limpieza Maquinaria", path: "/limpieza-maquinaria" },
+            { icon: <Trash size={16} />, label: "Limpieza Maquinaria / Equipos", path: "/limpieza-maquinaria" },
+            { icon: <Trash size={16} />, label: "Limpieza tanque de agua", path: "/NOTYET" },
             { icon: <Scale size={16} />, label: "Balance de Masa", path: "/balance-masa" },
             { icon: <Droplets size={16} />, label: "Análisis de Agua", path: "/analisis-agua" },
-            { icon: <Droplets size={16} />, label: "Calibrar Aspersión", path: "/calibrar-aspersion" },
+            { icon: <Bug size={16} />, label: "Plaga por zona de postcosecha", path: "/plaga-zona-postcosecha" },
             { icon: <Wrench size={16} />, label: "Mantención para Riego Tecnificado", path: "/mantencion-riego-tecnificado" },
             { icon: <Building2 size={16} />, label: "Ingreso de Animales", path: "/ingreso-animales" },
             { icon: <Droplets size={16} />, label: "Aforo por Sector de Riego", path: "/aforo-sector-riego" },
             { icon: <Recycle size={16} />, label: "Retiro de Residuos", path: "/retiro-residuos" },
             { icon: <Recycle size={16} />, label: "Manejo de Residuos", path: "/manejo-residuos" },
-            { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" },
-            { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibracion-equipos-medicion" },
+            { icon: <Scale size={16} />, label: "Calibración Equipos de Medición", path: "/calibration-measuring-equipment" },
             { icon: <Calculator size={16} />, label: "Cálculo Bomba de Espalda", path: "/back-pump-calculation" },
+          ],
+          isExpanded: false
+        },
+        {
+          icon: <FileText size={20} />,
+          label: "Registros de control",
+          children: [
+
+            { icon: <UserCheck size={16} />, label: "Registro de Visitas", path: "/visitor-log" },
+            { icon: <UserCheck size={16} />, label: "Dotación al Personal", path: "/personnel-provision" },
+            { icon: <Presentation size={16} />, label: "Capacitaciones o charlas", path: "/capacitaciones" },
+            { icon: <Presentation size={16} />, label: "Limpieza de instalaciones", path: "/facility-cleaning" },
+            { icon: <Presentation size={16} />, label: "Lavado de manos", path: "/lavado-manos" },
+            { icon: <Presentation size={16} />, label: "Consumo de luz", path: "/electricity-consumption" },
+            { icon: <Presentation size={16} />, label: "Consumo de agua", path: "/water-consumption" },
+            { icon: <AlertCircle size={16} />, label: "Reclamos", path: "/reclamos" },
+            { icon: <ShieldCheck size={16} />, label: "Liberación de Inocuidad", path: "/liberacion-inocuidad" },
+            { icon: <Package size={16} />, label: "Limpieza de recipientes", path: "/container-cleaning" },
+            { icon: <AlertCircle size={16} />, label: "Higiene y sanidad", path: "/hygiene-sanitation" },
+            { icon: <Droplets size={16} />, label: "Calibrar de boquillas", path: "/calibrate-sprinklers" },
+            { icon: <Scale size={16} />, label: "Registro de calicata", path: "/calicata" },
+            { icon: <Scale size={16} />, label: "Registro de cloro en laminas de espuma", path: "/chlorine-registration" },
+            { icon: <Scale size={16} />, label: "Cloracion de agua", path: "/water-chlorination" },
+
+
+
+
+
+            { icon: <Scale size={16} />, label: "Calibración Equipo", path: "/calibracion-equipos" }, //??????'
+
           ],
           isExpanded: false
         },

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "@/lib/store/authStore";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import Grid from "@/components/Grid/Grid";
@@ -16,6 +17,22 @@ import { ISoilFertilization } from "@eon-lib/eon-mongoose/types";
 import soilFertilizationService from "@/_services/soilFertilizationService";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import * as z from "zod";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Helper function to render the state
 const renderState = (value: boolean) => (
@@ -361,10 +378,22 @@ const FertilizacionSuelo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSoilFertilization, setSelectedSoilFertilization] = useState<ISoilFertilization | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingSoilFertilizationData, setPendingSoilFertilizationData] = useState<Partial<ISoilFertilization> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
-  
+
   // Redirect to homepage if no propertyId is available
   useEffect(() => {
     if (!propertyId) {
@@ -375,13 +404,40 @@ const FertilizacionSuelo = () => {
       });
     }
   }, [propertyId]);
-  
+
   // Fetch soil fertilizations on component mount and when propertyId changes
   useEffect(() => {
     if (propertyId) {
       fetchSoilFertilizations();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch soil fertilizations data
   const fetchSoilFertilizations = async () => {
@@ -407,41 +463,159 @@ const FertilizacionSuelo = () => {
   
   // Function to handle adding a new soil fertilization
   const handleAddSoilFertilization = async (data: Partial<ISoilFertilization>) => {
+    // Store the data and show the work association question
+    setPendingSoilFertilizationData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      const newSoilFertilization = await soilFertilizationService.createSoilFertilization(data);
-      await fetchSoilFertilizations();
-      setIsDialogOpen(false);
-      toast({
-        title: "Fertilización creada",
-        description: `El registro de fertilización ha sido creado exitosamente.`,
-      });
+      if (!pendingSoilFertilizationData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create soil fertilization with associated work
+        const result = await createSoilFertilizationWithWork(pendingSoilFertilizationData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'SOIL_FERTILIZATION',
+          "Fertilización de suelo creada correctamente"
+        );
+      } else {
+        // Create soil fertilization without work
+        const result = await createSoilFertilizationWithoutWork(pendingSoilFertilizationData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'SOIL_FERTILIZATION',
+          "Fertilización de suelo creada correctamente"
+        );
+      }
+
+      fetchSoilFertilizations();
+      setShowWorkWizard(false);
+      setPendingSoilFertilizationData(null);
+
+    } catch (error) {
+      console.error("Error creating soil fertilization with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'SOIL_FERTILIZATION',
+        "No se pudo crear la fertilización de suelo"
+      );
+    }
+  };
+
+  // Create soil fertilization without associated work
+  const createSoilFertilizationWithoutWork = async (data: Partial<ISoilFertilization>) => {
+    await soilFertilizationService.createSoilFertilization(data);
+  };
+
+  // Create soil fertilization with associated work
+  const createSoilFertilizationWithWork = async (
+    soilFertilizationData: Partial<ISoilFertilization>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "SOIL_FERTILIZATION",
+      soilFertilizationData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingSoilFertilizationData) return;
+
+      const result = await createSoilFertilizationWithoutWork(pendingSoilFertilizationData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'SOIL_FERTILIZATION',
+        "Fertilización de suelo creada correctamente"
+      );
+
+      fetchSoilFertilizations();
+      setShowConfirmation(false);
+      setPendingSoilFertilizationData(null);
+
     } catch (error) {
       console.error("Error creating soil fertilization:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el registro de fertilización. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'SOIL_FERTILIZATION',
+        "No se pudo crear la fertilización de suelo"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingSoilFertilizationData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingSoilFertilizationData(null);
   };
   
   // Function to handle updating a soil fertilization
   const handleUpdateSoilFertilization = async (id: string | number, data: Partial<ISoilFertilization>) => {
     try {
-      await soilFertilizationService.updateSoilFertilization(id, data);
+      const result = await soilFertilizationService.updateSoilFertilization(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'SOIL_FERTILIZATION',
+        "Fertilización de suelo actualizada correctamente"
+      );
+
       await fetchSoilFertilizations();
       setIsDialogOpen(false);
-      toast({
-        title: "Fertilización actualizada",
-        description: `El registro de fertilización ha sido actualizado exitosamente.`,
-      });
     } catch (error) {
       console.error(`Error updating soil fertilization ${id}:`, error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el registro de fertilización. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'SOIL_FERTILIZATION',
+        "No se pudo actualizar la fertilización de suelo"
+      );
     }
   };
   
@@ -549,8 +723,8 @@ const FertilizacionSuelo = () => {
           <DialogHeader>
             <DialogTitle>{isEditMode ? "Editar Fertilización de Suelo" : "Añadir Nueva Fertilización de Suelo"}</DialogTitle>
             <DialogDescription>
-              {isEditMode 
-                ? "Modifique el formulario para actualizar el registro de fertilización." 
+              {isEditMode
+                ? "Modifique el formulario para actualizar el registro de fertilización."
                 : "Complete el formulario para añadir un nuevo registro de fertilización al sistema."
               }
             </DialogDescription>
@@ -560,7 +734,7 @@ const FertilizacionSuelo = () => {
             onSubmit={handleFormSubmit}
             validationSchema={formValidationSchema}
             defaultValues={
-              isEditMode && selectedSoilFertilization 
+              isEditMode && selectedSoilFertilization
                 ? {
                     property: selectedSoilFertilization.property,
                     dateFertilization: selectedSoilFertilization.dateFertilization,
@@ -586,6 +760,93 @@ const FertilizacionSuelo = () => {
                 : { state: true }
             }
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear la fertilización de suelo sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingSoilFertilizationData && (
+            <WorkAssociationWizard
+              entityType="fertilizacionSuelo"
+              entityData={{
+                id: "new-soil-fertilization"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { CalendarIcon, Search, Check, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
+import { useFieldArray } from "react-hook-form";
 import {
   FormControl,
   FormDescription,
@@ -52,6 +53,115 @@ const FormField: React.FC<FormFieldProps> = ({ field }) => {
   // Render different field types
   const renderField = () => {
     switch (field.type) {
+      case "arrayObject": {
+        const name = field.name;
+        const { fields: rows, append, remove, replace } = useFieldArray({ control, name });
+        // Initialize fixed length if requested and initial empty
+        if (field.fixedLength && rows.length === 0 && Array.isArray(field.items)) {
+          replace(field.items.map((it) => it.defaultValue || {}));
+        }
+
+        return (
+          <HookFormField
+            control={control}
+            name={name}
+            render={() => (
+              <FormItem className="col-span-2">
+                <FormLabel>{field.label}</FormLabel>
+                <div className="space-y-3 mt-2">
+                  {(rows as any[]).map((row, idx) => (
+                    <div key={row.id ?? idx} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-lg">
+                      <div className="md:col-span-1">
+                        <FormLabel className="text-sm font-medium">
+                          {field.items?.[idx]?.title || `${field.label} ${idx + 1}`}
+                        </FormLabel>
+                      </div>
+                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {field.subFields?.map((sf) => {
+                          const sfName = `${name}.${idx}.${sf.name}`;
+                          if (sf.type === "checkbox") {
+                            return (
+                              <HookFormField
+                                key={sfName}
+                                control={control}
+                                name={sfName}
+                                render={({ field: sfField }) => (
+                                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-2">
+                                    <FormControl>
+                                      <Checkbox checked={!!sfField.value} onCheckedChange={sfField.onChange} />
+                                    </FormControl>
+                                    <div className="space-y-1 leading-none">
+                                      <FormLabel>{sf.label}</FormLabel>
+                                    </div>
+                                  </FormItem>
+                                )}
+                              />
+                            );
+                          }
+                          if (sf.type === "textarea") {
+                            return (
+                              <HookFormField
+                                key={sfName}
+                                control={control}
+                                name={sfName}
+                                render={({ field: sfField }) => (
+                                  <FormItem>
+                                    <FormLabel>{sf.label}</FormLabel>
+                                    <FormControl>
+                                      <Textarea {...sfField} rows={sf.rows || 2} />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            );
+                          }
+                          // default to text input
+                          return (
+                            <HookFormField
+                              key={sfName}
+                              control={control}
+                              name={sfName}
+                              render={({ field: sfField }) => (
+                                <FormItem>
+                                  <FormLabel>{sf.label}</FormLabel>
+                                  <FormControl>
+                                    <Input {...sfField} />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                          );
+                        })}
+                      </div>
+                      {!field.fixedLength && (
+                        <div className="md:col-span-3 flex justify-end">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => remove(idx)}>
+                            Remove
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {!field.fixedLength && (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => append({})}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                {field.helperText && <FormDescription>{field.helperText}</FormDescription>}
+              </FormItem>
+            )}
+          />
+        );
+      }
       case "text":
       case "email":
       case "password":

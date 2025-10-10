@@ -14,10 +14,27 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import equipmentCalibrationService from "@/_services/equipmentCalibrationService";
 import { IEquipmentCalibration } from "@eon-lib/eon-mongoose/types";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Columns configuration for the grid
 const columns: Column[] = [
@@ -289,7 +306,19 @@ const EquipmentCalibration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCalibration, setSelectedCalibration] = useState<IEquipmentCalibration | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingCalibrationData, setPendingCalibrationData] = useState<Partial<IEquipmentCalibration> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -308,8 +337,35 @@ const EquipmentCalibration = () => {
   useEffect(() => {
     if (propertyId) {
       fetchEquipmentCalibrations();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch equipment calibrations data
   const fetchEquipmentCalibrations = async () => {
@@ -327,81 +383,161 @@ const EquipmentCalibration = () => {
   
   // Function to handle adding a new equipment calibration
   const handleAddEquipmentCalibration = async (data: Partial<IEquipmentCalibration>) => {
+    // Store the data and show the work association question
+    setPendingCalibrationData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      const calibrationData: Partial<IEquipmentCalibration> = {
-        date: data.date,
-        measurementType: data.measurementType,
-        reference: data.reference,
-        capacity: data.capacity,
-        standardType: data.standardType,
-        standardWeight: data.standardWeight,
-        obtainedWeight: data.obtainedWeight,
-        result: data.result,
-        operator: data.operator,
-        correctiveAction: data.correctiveAction,
-        image1: data.image1,
-        image2: data.image2,
-        image3: data.image3,
-        timestamp: data.timestamp,
-        user: data.user,
-        state: data.state !== undefined ? data.state : true
-      };
-      
-      const newCalibration = await equipmentCalibrationService.createEquipmentCalibration(calibrationData);
-      setEquipmentCalibrations((prevCalibrations) => [...prevCalibrations, newCalibration]);
-      setIsDialogOpen(false);
-      toast({
-        title: "Calibración creada",
-        description: `La calibración ha sido creada exitosamente.`,
-      });
+      if (!pendingCalibrationData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create equipment calibration with associated work
+        const result = await createEquipmentCalibrationWithWork(pendingCalibrationData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'EQUIPMENT_CALIBRATION',
+          "Calibración de equipo creada correctamente"
+        );
+      } else {
+        // Create equipment calibration without work
+        const result = await createEquipmentCalibrationWithoutWork(pendingCalibrationData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'EQUIPMENT_CALIBRATION',
+          "Calibración de equipo creada correctamente"
+        );
+      }
+
+      fetchEquipmentCalibrations();
+      setShowWorkWizard(false);
+      setPendingCalibrationData(null);
+
+    } catch (error) {
+      console.error("Error creating equipment calibration with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'EQUIPMENT_CALIBRATION',
+        "No se pudo crear la calibración de equipo"
+      );
+    }
+  };
+
+  // Create equipment calibration without associated work
+  const createEquipmentCalibrationWithoutWork = async (data: Partial<IEquipmentCalibration>) => {
+    await equipmentCalibrationService.createEquipmentCalibration(data);
+  };
+
+  // Create equipment calibration with associated work
+  const createEquipmentCalibrationWithWork = async (
+    calibrationData: Partial<IEquipmentCalibration>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "EQUIPMENT_CALIBRATION",
+      calibrationData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingCalibrationData) return;
+
+      const result = await createEquipmentCalibrationWithoutWork(pendingCalibrationData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'EQUIPMENT_CALIBRATION',
+        "Calibración de equipo creada correctamente"
+      );
+
+      fetchEquipmentCalibrations();
+      setShowConfirmation(false);
+      setPendingCalibrationData(null);
+
     } catch (error) {
       console.error("Error creating equipment calibration:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear la calibración. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'EQUIPMENT_CALIBRATION',
+        "No se pudo crear la calibración de equipo"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingCalibrationData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingCalibrationData(null);
   };
 
   // Function to handle updating an existing equipment calibration
   const handleUpdateEquipmentCalibration = async (id: string | number, data: Partial<IEquipmentCalibration>) => {
     try {
-      const calibrationData: Partial<IEquipmentCalibration> = {
-        date: data.date,
-        measurementType: data.measurementType,
-        reference: data.reference,
-        capacity: data.capacity,
-        standardType: data.standardType,
-        standardWeight: data.standardWeight,
-        obtainedWeight: data.obtainedWeight,
-        result: data.result,
-        operator: data.operator,
-        correctiveAction: data.correctiveAction,
-        image1: data.image1,
-        image2: data.image2,
-        image3: data.image3,
-        timestamp: data.timestamp,
-        user: data.user,
-        state: data.state !== undefined ? data.state : true
-      };
-      
-      await equipmentCalibrationService.updateEquipmentCalibration(id, calibrationData);
-      await fetchEquipmentCalibrations();
+      const result = await equipmentCalibrationService.updateEquipmentCalibration(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'EQUIPMENT_CALIBRATION',
+        "Calibración de equipo actualizada correctamente"
+      );
+
+      fetchEquipmentCalibrations();
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedCalibration(null);
-      toast({
-        title: "Calibración actualizada",
-        description: `La calibración ha sido actualizada exitosamente.`,
-      });
     } catch (error) {
-      console.error("Error updating equipment calibration:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la calibración. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+      console.error(`Error updating equipment calibration ${id}:`, error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'EQUIPMENT_CALIBRATION',
+        "No se pudo actualizar la calibración de equipo"
+      );
     }
   };
 
@@ -485,7 +621,7 @@ const EquipmentCalibration = () => {
       
       {/* Dialog for adding/editing equipment calibration */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Calibración" : "Agregar Calibración"}
@@ -551,6 +687,93 @@ const EquipmentCalibration = () => {
         gridId="equipment-calibration-grid"
         actions={actionButtons}
       />
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear la calibración de equipo sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingCalibrationData && (
+            <WorkAssociationWizard
+              entityType="equipmentCalibration"
+              entityData={{
+                id: "new-equipment-calibration"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

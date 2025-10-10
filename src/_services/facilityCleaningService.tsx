@@ -12,7 +12,7 @@ class FacilityCleaningService {
    */
   async findAll(): Promise<IFacilityCleaningRecord[]> {
     try {
-      const response = await fetch(ENDPOINTS.facilityCleaning.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.facilityCleaning.base), {
         headers: authService.getAuthHeaders(),
       });
       
@@ -20,7 +20,8 @@ class FacilityCleaningService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      return data.data || data;
     } catch (error) {
       console.error('Error fetching facility cleaning records:', error);
       throw error;
@@ -52,7 +53,7 @@ class FacilityCleaningService {
         state: facilityCleaningRecord.state !== undefined ? facilityCleaningRecord.state : true,
       };
 
-      const response = await fetch(ENDPOINTS.facilityCleaning.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.facilityCleaning.base), {
         method: 'POST',
         headers: authService.getAuthHeaders(),
         body: JSON.stringify(facilityCleaningRecordData),

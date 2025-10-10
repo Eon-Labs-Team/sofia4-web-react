@@ -7,7 +7,6 @@ import {
   Plus,
   Edit,
   Trash2,
-  GalleryVerticalEnd,
 } from "lucide-react";
 import { Column } from "@/lib/store/gridStore";
 import { Button } from "@/components/ui/button";
@@ -23,8 +22,8 @@ import DynamicForm, {
   SectionConfig,
 } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
-import { IWeedMonitoring } from "@eon-lib/eon-mongoose/types";
-import weedMonitoringService from "@/_services/weedMonitoringService";
+import { IContainerCleaning } from "@eon-lib/eon-mongoose/types";
+import containerCleaningService from "@/_services/containerCleaningService";
 import { toast } from "@/components/ui/use-toast";
 import { WorkAssociationWizard } from "@/components/Wizard";
 import { WorkAssociationData } from "@/components/Wizard/types";
@@ -55,29 +54,17 @@ const renderState = (value: boolean) => {
   );
 };
 
-// Render function for images
-const renderImages = (value: string) => {
-  if (!value) return <span>Sin imagen</span>;
-  return (
+// Render function for boolean fields
+const renderBoolean = (value: boolean) => {
+  return value ? (
     <div className="flex items-center">
-      <GalleryVerticalEnd className="h-4 w-4 mr-2" />
-      <span>Ver imagen</span>
+      <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+      <span>Sí</span>
     </div>
-  );
-};
-
-// Render function for development level
-const renderDevelopmentLevel = (value: number) => {
-  const getColor = (level: number) => {
-    if (level <= 3) return "text-green-500";
-    if (level <= 6) return "text-yellow-500";
-    return "text-red-500";
-  };
-  
-  return (
+  ) : (
     <div className="flex items-center">
-      <span className={`font-medium ${getColor(value)}`}>{value}</span>
-      <span className="ml-2">/ 10</span>
+      <XCircle className="h-4 w-4 text-red-500 mr-2" />
+      <span>No</span>
     </div>
   );
 };
@@ -100,87 +87,63 @@ const columns: Column[] = [
     groupable: true,
   },
   {
-    id: "barracks",
-    header: "Cuartel",
-    accessor: "barracks",
+    id: "location",
+    header: "Ubicación",
+    accessor: "location",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "crop",
-    header: "Cultivo",
-    accessor: "crop",
+    id: "container",
+    header: "Contenedor",
+    accessor: "container",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "variety",
-    header: "Variedad",
-    accessor: "variety",
+    id: "containerNumber",
+    header: "N° Contenedor",
+    accessor: "containerNumber",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "sector",
-    header: "Sector",
-    accessor: "sector",
+    id: "supervisor",
+    header: "Supervisor",
+    accessor: "supervisor",
     visible: true,
     sortable: true,
     groupable: true,
   },
   {
-    id: "weedType",
-    header: "Tipo de maleza",
-    accessor: "weedType",
+    id: "washed",
+    header: "Lavado",
+    accessor: "washed",
     visible: true,
     sortable: true,
     groupable: true,
+    render: renderBoolean,
   },
   {
-    id: "developmentLevel",
-    header: "Nivel de desarrollo",
-    accessor: "developmentLevel",
+    id: "rinsed",
+    header: "Enjuagado",
+    accessor: "rinsed",
     visible: true,
     sortable: true,
-    render: renderDevelopmentLevel,
+    groupable: true,
+    render: renderBoolean,
   },
   {
-    id: "responsible",
-    header: "Responsable",
-    accessor: "responsible",
+    id: "hung",
+    header: "Colgado",
+    accessor: "hung",
     visible: true,
     sortable: true,
-  },
-  {
-    id: "observation",
-    header: "Observación",
-    accessor: "observation",
-    visible: true,
-    sortable: true,
-  },
-  {
-    id: "image1",
-    header: "Imagen 1",
-    accessor: "image1",
-    visible: true,
-    render: renderImages,
-  },
-  {
-    id: "image2",
-    header: "Imagen 2",
-    accessor: "image2",
-    visible: true,
-    render: renderImages,
-  },
-  {
-    id: "image3",
-    header: "Imagen 3",
-    accessor: "image3",
-    visible: true,
-    render: renderImages,
+    groupable: true,
+    render: renderBoolean,
   },
   {
     id: "state",
@@ -196,183 +159,219 @@ const columns: Column[] = [
 // Expandable content for each row
 const expandableContent = (row: any) => (
   <div className="p-4">
-    <h3 className="text-lg font-semibold mb-2">Detalles de Monitoreo de Maleza</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <h3 className="text-lg font-semibold mb-4">Detalle de Limpieza de Contenedor</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div>
-        <p><strong>Fecha:</strong> {row.date}</p>
-        <p><strong>Cuartel:</strong> {row.barracks}</p>
-        <p><strong>Cultivo:</strong> {row.crop}</p>
-        <p><strong>Variedad:</strong> {row.variety}</p>
-        <p><strong>Sector:</strong> {row.sector}</p>
-        <p><strong>Tipo de maleza:</strong> {row.weedType}</p>
-        <p><strong>Nivel de desarrollo:</strong> {row.developmentLevel}/10</p>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Información General</h4>
+        <p className="text-sm"><strong>Fecha:</strong> {row.date}</p>
+        <p className="text-sm"><strong>Ubicación:</strong> {row.location}</p>
+        <p className="text-sm"><strong>Supervisor:</strong> {row.supervisor}</p>
       </div>
       <div>
-        <p><strong>Responsable:</strong> {row.responsible}</p>
-        <p><strong>Observación:</strong> {row.observation}</p>
-        <p><strong>Estado:</strong> {row.state ? "Activo" : "Inactivo"}</p>
-        <div className="mt-4">
-          <h4 className="text-md font-semibold mb-2">Imágenes</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {row.image1 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 1</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-            {row.image2 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 2</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-            {row.image3 && (
-              <div className="border p-2 rounded">
-                <p className="text-sm mb-1">Imagen 3</p>
-                <div className="h-20 bg-gray-200 flex items-center justify-center">
-                  <GalleryVerticalEnd className="h-6 w-6" />
-                </div>
-              </div>
-            )}
-          </div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Contenedor</h4>
+        <p className="text-sm"><strong>Tipo:</strong> {row.container}</p>
+        <p className="text-sm"><strong>Número:</strong> {row.containerNumber}</p>
+        <p className="text-sm"><strong>Variedad Cosechada:</strong> {row.harvestedVariety}</p>
+        {row.crew && <p className="text-sm"><strong>Cuadrilla:</strong> {row.crew}</p>}
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Proceso de Limpieza</h4>
+        <p className="text-sm"><strong>Lavado:</strong> {row.washed ? 'Sí' : 'No'}</p>
+        <p className="text-sm"><strong>Enjuagado:</strong> {row.rinsed ? 'Sí' : 'No'}</p>
+        <p className="text-sm"><strong>Colgado:</strong> {row.hung ? 'Sí' : 'No'}</p>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Responsable</h4>
+        <p className="text-sm"><strong>Persona:</strong> {row.responsiblePerson}</p>
+      </div>
+      {(row.photo1 || row.photo2 || row.photo3) && (
+        <div>
+          <h4 className="font-semibold mb-2 text-sm text-muted-foreground">Fotografías</h4>
+          {row.photo1 && <p className="text-sm"><strong>Foto 1:</strong> {row.photo1}</p>}
+          {row.photo2 && <p className="text-sm"><strong>Foto 2:</strong> {row.photo2}</p>}
+          {row.photo3 && <p className="text-sm"><strong>Foto 3:</strong> {row.photo3}</p>}
         </div>
-      </div>
+      )}
     </div>
   </div>
 );
 
-// Form configuration for adding new weed monitoring record
+// Form configuration for adding new container cleaning
 const formSections: SectionConfig[] = [
   {
-    id: "weed-monitoring-info",
-    title: "Información del Monitoreo de Maleza",
-    description: "Ingrese los datos del nuevo monitoreo de maleza",
+    id: "general-info",
+    title: "Información General",
+    description: "Datos generales de la limpieza de contenedor",
     fields: [
       {
         id: "date",
         type: "date",
         label: "Fecha",
         name: "date",
-        placeholder: "Seleccione una fecha",
+        placeholder: "Seleccione la fecha",
         required: true,
-        helperText: "Fecha del monitoreo"
+        helperText: "Fecha de la limpieza",
+        defaultValue: new Date().toISOString().split('T')[0],
       },
       {
-        id: "barracks",
+        id: "location",
         type: "text",
-        label: "Cuartel",
-        name: "barracks",
-        placeholder: "Nombre del cuartel",
+        label: "Ubicación",
+        name: "location",
+        placeholder: "Ingrese la ubicación",
         required: true,
-        helperText: "Cuartel donde se realizó el monitoreo"
+        helperText: "Lugar donde se realizó la limpieza"
       },
       {
-        id: "crop",
+        id: "supervisor",
         type: "text",
-        label: "Cultivo",
-        name: "crop",
-        placeholder: "Tipo de cultivo",
+        label: "Supervisor",
+        name: "supervisor",
+        placeholder: "Nombre del supervisor",
         required: true,
-        helperText: "Cultivo monitoreado"
-      },
-      {
-        id: "variety",
-        type: "text",
-        label: "Variedad",
-        name: "variety",
-        placeholder: "Variedad del cultivo",
-        required: true,
-        helperText: "Variedad del cultivo"
-      },
-      {
-        id: "sector",
-        type: "text",
-        label: "Sector",
-        name: "sector",
-        placeholder: "Sector del cuartel",
-        required: true,
-        helperText: "Sector específico donde se realizó el monitoreo"
-      },
-      {
-        id: "weedType",
-        type: "text",
-        label: "Tipo de maleza",
-        name: "weedType",
-        placeholder: "Tipo de maleza observada",
-        required: true,
-        helperText: "Tipo o especie de maleza identificada"
-      },
-      {
-        id: "developmentLevel",
-        type: "number",
-        label: "Nivel de desarrollo",
-        name: "developmentLevel",
-        placeholder: "Escala del 1 al 10",
-        required: true,
-        helperText: "Nivel de desarrollo de la maleza (1-10)"
+        helperText: "Supervisor responsable"
       },
     ]
   },
   {
-    id: "additional-info",
-    title: "Información adicional",
-    description: "Ingrese información adicional del monitoreo",
+    id: "container-info",
+    title: "Información del Contenedor",
+    description: "Datos del contenedor limpiado",
     fields: [
       {
-        id: "responsible",
+        id: "container",
         type: "text",
-        label: "Responsable",
-        name: "responsible",
+        label: "Tipo de Contenedor",
+        name: "container",
+        placeholder: "Ej: Bin, Caja, etc.",
+        required: true,
+        helperText: "Tipo de contenedor"
+      },
+      {
+        id: "containerNumber",
+        type: "text",
+        label: "Número de Contenedor",
+        name: "containerNumber",
+        placeholder: "Ingrese el número",
+        required: true,
+        helperText: "Número identificador del contenedor"
+      },
+      {
+        id: "harvestedVariety",
+        type: "text",
+        label: "Variedad Cosechada",
+        name: "harvestedVariety",
+        placeholder: "Variedad de la fruta",
+        required: true,
+        helperText: "Variedad que contenía el contenedor"
+      },
+      {
+        id: "crew",
+        type: "text",
+        label: "Cuadrilla (Opcional)",
+        name: "crew",
+        placeholder: "Nombre de la cuadrilla",
+        required: false,
+        helperText: "Cuadrilla que realizó la limpieza"
+      },
+    ]
+  },
+  {
+    id: "cleaning-process",
+    title: "Proceso de Limpieza",
+    description: "Estado del proceso de limpieza",
+    fields: [
+      {
+        id: "washed",
+        type: "checkbox",
+        label: "Lavado",
+        name: "washed",
+        required: false,
+        defaultValue: false,
+        helperText: "¿Se lavó el contenedor?"
+      },
+      {
+        id: "rinsed",
+        type: "checkbox",
+        label: "Enjuagado",
+        name: "rinsed",
+        required: false,
+        defaultValue: false,
+        helperText: "¿Se enjuagó el contenedor?"
+      },
+      {
+        id: "hung",
+        type: "checkbox",
+        label: "Colgado",
+        name: "hung",
+        required: false,
+        defaultValue: false,
+        helperText: "¿Se colgó el contenedor para secar?"
+      },
+    ]
+  },
+  {
+    id: "responsible-info",
+    title: "Responsable",
+    description: "Persona responsable de la limpieza",
+    fields: [
+      {
+        id: "responsiblePerson",
+        type: "text",
+        label: "Persona Responsable",
+        name: "responsiblePerson",
         placeholder: "Nombre del responsable",
         required: true,
-        helperText: "Persona responsable del monitoreo"
+        helperText: "Persona que realizó o supervisó la limpieza"
       },
+    ]
+  },
+  {
+    id: "photos",
+    title: "Fotografías (Opcional)",
+    description: "URLs de las fotografías de evidencia",
+    fields: [
       {
-        id: "observation",
-        type: "textarea",
-        label: "Observación",
-        name: "observation",
-        placeholder: "Ingrese sus observaciones",
-        required: true,
-        helperText: "Observaciones detalladas del monitoreo"
-      },
-      {
-        id: "image1",
+        id: "photo1",
         type: "text",
-        label: "Imagen 1",
-        name: "image1",
-        placeholder: "URL de la imagen 1",
-        required: true,
-        helperText: "URL de la primera imagen"
+        label: "Fotografía 1",
+        name: "photo1",
+        placeholder: "URL de la foto 1",
+        required: false,
+        helperText: "URL de la primera fotografía"
       },
       {
-        id: "image2",
+        id: "photo2",
         type: "text",
-        label: "Imagen 2",
-        name: "image2",
-        placeholder: "URL de la imagen 2",
-        required: true,
-        helperText: "URL de la segunda imagen"
+        label: "Fotografía 2",
+        name: "photo2",
+        placeholder: "URL de la foto 2",
+        required: false,
+        helperText: "URL de la segunda fotografía"
       },
       {
-        id: "image3",
+        id: "photo3",
         type: "text",
-        label: "Imagen 3",
-        name: "image3",
-        placeholder: "URL de la imagen 3",
-        required: true,
-        helperText: "URL de la tercera imagen"
+        label: "Fotografía 3",
+        name: "photo3",
+        placeholder: "URL de la foto 3",
+        required: false,
+        helperText: "URL de la tercera fotografía"
       },
+    ]
+  },
+  {
+    id: "state-info",
+    title: "Estado",
+    description: "Estado del registro",
+    fields: [
       {
         id: "state",
         type: "checkbox",
         label: "Activo",
         name: "state",
-        required: true,
+        required: false,
+        defaultValue: true,
         helperText: "Indica si el registro está activo"
       },
     ]
@@ -382,30 +381,32 @@ const formSections: SectionConfig[] = [
 // Form validation schema
 const formValidationSchema = z.object({
   date: z.string().min(1, { message: "La fecha es obligatoria" }),
-  barracks: z.string().min(1, { message: "El cuartel es obligatorio" }),
-  crop: z.string().min(1, { message: "El cultivo es obligatorio" }),
-  variety: z.string().min(1, { message: "La variedad es obligatoria" }),
-  sector: z.string().min(1, { message: "El sector es obligatorio" }),
-  weedType: z.string().min(1, { message: "El tipo de maleza es obligatorio" }),
-  developmentLevel: z.coerce.number().min(1).max(10, { message: "El nivel debe estar entre 1 y 10" }),
-  responsible: z.string().min(1, { message: "El responsable es obligatorio" }),
-  observation: z.string().min(1, { message: "La observación es obligatoria" }),
-  image1: z.string().min(1, { message: "La imagen 1 es obligatoria" }),
-  image2: z.string().min(1, { message: "La imagen 2 es obligatoria" }),
-  image3: z.string().min(1, { message: "La imagen 3 es obligatoria" }),
-  state: z.boolean().default(true),
+  location: z.string().min(1, { message: "La ubicación es obligatoria" }),
+  supervisor: z.string().min(1, { message: "El supervisor es obligatorio" }),
+  container: z.string().min(1, { message: "El tipo de contenedor es obligatorio" }),
+  containerNumber: z.string().min(1, { message: "El número de contenedor es obligatorio" }),
+  harvestedVariety: z.string().min(1, { message: "La variedad cosechada es obligatoria" }),
+  crew: z.string().optional(),
+  washed: z.boolean().default(false),
+  rinsed: z.boolean().default(false),
+  hung: z.boolean().default(false),
+  responsiblePerson: z.string().min(1, { message: "La persona responsable es obligatoria" }),
+  photo1: z.string().optional(),
+  photo2: z.string().optional(),
+  photo3: z.string().optional(),
+  state: z.boolean().default(true)
 });
 
-const MonitoreoMaleza = () => {
+const ContainerCleaning = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [weedMonitoringRecords, setWeedMonitoringRecords] = useState<IWeedMonitoring[]>([]);
+  const [containerCleaningData, setContainerCleaningData] = useState<IContainerCleaning[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedWeedMonitoring, setSelectedWeedMonitoring] = useState<IWeedMonitoring | null>(null);
+  const [selectedContainerCleaning, setSelectedContainerCleaning] = useState<IContainerCleaning | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showWorkQuestion, setShowWorkQuestion] = useState(false);
   const [showWorkWizard, setShowWorkWizard] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingWeedMonitoringData, setPendingWeedMonitoringData] = useState<Partial<IWeedMonitoring> | null>(null);
+  const [pendingData, setPendingData] = useState<Partial<IContainerCleaning> | null>(null);
   const [workWizardData, setWorkWizardData] = useState({
     workerList: [],
     cuarteles: [],
@@ -417,7 +418,7 @@ const MonitoreoMaleza = () => {
 
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
-  
+
   // Redirect to homepage if no propertyId is available
   useEffect(() => {
     if (!propertyId) {
@@ -428,11 +429,11 @@ const MonitoreoMaleza = () => {
       });
     }
   }, [propertyId]);
-  
-  // Fetch weed monitoring records on component mount and when propertyId changes
+
+  // Fetch container cleaning data on component mount and when propertyId changes
   useEffect(() => {
     if (propertyId) {
-      fetchWeedMonitoringRecords();
+      fetchContainerCleaning();
       loadWorkWizardData();
     }
   }, [propertyId]);
@@ -462,38 +463,33 @@ const MonitoreoMaleza = () => {
       console.error("Error loading work wizard data:", error);
     }
   };
-  
-  // Function to fetch weed monitoring records data
-  const fetchWeedMonitoringRecords = async () => {
+
+  // Function to fetch container cleaning data
+  const fetchContainerCleaning = async () => {
     setIsLoading(true);
     try {
-      const response = await weedMonitoringService.findAll();
+      const response = await containerCleaningService.findAll();
       // Handle different response structures
       if (Array.isArray(response)) {
-        setWeedMonitoringRecords(response);
+        setContainerCleaningData(response);
       } else if (response && typeof response === 'object') {
-        const data = response.data || [];
-        setWeedMonitoringRecords(Array.isArray(data) ? data : []);
+        const data = (response as any).data || [];
+        setContainerCleaningData(Array.isArray(data) ? data : []);
       } else {
-        setWeedMonitoringRecords([]);
+        setContainerCleaningData([]);
       }
     } catch (error) {
-      console.error("Error loading weed monitoring records:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los registros de monitoreo de maleza",
-        variant: "destructive",
-      });
-      setWeedMonitoringRecords([]);
+      console.error("Error loading container cleaning:", error);
+      setContainerCleaningData([]);
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Function to handle adding a new weed monitoring record
-  const handleAddWeedMonitoring = async (data: Partial<IWeedMonitoring>) => {
+
+  // Function to handle adding a new container cleaning
+  const handleAddContainerCleaning = async (data: Partial<IContainerCleaning>) => {
     // Store the data and show the work association question
-    setPendingWeedMonitoringData(data);
+    setPendingData(data);
     setIsDialogOpen(false);
     setShowWorkQuestion(true);
   };
@@ -501,62 +497,59 @@ const MonitoreoMaleza = () => {
   // Function to handle work association completion
   const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      if (!pendingWeedMonitoringData) return;
+      if (!pendingData) return;
 
       if (workAssociationData.associateWork) {
-        // Create weed monitoring with associated work
-        const result = await createWeedMonitoringWithWork(pendingWeedMonitoringData, workAssociationData);
+        // Create container cleaning with associated work
+        const result = await createContainerCleaningWithWork(pendingData, workAssociationData);
 
-        // Handle enhanced response format
         handleResponseWithFallback(
           result,
           'creation',
-          'WEED_MONITORING',
-          "Monitoreo de maleza creado correctamente"
+          'CONTAINER_CLEANING',
+          "Limpieza de contenedor registrada correctamente"
         );
       } else {
-        // Create weed monitoring without work
-        const result = await createWeedMonitoringWithoutWork(pendingWeedMonitoringData);
+        // Create container cleaning without work
+        const result = await createContainerCleaningWithoutWork(pendingData);
 
-        // Handle enhanced response format for single entity creation
         handleResponseWithFallback(
           result,
           'creation',
-          'WEED_MONITORING',
-          "Monitoreo de maleza creado correctamente"
+          'CONTAINER_CLEANING',
+          "Limpieza de contenedor registrada correctamente"
         );
       }
 
-      fetchWeedMonitoringRecords();
+      fetchContainerCleaning();
       setShowWorkWizard(false);
-      setPendingWeedMonitoringData(null);
+      setPendingData(null);
 
     } catch (error) {
-      console.error("Error creating weed monitoring with work association:", error);
+      console.error("Error creating container cleaning with work association:", error);
 
       handleErrorWithEnhancedFormat(
         error,
         'creation',
-        'WEED_MONITORING',
-        "No se pudo crear el monitoreo de maleza"
+        'CONTAINER_CLEANING',
+        "No se pudo registrar la limpieza de contenedor"
       );
     }
   };
 
-  // Create weed monitoring without associated work
-  const createWeedMonitoringWithoutWork = async (data: Partial<IWeedMonitoring>) => {
-    await weedMonitoringService.createWeedMonitoring(data);
+  // Create container cleaning without associated work
+  const createContainerCleaningWithoutWork = async (data: Partial<IContainerCleaning>) => {
+    await containerCleaningService.createContainerCleaning(data);
   };
 
-  // Create weed monitoring with associated work
-  const createWeedMonitoringWithWork = async (
-    weedMonitoringData: Partial<IWeedMonitoring>,
+  // Create container cleaning with associated work
+  const createContainerCleaningWithWork = async (
+    containerCleaningData: Partial<IContainerCleaning>,
     workAssociationData: WorkAssociationData
   ) => {
-    // Create work with entity using the new endpoint
     const result = await workService.createWorkWithEntity(
-      "WEED_MONITORING",
-      weedMonitoringData,
+      "CONTAINER_CLEANING",
+      containerCleaningData,
       workAssociationData.workData
     );
 
@@ -568,10 +561,8 @@ const MonitoreoMaleza = () => {
     setShowWorkQuestion(false);
 
     if (associateWork) {
-      // Show the full wizard
       setShowWorkWizard(true);
     } else {
-      // Show confirmation dialog for direct insertion
       setShowConfirmation(true);
     }
   };
@@ -579,30 +570,29 @@ const MonitoreoMaleza = () => {
   // Function to handle confirmation of direct insertion
   const handleConfirmInsertion = async () => {
     try {
-      if (!pendingWeedMonitoringData) return;
+      if (!pendingData) return;
 
-      const result = await createWeedMonitoringWithoutWork(pendingWeedMonitoringData);
+      const result = await createContainerCleaningWithoutWork(pendingData);
 
-      // Handle enhanced response format
       handleResponseWithFallback(
         result,
         'creation',
-        'WEED_MONITORING',
-        "Monitoreo de maleza creado correctamente"
+        'CONTAINER_CLEANING',
+        "Limpieza de contenedor registrada correctamente"
       );
 
-      fetchWeedMonitoringRecords();
+      fetchContainerCleaning();
       setShowConfirmation(false);
-      setPendingWeedMonitoringData(null);
+      setPendingData(null);
 
     } catch (error) {
-      console.error("Error creating weed monitoring:", error);
+      console.error("Error creating container cleaning:", error);
 
       handleErrorWithEnhancedFormat(
         error,
         'creation',
-        'WEED_MONITORING',
-        "No se pudo crear el monitoreo de maleza"
+        'CONTAINER_CLEANING',
+        "No se pudo registrar la limpieza de contenedor"
       );
     }
   };
@@ -610,7 +600,7 @@ const MonitoreoMaleza = () => {
   // Function to handle work wizard cancellation
   const handleWorkWizardCancel = () => {
     setShowWorkWizard(false);
-    setPendingWeedMonitoringData(null);
+    setPendingData(null);
   };
 
   // Function to cancel all operations
@@ -618,75 +608,74 @@ const MonitoreoMaleza = () => {
     setShowWorkQuestion(false);
     setShowWorkWizard(false);
     setShowConfirmation(false);
-    setPendingWeedMonitoringData(null);
+    setPendingData(null);
   };
-  
-  // Function to handle updating a weed monitoring record
-  const handleUpdateWeedMonitoring = async (id: string | number, data: Partial<IWeedMonitoring>) => {
-    try {
-      const result = await weedMonitoringService.updateWeedMonitoring(id, data);
 
-      // Handle enhanced response format
+  // Function to handle updating a container cleaning
+  const handleUpdateContainerCleaning = async (id: string | number, data: Partial<IContainerCleaning>) => {
+    try {
+      const result = await containerCleaningService.updateContainerCleaning(id, data);
+
       handleResponseWithFallback(
         result,
         'update',
-        'WEED_MONITORING',
-        "Monitoreo de maleza actualizado correctamente"
+        'CONTAINER_CLEANING',
+        "Limpieza de contenedor actualizada correctamente"
       );
 
-      fetchWeedMonitoringRecords();
+      fetchContainerCleaning();
       setIsDialogOpen(false);
       setIsEditMode(false);
-      setSelectedWeedMonitoring(null);
+      setSelectedContainerCleaning(null);
     } catch (error) {
-      console.error(`Error updating weed monitoring record ${id}:`, error);
+      console.error(`Error updating container cleaning ${id}:`, error);
 
       handleErrorWithEnhancedFormat(
         error,
         'update',
-        'WEED_MONITORING',
-        "No se pudo actualizar el monitoreo de maleza"
+        'CONTAINER_CLEANING',
+        "No se pudo actualizar la limpieza de contenedor"
       );
     }
   };
-  
-  // Function to handle deleting a weed monitoring record
-  const handleDeleteWeedMonitoring = async (id: string | number) => {
+
+  // Function to handle deleting a container cleaning
+  const handleDeleteContainerCleaning = async (id: string | number) => {
     try {
-      await weedMonitoringService.softDeleteWeedMonitoring(id);
+      await containerCleaningService.softDeleteContainerCleaning(id);
       toast({
         title: "Éxito",
-        description: "Monitoreo de maleza eliminado correctamente",
+        description: "Limpieza de contenedor eliminada correctamente",
       });
-      fetchWeedMonitoringRecords();
+      fetchContainerCleaning();
     } catch (error) {
-      console.error(`Error deleting weed monitoring record ${id}:`, error);
+      console.error(`Error deleting container cleaning ${id}:`, error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar el monitoreo de maleza",
+        description: "No se pudo eliminar la limpieza de contenedor",
         variant: "destructive",
       });
     }
   };
-  
+
   // Function to handle form submission
-  const handleFormSubmit = (data: Partial<IWeedMonitoring>) => {
-    if (isEditMode && selectedWeedMonitoring && selectedWeedMonitoring._id) {
-      handleUpdateWeedMonitoring(selectedWeedMonitoring._id, data);
+  const handleFormSubmit = (data: Partial<IContainerCleaning>) => {
+    if (isEditMode && selectedContainerCleaning && selectedContainerCleaning._id) {
+      handleUpdateContainerCleaning(selectedContainerCleaning._id, data);
     } else {
-      handleAddWeedMonitoring(data);
+      handleAddContainerCleaning(data);
     }
   };
-  
+
   // Function to handle edit click
-  const handleEditClick = (weedMonitoring: IWeedMonitoring) => {
-    setSelectedWeedMonitoring(weedMonitoring);
+  const handleEditClick = (containerCleaning: IContainerCleaning) => {
+    setSelectedContainerCleaning(containerCleaning);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
-  
+
   // Function to render action buttons for each row
-  const renderActions = (row: IWeedMonitoring) => {
+  const renderActions = (row: IContainerCleaning) => {
     return (
       <div className="flex space-x-2">
         <Button
@@ -699,30 +688,30 @@ const MonitoreoMaleza = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => handleDeleteWeedMonitoring(row._id as string)}
+          onClick={() => handleDeleteContainerCleaning(row._id as string)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
     );
   };
-  
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Monitoreo de Maleza</h1>
+        <h1 className="text-2xl font-bold">Gestión de Limpieza de recipientes</h1>
         <Button onClick={() => {
           setIsEditMode(false);
-          setSelectedWeedMonitoring(null);
+          setSelectedContainerCleaning(null);
           setIsDialogOpen(true);
         }}>
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Monitoreo
+          Agregar Registro
         </Button>
       </div>
-      
+
       <Grid
-        data={weedMonitoringRecords}
+        data={containerCleaningData}
         columns={[...columns, {
           id: "actions",
           header: "Acciones",
@@ -730,22 +719,22 @@ const MonitoreoMaleza = () => {
           visible: true,
           render: renderActions,
         }]}
-        gridId="monitoreo-maleza"
-        title="Registros de Monitoreo de Maleza"
+        gridId="container-cleaning-grid"
+        title="Registros de Limpieza de recipientes"
         expandableContent={expandableContent}
         actions={renderActions}
       />
-      
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Editar Monitoreo de Maleza" : "Agregar Nuevo Monitoreo de Maleza"}
+              {isEditMode ? "Editar Limpieza de Contenedor" : "Agregar Nueva Limpieza de Contenedor"}
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? "Modifique la información del monitoreo de maleza existente"
-                : "Complete la información para crear un nuevo monitoreo de maleza"}
+                ? "Modifique la información de la limpieza de contenedor existente"
+                : "Complete la información para registrar una nueva limpieza de contenedor"}
             </DialogDescription>
           </DialogHeader>
 
@@ -753,7 +742,7 @@ const MonitoreoMaleza = () => {
             sections={formSections}
             validationSchema={formValidationSchema}
             onSubmit={handleFormSubmit}
-            defaultValues={isEditMode && selectedWeedMonitoring ? selectedWeedMonitoring : undefined}
+            defaultValues={isEditMode && selectedContainerCleaning ? selectedContainerCleaning : undefined}
           />
 
           <DialogFooter>
@@ -798,7 +787,7 @@ const MonitoreoMaleza = () => {
           <DialogHeader>
             <DialogTitle>Confirmar Inserción</DialogTitle>
             <DialogDescription>
-              ¿Está seguro que desea crear el monitoreo de maleza sin asociar un trabajo?
+              ¿Está seguro que desea registrar la limpieza de contenedor sin asociar un trabajo?
             </DialogDescription>
           </DialogHeader>
 
@@ -832,11 +821,11 @@ const MonitoreoMaleza = () => {
             </DialogDescription>
           </DialogHeader>
 
-          {showWorkWizard && pendingWeedMonitoringData && (
+          {showWorkWizard && pendingData && (
             <WorkAssociationWizard
-              entityType="monitoreoMaleza"
+              entityType="containerCleaning"
               entityData={{
-                id: "new-weed-monitoring"
+                id: "new-container-cleaning"
               }}
               onComplete={handleWorkAssociation}
               onCancel={handleWorkWizardCancel}
@@ -854,4 +843,4 @@ const MonitoreoMaleza = () => {
   );
 };
 
-export default MonitoreoMaleza; 
+export default ContainerCleaning;

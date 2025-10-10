@@ -129,6 +129,26 @@ export const ENDPOINTS = {
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/calibrateSprinkler/${id}`,
     changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/calibrateSprinkler/${id}/state/false`,
   },
+  claims: {
+    base: `${API_BASE_URL}/controlRecord/claims`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/claims/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/claims/${id}/state/false`,
+  },
+  safetyClearance: {
+    base: `${API_BASE_URL}/fieldRecord/safetyClearance`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/safetyClearance/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/safetyClearance/${id}/state/false`,
+  },
+  containerCleaning: {
+    base: `${API_BASE_URL}/controlRecord/containerCleaning`,
+    byId: (id: string | number) => `${API_BASE_URL}/controlRecord/containerCleaning/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/controlRecord/containerCleaning/${id}/state/false`,
+  },
+  plaguePerPostharvestZone: {
+    base: `${API_BASE_URL}/fieldRecord/plaguePerPostharvestZone`,
+    byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/plaguePerPostharvestZone/${id}`,
+    changeState: (id: string | number) => `${API_BASE_URL}/fieldRecord/plaguePerPostharvestZone/${id}/state/false`,
+  },
   technicalIrrigationMaintenance: {
     base: `${API_BASE_URL}/fieldRecord/technicalIrrigationMaintenance`,
     byId: (id: string | number) => `${API_BASE_URL}/fieldRecord/technicalIrrigationMaintenance/${id}`,

@@ -18,12 +18,29 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import DynamicForm, { SectionConfig } from "@/components/DynamicForm/DynamicForm";
 import { z } from "zod";
 import { ITechnicalIrrigationMaintenance } from "@eon-lib/eon-mongoose/types";
 import technicalIrrigationMaintenanceService from "@/_services/technicalIrrigationMaintenanceService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Render function for the boolean columns
 const renderBoolean = (value: boolean) => {
@@ -161,6 +178,19 @@ const expandableContent = (row: any) => (
   </div>
 );
 
+// Esquema de validación para mantención de riego tecnificado
+const technicalIrrigationMaintenanceFormSchema = z.object({
+  barracks: z.string().min(1, { message: "El cuartel es obligatorio" }),
+  supervisor: z.string().min(1, { message: "El supervisor es obligatorio" }),
+  date: z.string().min(1, { message: "La fecha es obligatoria" }).regex(/^\d{4}-\d{2}-\d{2}$/, { message: "La fecha debe tener el formato YYYY-MM-DD" }),
+  hallNumber: z.number().min(1, { message: "El número de sala debe ser mayor a 0" }),
+  centerCost: z.string().min(1, { message: "El centro de costos es obligatorio" }),
+  workType: z.string().min(1, { message: "El tipo de trabajo es obligatorio" }),
+  workDone: z.string().min(1, { message: "La descripción del trabajo realizado es obligatoria" }),
+  responsible: z.string().min(1, { message: "El responsable es obligatorio" }),
+  state: z.boolean().default(true)
+});
+
 // Form configuration for adding new technical irrigation maintenance
 const formSections: SectionConfig[] = [
   {
@@ -246,7 +276,8 @@ const formSections: SectionConfig[] = [
         label: "Estado Activo",
         name: "state",
         required: true,
-        helperText: "Indica si está en estado activo"
+        helperText: "Indica si está en estado activo",
+        defaultValue: true
       }
     ]
   }
@@ -258,10 +289,22 @@ const TechnicalIrrigationMaintenance = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMaintenance, setSelectedMaintenance] = useState<ITechnicalIrrigationMaintenance | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingMaintenanceData, setPendingMaintenanceData] = useState<Partial<ITechnicalIrrigationMaintenance> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
-  
+
   // Redirect to homepage if no propertyId is available
   useEffect(() => {
     if (!propertyId) {
@@ -272,13 +315,40 @@ const TechnicalIrrigationMaintenance = () => {
       });
     }
   }, [propertyId]);
-  
+
   // Fetch maintenances on component mount and when propertyId changes
   useEffect(() => {
     if (propertyId) {
       fetchMaintenances();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch maintenances data
   const fetchMaintenances = async () => {
@@ -303,43 +373,161 @@ const TechnicalIrrigationMaintenance = () => {
   
   // Function to handle adding a new maintenance
   const handleAddMaintenance = async (data: Partial<ITechnicalIrrigationMaintenance>) => {
+    // Store the data and show the work association question
+    setPendingMaintenanceData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      const newMaintenance = await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data);
-      await fetchMaintenances();
-      setIsDialogOpen(false);
-      toast({
-        title: "Mantención creada",
-        description: `La mantención ha sido creada exitosamente.`,
-      });
+      if (!pendingMaintenanceData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create maintenance with associated work
+        const result = await createMaintenanceWithWork(pendingMaintenanceData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'TECHNICAL_IRRIGATION_MAINTENANCE',
+          "Mantención de riego tecnificado creada correctamente"
+        );
+      } else {
+        // Create maintenance without work
+        const result = await createMaintenanceWithoutWork(pendingMaintenanceData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'TECHNICAL_IRRIGATION_MAINTENANCE',
+          "Mantención de riego tecnificado creada correctamente"
+        );
+      }
+
+      fetchMaintenances();
+      setShowWorkWizard(false);
+      setPendingMaintenanceData(null);
+
+    } catch (error) {
+      console.error("Error creating maintenance with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'TECHNICAL_IRRIGATION_MAINTENANCE',
+        "No se pudo crear la mantención de riego tecnificado"
+      );
+    }
+  };
+
+  // Create maintenance without associated work
+  const createMaintenanceWithoutWork = async (data: Partial<ITechnicalIrrigationMaintenance>) => {
+    await technicalIrrigationMaintenanceService.createTechnicalIrrigationMaintenance(data);
+  };
+
+  // Create maintenance with associated work
+  const createMaintenanceWithWork = async (
+    maintenanceData: Partial<ITechnicalIrrigationMaintenance>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "TECHNICAL_IRRIGATION_MAINTENANCE",
+      maintenanceData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingMaintenanceData) return;
+
+      const result = await createMaintenanceWithoutWork(pendingMaintenanceData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'TECHNICAL_IRRIGATION_MAINTENANCE',
+        "Mantención de riego tecnificado creada correctamente"
+      );
+
+      fetchMaintenances();
+      setShowConfirmation(false);
+      setPendingMaintenanceData(null);
+
     } catch (error) {
       console.error("Error creating maintenance:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear la mantención. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'TECHNICAL_IRRIGATION_MAINTENANCE',
+        "No se pudo crear la mantención de riego tecnificado"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingMaintenanceData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingMaintenanceData(null);
   };
 
   // Function to handle updating an existing maintenance
   const handleUpdateMaintenance = async (id: string | number, data: Partial<ITechnicalIrrigationMaintenance>) => {
     try {
-      await technicalIrrigationMaintenanceService.updateTechnicalIrrigationMaintenance(id, data);
+      const result = await technicalIrrigationMaintenanceService.updateTechnicalIrrigationMaintenance(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'TECHNICAL_IRRIGATION_MAINTENANCE',
+        "Mantención de riego tecnificado actualizada correctamente"
+      );
+
       await fetchMaintenances();
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedMaintenance(null);
-      toast({
-        title: "Mantención actualizada",
-        description: `La mantención ha sido actualizada exitosamente.`,
-      });
     } catch (error) {
       console.error("Error updating maintenance:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la mantención. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'TECHNICAL_IRRIGATION_MAINTENANCE',
+        "No se pudo actualizar la mantención de riego tecnificado"
+      );
     }
   };
 
@@ -441,7 +629,7 @@ const TechnicalIrrigationMaintenance = () => {
 
       {/* Dialog for adding or editing maintenance */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Mantención" : "Agregar Mantención"}
@@ -452,12 +640,100 @@ const TechnicalIrrigationMaintenance = () => {
                 : "Complete el formulario para agregar una nueva mantención"}
             </DialogDescription>
           </DialogHeader>
-          
+
           <DynamicForm
             sections={formSections}
             onSubmit={handleFormSubmit}
+            validationSchema={technicalIrrigationMaintenanceFormSchema}
             defaultValues={selectedMaintenance || {}}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear la mantención de riego tecnificado sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingMaintenanceData && (
+            <WorkAssociationWizard
+              entityType="technicalIrrigationMaintenance"
+              entityData={{
+                id: "new-technical-irrigation-maintenance"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

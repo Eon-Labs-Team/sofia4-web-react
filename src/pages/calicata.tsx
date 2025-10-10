@@ -28,6 +28,22 @@ import { ICalicata } from "@eon-lib/eon-mongoose/types";
 import calicataService from "@/_services/calicataService";
 import { toast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleEnhancedResponse,
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+  isEnhancedResponse,
+  StandardResponse
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -285,7 +301,19 @@ const Calicata = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCalicata, setSelectedCalicata] = useState<ICalicata | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingData, setPendingData] = useState<Partial<ICalicata> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -304,8 +332,35 @@ const Calicata = () => {
   useEffect(() => {
     if (propertyId) {
       fetchCalicatas();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch calicatas data
   const fetchCalicatas = async () => {
@@ -328,43 +383,161 @@ const Calicata = () => {
   
   // Function to handle adding a new calicata
   const handleAddCalicata = async (data: Partial<ICalicata>) => {
+    // Store the data and show the work association question
+    setPendingData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      await calicataService.createCalicata(data);
-      await fetchCalicatas();
-      setIsDialogOpen(false);
-      toast({
-        title: "Éxito",
-        description: "Calicata agregada correctamente",
-      });
+      if (!pendingData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create calicata with associated work
+        const result = await createEntityWithWork(pendingData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'CALICATA',
+          "Calicata creada correctamente"
+        );
+      } else {
+        // Create calicata without work
+        const result = await createEntityWithoutWork(pendingData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'CALICATA',
+          "Calicata creada correctamente"
+        );
+      }
+
+      fetchCalicatas();
+      setShowWorkWizard(false);
+      setPendingData(null);
+
     } catch (error) {
-      console.error("Error adding calicata:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo agregar la calicata",
-        variant: "destructive",
-      });
+      console.error("Error creating calicata with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'CALICATA',
+        "No se pudo crear la calicata"
+      );
     }
+  };
+
+  // Create calicata without associated work
+  const createEntityWithoutWork = async (data: Partial<ICalicata>) => {
+    await calicataService.createCalicata(data);
+  };
+
+  // Create calicata with associated work
+  const createEntityWithWork = async (
+    calicataData: Partial<ICalicata>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "CALICATA",
+      calicataData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingData) return;
+
+      const result = await createEntityWithoutWork(pendingData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'CALICATA',
+        "Calicata creada correctamente"
+      );
+
+      fetchCalicatas();
+      setShowConfirmation(false);
+      setPendingData(null);
+
+    } catch (error) {
+      console.error("Error creating calicata:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'CALICATA',
+        "No se pudo crear la calicata"
+      );
+    }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingData(null);
   };
   
   // Function to handle updating a calicata
   const handleUpdateCalicata = async (id: string | number, data: Partial<ICalicata>) => {
     try {
-      await calicataService.updateCalicata(id, data);
-      await fetchCalicatas();
+      const result = await calicataService.updateCalicata(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'CALICATA',
+        "Calicata actualizada correctamente"
+      );
+
+      fetchCalicatas();
       setIsDialogOpen(false);
-      setSelectedCalicata(null);
       setIsEditMode(false);
-      toast({
-        title: "Éxito",
-        description: "Calicata actualizada correctamente",
-      });
+      setSelectedCalicata(null);
     } catch (error) {
-      console.error("Error updating calicata:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar la calicata",
-        variant: "destructive",
-      });
+      console.error(`Error updating calicata ${id}:`, error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'CALICATA',
+        "No se pudo actualizar la calicata"
+      );
     }
   };
   
@@ -454,7 +627,7 @@ const Calicata = () => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Calicata" : "Agregar Nueva Calicata"}
@@ -474,6 +647,93 @@ const Calicata = () => {
             initialValues={isEditMode && selectedCalicata ? selectedCalicata : undefined}
             submitButtonLabel={isEditMode ? "Actualizar" : "Agregar"}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear la calicata sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingData && (
+            <WorkAssociationWizard
+              entityType="calicata"
+              entityData={{
+                id: "new-calicata"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

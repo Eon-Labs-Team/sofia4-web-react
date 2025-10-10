@@ -12,7 +12,7 @@ class WaterAnalysisService {
    */
   async findAll(): Promise<IWaterAnalysis[]> {
     try {
-      const response = await fetch(ENDPOINTS.waterAnalysis.base, {
+      const response = await fetch(authService.buildUrlWithParams(ENDPOINTS.waterAnalysis.base), {
         headers: authService.getAuthHeaders(),
       });
       

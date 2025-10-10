@@ -27,6 +27,19 @@ import { z } from "zod";
 import { IWeatherEvent } from "@eon-lib/eon-mongoose/types";
 import weatherEventService from "@/_services/weatherEventService";
 import { toast } from "@/components/ui/use-toast";
+import { WorkAssociationWizard } from "@/components/Wizard";
+import { WorkAssociationData } from "@/components/Wizard/types";
+import workerListService from "@/_services/workerListService";
+import listaCuartelesService from "@/_services/listaCuartelesService";
+import inventoryProductService from "@/_services/inventoryProductService";
+import listaMaquinariasService from "@/_services/machineryListService";
+import workService from "@/_services/workService";
+import cropTypeService from "@/_services/cropTypeService";
+import varietyTypeService from "@/_services/varietyTypeService";
+import {
+  handleResponseWithFallback,
+  handleErrorWithEnhancedFormat,
+} from "@/lib/utils/responseHandler";
 
 // Render function for the state column (boolean)
 const renderState = (value: boolean) => {
@@ -260,7 +273,19 @@ const EventosClimaticos = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedWeatherEvent, setSelectedWeatherEvent] = useState<IWeatherEvent | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  
+  const [showWorkQuestion, setShowWorkQuestion] = useState(false);
+  const [showWorkWizard, setShowWorkWizard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingWeatherEventData, setPendingWeatherEventData] = useState<Partial<IWeatherEvent> | null>(null);
+  const [workWizardData, setWorkWizardData] = useState({
+    workerList: [],
+    cuarteles: [],
+    productOptions: [],
+    machineryOptions: []
+  });
+  const [cropTypes, setCropTypes] = useState([]);
+  const [varietyTypes, setVarietyTypes] = useState([]);
+
   // Get propertyId from AuthStore
   const { propertyId } = useAuthStore();
   
@@ -279,8 +304,35 @@ const EventosClimaticos = () => {
   useEffect(() => {
     if (propertyId) {
       fetchWeatherEvents();
+      loadWorkWizardData();
     }
   }, [propertyId]);
+
+  // Function to load data for WorkAssociationWizard
+  const loadWorkWizardData = async () => {
+    try {
+      const [workerList, cuarteles, productOptions, machineryOptions, cropTypesData, varietyTypesData] = await Promise.all([
+        workerListService.findAll(),
+        listaCuartelesService.findAll(),
+        inventoryProductService.findAll(),
+        listaMaquinariasService.findAll(),
+        cropTypeService.findAll(),
+        varietyTypeService.findAll()
+      ]);
+
+      setWorkWizardData({
+        workerList: Array.isArray(workerList) ? workerList : [],
+        cuarteles: Array.isArray(cuarteles) ? cuarteles : [],
+        productOptions: Array.isArray(productOptions) ? productOptions : [],
+        machineryOptions: Array.isArray(machineryOptions) ? machineryOptions : []
+      });
+
+      setCropTypes(Array.isArray(cropTypesData) ? cropTypesData : []);
+      setVarietyTypes(Array.isArray(varietyTypesData) ? varietyTypesData : []);
+    } catch (error) {
+      console.error("Error loading work wizard data:", error);
+    }
+  };
   
   // Function to fetch weather events data
   const fetchWeatherEvents = async () => {
@@ -303,69 +355,161 @@ const EventosClimaticos = () => {
   
   // Function to handle adding a new weather event
   const handleAddWeatherEvent = async (data: Partial<IWeatherEvent>) => {
+    // Store the data and show the work association question
+    setPendingWeatherEventData(data);
+    setIsDialogOpen(false);
+    setShowWorkQuestion(true);
+  };
+
+  // Function to handle work association completion
+  const handleWorkAssociation = async (workAssociationData: WorkAssociationData) => {
     try {
-      // Prepare data according to the exact structure of the model
-      const weatherEventData: Partial<IWeatherEvent> = {
-        eventDate: data.eventDate,
-        temperature: data.temperature,
-        temperatureUnit: data.temperatureUnit,
-        damp: data.damp,
-        precipitation: data.precipitation,
-        windSpeed: data.windSpeed,
-        sunRadiation: data.sunRadiation,
-        others: data.others,
-        state: data.state !== undefined ? data.state : true
-      };
-      
-      const newWeatherEvent = await weatherEventService.createWeatherEvent(weatherEventData);
-      setWeatherEvents((prevEvents) => [...prevEvents, newWeatherEvent]);
-      setIsDialogOpen(false);
-      toast({
-        title: "Evento climático creado",
-        description: `El evento climático del ${new Date(data.eventDate as string).toLocaleDateString()} ha sido creado exitosamente.`,
-      });
+      if (!pendingWeatherEventData) return;
+
+      if (workAssociationData.associateWork) {
+        // Create weather event with associated work
+        const result = await createWeatherEventWithWork(pendingWeatherEventData, workAssociationData);
+
+        // Handle enhanced response format
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'WEATHER_EVENT',
+          "Evento climático creado correctamente"
+        );
+      } else {
+        // Create weather event without work
+        const result = await createWeatherEventWithoutWork(pendingWeatherEventData);
+
+        // Handle enhanced response format for single entity creation
+        handleResponseWithFallback(
+          result,
+          'creation',
+          'WEATHER_EVENT',
+          "Evento climático creado correctamente"
+        );
+      }
+
+      fetchWeatherEvents();
+      setShowWorkWizard(false);
+      setPendingWeatherEventData(null);
+
+    } catch (error) {
+      console.error("Error creating weather event with work association:", error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'WEATHER_EVENT',
+        "No se pudo crear el evento climático"
+      );
+    }
+  };
+
+  // Create weather event without associated work
+  const createWeatherEventWithoutWork = async (data: Partial<IWeatherEvent>) => {
+    await weatherEventService.createWeatherEvent(data);
+  };
+
+  // Create weather event with associated work
+  const createWeatherEventWithWork = async (
+    weatherEventData: Partial<IWeatherEvent>,
+    workAssociationData: WorkAssociationData
+  ) => {
+    // Create work with entity using the new endpoint
+    const result = await workService.createWorkWithEntity(
+      "WEATHER_EVENT",
+      weatherEventData,
+      workAssociationData.workData
+    );
+
+    return result;
+  };
+
+  // Function to handle work association question response
+  const handleWorkQuestionResponse = (associateWork: boolean) => {
+    setShowWorkQuestion(false);
+
+    if (associateWork) {
+      // Show the full wizard
+      setShowWorkWizard(true);
+    } else {
+      // Show confirmation dialog for direct insertion
+      setShowConfirmation(true);
+    }
+  };
+
+  // Function to handle confirmation of direct insertion
+  const handleConfirmInsertion = async () => {
+    try {
+      if (!pendingWeatherEventData) return;
+
+      const result = await createWeatherEventWithoutWork(pendingWeatherEventData);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'creation',
+        'WEATHER_EVENT',
+        "Evento climático creado correctamente"
+      );
+
+      fetchWeatherEvents();
+      setShowConfirmation(false);
+      setPendingWeatherEventData(null);
+
     } catch (error) {
       console.error("Error creating weather event:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el evento climático. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'creation',
+        'WEATHER_EVENT',
+        "No se pudo crear el evento climático"
+      );
     }
+  };
+
+  // Function to handle work wizard cancellation
+  const handleWorkWizardCancel = () => {
+    setShowWorkWizard(false);
+    setPendingWeatherEventData(null);
+  };
+
+  // Function to cancel all operations
+  const handleCancelAll = () => {
+    setShowWorkQuestion(false);
+    setShowWorkWizard(false);
+    setShowConfirmation(false);
+    setPendingWeatherEventData(null);
   };
 
   // Function to handle updating an existing weather event
   const handleUpdateWeatherEvent = async (id: string | number, data: Partial<IWeatherEvent>) => {
     try {
-      // Prepare data according to the exact structure of the model
-      const weatherEventData: Partial<IWeatherEvent> = {
-        eventDate: data.eventDate,
-        temperature: data.temperature,
-        temperatureUnit: data.temperatureUnit,
-        damp: data.damp,
-        precipitation: data.precipitation,
-        windSpeed: data.windSpeed,
-        sunRadiation: data.sunRadiation,
-        others: data.others,
-        state: data.state !== undefined ? data.state : true
-      };
-      
-      await weatherEventService.updateWeatherEvent(id, weatherEventData);
-      await fetchWeatherEvents(); // Refresh the list
+      const result = await weatherEventService.updateWeatherEvent(id, data);
+
+      // Handle enhanced response format
+      handleResponseWithFallback(
+        result,
+        'update',
+        'WEATHER_EVENT',
+        "Evento climático actualizado correctamente"
+      );
+
+      fetchWeatherEvents();
       setIsDialogOpen(false);
       setIsEditMode(false);
       setSelectedWeatherEvent(null);
-      toast({
-        title: "Evento climático actualizado",
-        description: `El evento climático del ${new Date(data.eventDate as string).toLocaleDateString()} ha sido actualizado exitosamente.`,
-      });
     } catch (error) {
-      console.error("Error updating weather event:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el evento climático. Por favor intente nuevamente.",
-        variant: "destructive",
-      });
+      console.error(`Error updating weather event ${id}:`, error);
+
+      handleErrorWithEnhancedFormat(
+        error,
+        'update',
+        'WEATHER_EVENT',
+        "No se pudo actualizar el evento climático"
+      );
     }
   };
 
@@ -453,7 +597,7 @@ const EventosClimaticos = () => {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? "Editar Evento Climático" : "Agregar Nuevo Evento Climático"}
@@ -474,6 +618,93 @@ const EventosClimaticos = () => {
             }}
             validationSchema={formValidationSchema}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Question */}
+      <Dialog open={showWorkQuestion} onOpenChange={() => setShowWorkQuestion(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Desear asociar un trabajo?</DialogTitle>
+            <DialogDescription>
+              Esto permitirá asociar costos de recursos humanos, salidas de productos de bodega y uso de maquinarias.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleWorkQuestionResponse(false)}
+              className="flex-1"
+            >
+              No
+            </Button>
+            <Button
+              onClick={() => handleWorkQuestionResponse(true)}
+              className="flex-1"
+            >
+              Sí
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog for Direct Insertion */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="w-[95vw] max-w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Confirmar Inserción</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea crear el evento climático sin asociar un trabajo?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAll}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmInsertion}
+              className="flex-1"
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Work Association Wizard */}
+      <Dialog open={showWorkWizard} onOpenChange={setShowWorkWizard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {/* Asociación de Trabajo */}
+            </DialogTitle>
+            <DialogDescription>
+              {/* Configure la información del trabajo a asociar */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {showWorkWizard && pendingWeatherEventData && (
+            <WorkAssociationWizard
+              entityType="eventosClimaticos"
+              entityData={{
+                id: "new-weather-event"
+              }}
+              onComplete={handleWorkAssociation}
+              onCancel={handleWorkWizardCancel}
+              workerList={workWizardData.workerList}
+              cuarteles={workWizardData.cuarteles}
+              productOptions={workWizardData.productOptions}
+              machineryOptions={workWizardData.machineryOptions}
+              cropTypes={cropTypes}
+              varietyTypes={varietyTypes}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
